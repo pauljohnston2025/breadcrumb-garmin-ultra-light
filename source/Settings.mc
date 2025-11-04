@@ -160,7 +160,6 @@ class Settings {
     var offTrackAlertsDistanceM as Number = 20;
     var offTrackAlertsMaxReportIntervalS as Number = 60;
     var offTrackCheckIntervalS as Number = 15;
-    var alertType as Number = ALERT_TYPE_TOAST;
     var offTrackWrongDirection as Boolean = false;
     var drawCheverons as Boolean = false;
 
@@ -220,12 +219,6 @@ class Settings {
     function setUiMode(_uiMode as Number) as Void {
         uiMode = _uiMode;
         setValue("uiMode", uiMode);
-    }
-
-    (:settingsView,:menu2)
-    function setAlertType(_alertType as Number) as Void {
-        alertType = _alertType;
-        setValue("alertType", alertType);
     }
 
     (:settingsView,:menu2)
@@ -1205,7 +1198,6 @@ class Settings {
         zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
         uiMode = defaultSettings.uiMode;
         elevationMode = defaultSettings.elevationMode;
-        alertType = defaultSettings.alertType;
         renderMode = defaultSettings.renderMode;
         fixedLatitude = defaultSettings.fixedLatitude;
         fixedLongitude = defaultSettings.fixedLongitude;
@@ -1265,7 +1257,6 @@ class Settings {
                 "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
                 "uiMode" => uiMode,
                 "elevationMode" => elevationMode,
-                "alertType" => alertType,
                 "renderMode" => renderMode,
                 "fixedLatitude" => fixedLatitude == null ? 0f : fixedLatitude,
                 "fixedLongitude" => fixedLongitude == null ? 0f : fixedLongitude,
@@ -1360,7 +1351,6 @@ class Settings {
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
         uiMode = parseNumber("uiMode", uiMode);
         elevationMode = parseNumber("elevationMode", elevationMode);
-        alertType = parseNumber("alertType", alertType);
         renderMode = parseNumber("renderMode", renderMode);
 
         fixedLatitude = parseOptionalFloat("fixedLatitude", fixedLatitude);

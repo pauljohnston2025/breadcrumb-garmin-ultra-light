@@ -218,12 +218,6 @@ For time based only Set `Min Turn Alert Distance (m) = -1` and `Turn Alert Time 
 
 How often, in seconds, an alert should fire. Alerts will continue firing until you return to the planned route (or reach a section of another enabled route). Also controls the max alert speed for [Wrong Direction Alerts](#wrong-direction-alerts)
 
-### Off Track Alerts Alert Type
-
-**Toast (notification)**: Some devices have issues with alerts rendering, so you can use a toast. This is the default as it does not require enabling alerts on the device.  
-**Alerts**: Send an alert instead of a toast, to use this you need to also enable alerts for the datafield in the activity settings. see [Through Alerts](#through-alerts). Also controls the alert type for [Wrong Direction Alerts](#wrong-direction-alerts)  
-**Image**: Same as `Alerts` but implemented locally rather than through garmins `showAlert`. This makes them more stable (no exception handling because of a currently active alert that we cannot replace), and ensures the latest alert is always show.
-
 ---
 
 ### Colours

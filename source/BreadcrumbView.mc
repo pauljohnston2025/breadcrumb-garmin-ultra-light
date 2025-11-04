@@ -7,195 +7,6 @@ import Toybox.Graphics;
 import Toybox.Attention;
 import Toybox.System;
 
-typedef Alert as interface {
-    function text() as String;
-    function onUpdate(dc as Dc) as Void;
-    function alert() as WatchUi.DataFieldAlert;
-};
-
-class OffTrackAlert extends WatchUi.DataFieldAlert {
-    function initialize() {
-        WatchUi.DataFieldAlert.initialize();
-    }
-
-    function onUpdate(dc as Dc) as Void {
-        var halfWidth = dc.getWidth() * 0.5;
-        var offTrackIcon =
-            WatchUi.loadResource(Rez.Drawables.OffTrackIcon) as WatchUi.BitmapResource;
-        dc.drawBitmap(0, 0, offTrackIcon);
-        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
-            halfWidth,
-            40,
-            Graphics.FONT_SYSTEM_MEDIUM,
-            text(),
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-    }
-
-    function text() as String {
-        return "OFF TRACK";
-    }
-
-    function alert() as WatchUi.DataFieldAlert {
-        return me;
-    }
-}
-
-class WrongDirectionAlert extends WatchUi.DataFieldAlert {
-    function initialize() {
-        WatchUi.DataFieldAlert.initialize();
-    }
-
-    function onUpdate(dc as Dc) as Void {
-        // todo maybe save this as a bitmap to save space? are bitmaps more code-space efficient than the dc calls?
-
-        // --- 1. Setup Drawing Variables ---
-        var centerX = dc.getWidth() / 2;
-        var centerY = dc.getHeight() / 2;
-
-        // Define the dimensions of the sign. Make it large and prominent.
-        var rectWidth = dc.getWidth() * 0.75;
-        var rectHeight = dc.getHeight() / 2;
-        var rectX = centerX - rectWidth / 2;
-        var rectY = centerY - rectHeight / 2;
-        var radius = 10;
-
-        // --- 2. Draw the Red Background Rectangle ---
-        // Set the color to a vibrant red for immediate attention.
-        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(rectX, rectY, rectWidth, rectHeight, radius);
-
-        // --- 3. Draw the "WRONG WAY" Text ---
-        // Set the color to white for high contrast against the red background.
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        // white outline
-        dc.setPenWidth(4);
-        dc.drawRoundedRectangle(rectX, rectY, rectWidth, rectHeight, radius);
-
-        // To ensure the text fits well on a watch screen, we'll split it into two lines.
-        var text = "WRONG\nWAY";
-
-        // Draw the text centered both horizontally and vertically within the alert space.
-        dc.drawText(
-            centerX,
-            centerY,
-            Graphics.FONT_SYSTEM_LARGE, // Use a large font for readability
-            text,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER // Center align text
-        );
-    }
-
-    function text() as String {
-        return "WRONG DIRECTION";
-    }
-
-    function alert() as WatchUi.DataFieldAlert {
-        return me;
-    }
-}
-
-class DirectionAlert extends WatchUi.DataFieldAlert {
-    var direction as Number; // -180 to +180 deg
-    var distanceM as Float;
-    var distanceImperialUnits as Boolean;
-
-    function initialize(direction as Number, distanceM as Float, distanceImperialUnits as Boolean) {
-        WatchUi.DataFieldAlert.initialize();
-        self.direction = direction;
-        self.distanceM = distanceM;
-        self.distanceImperialUnits = distanceImperialUnits;
-    }
-
-    // Overrides the onUpdate function to draw a graphical turn indicator
-    function onUpdate(dc as Dc) as Void {
-        // This is very pretty, but runs out of memory when trying to create it on the sim :(
-        // However on a real physical device it seems to work fine (though maybe thats where my random crashes are coming from)
-
-        // --- 1. Setup Drawing Variables ---
-        // Get the center of the screen
-        var arrowVOffset = 30;
-        var centerX = dc.getWidth() / 2;
-        var centerY = dc.getHeight() / 2 - arrowVOffset;
-
-        // Define the length of the lines for the turn indicator
-        var lineLength = (dc.getHeight() * 0.75) / 2;
-
-        // Set the color for the drawing
-        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        // Set the line width to make it more visible
-        dc.setPenWidth(12);
-
-        // --- 2. Draw the "Current Path" Line ---
-        // This is a straight vertical line leading to the turn point (the center)
-        dc.drawLine(centerX, centerY + lineLength, centerX, centerY);
-
-        // --- 3. Calculate and Draw the "Turn" Line ---
-        // Convert the incoming direction from degrees to radians for the math functions
-        var angleRad = Math.toRadians(self.direction);
-
-        // Calculate the end point of the turn line using sine and cosine.
-        // We subtract from 'y' because in many screen coordinate systems,
-        // the 'y' value increases as you go down the screen.
-        var endX = centerX + lineLength * Math.sin(angleRad);
-        var endY = centerY - lineLength * Math.cos(angleRad);
-
-        dc.drawLine(centerX, centerY, endX, endY);
-
-        // --- 4. Draw an Arrowhead on the Turn Line ---
-        // This makes the direction of the turn clearer
-        var arrowLength = 50; // Length of the arrowhead barbs
-        var arrowAngle = Math.toRadians(40); // Angle of the barbs relative to the line
-
-        // Calculate the coordinates for the two barbs of the arrowhead
-        var arrowX1 = endX - arrowLength * Math.sin(angleRad - arrowAngle);
-        var arrowY1 = endY + arrowLength * Math.cos(angleRad - arrowAngle);
-        var arrowX2 = endX - arrowLength * Math.sin(angleRad + arrowAngle);
-        var arrowY2 = endY + arrowLength * Math.cos(angleRad + arrowAngle);
-
-        // Draw the two arrowhead lines
-        dc.drawLine(endX, endY, arrowX1, arrowY1);
-        dc.drawLine(endX, endY, arrowX2, arrowY2);
-
-        // --- 5. Display the Distance Text ---
-        // Keep the distance text, as it's still very useful information.
-        // We'll place it neatly below the line drawing.
-        var text = "";
-        if (distanceImperialUnits) {
-            var distanceFt = distanceM * 3.28084;
-            text = distanceFt.format("%.0f") + "ft";
-        } else {
-            text = distanceM.format("%.0f") + "m";
-        }
-
-        dc.drawText(
-            centerX,
-            centerY + lineLength + 10, // Position text below the drawing
-            Graphics.FONT_SYSTEM_MEDIUM,
-            text,
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-    }
-
-    function text() as String {
-        var dirText = direction >= 0 ? "Right" : "Left";
-        var distanceText = "";
-
-        if (distanceImperialUnits) {
-            var distanceFt = distanceM * 3.28084;
-            distanceText = distanceFt.format("%.0f") + "ft";
-        } else {
-            distanceText = distanceM.format("%.0f") + "m";
-        }
-
-        return dirText + " Turn In " + distanceText + " " + absN(direction) + "°";
-    }
-
-    function alert() as WatchUi.DataFieldAlert {
-        return me;
-    }
-}
-
 // note to get this to work on the simulator need to modify simulator.json and
 // add isTouchable this is already on edge devices with touch, but not the
 // venu2s, even though I tested and it worked on the actual device
@@ -213,8 +24,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
     var lastOffTrackAlertNotified as Number = 0;
     var lastOffTrackAlertChecked as Number = 0;
     var _computeCounter as Number = 0;
-    var imageAlert as Alert? = null;
-    var imageAlertShowAt as Number = 0;
 
     // Set the label of the data field here.
     function initialize(breadcrumbContext as BreadcrumbContext) {
@@ -275,7 +84,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         }
     }
 
-    function showMyAlert(alert as Alert) as Void {
+    function showMyAlert(alert as String) as Void {
         try {
             if (Attention has :backlight) {
                 // turn the screen on so we can see the alert, it does not respond to us gesturing to see the alert (think gesture controls are suppressed during vibration)
@@ -293,25 +102,13 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 Attention.vibrate(vibeData);
             }
 
-            // alert comes after we start the vibrate in case it throws
-            // logD("trying to trigger alert");
-            if (settings.alertType == ALERT_TYPE_ALERT) {
-                // alerts are really annoying because users have to remember to enable them
-                // and then some times ive noticed that they do not seem to work, or they are disabled and still lock out the screen
-                // this is why we default to toasts, the vibration will still occur, and maybe should be a separate setting?
-                showAlert(alert.alert());
-            } else if (settings.alertType == ALERT_TYPE_IMAGE) {
-                imageAlertShowAt = Time.now().value();
-                imageAlert = alert;
-            } else {
-                WatchUi.showToast(alert.text(), {});
-            }
+            WatchUi.showToast(alert, {});
         } catch (e) {
             logE("failed to show alert: " + e.getErrorMessage());
         }
     }
 
-    function showMyTrackAlert(epoch as Number, alert as Alert) as Void {
+    function showMyTrackAlert(epoch as Number, alert as String) as Void {
         lastOffTrackAlertNotified = epoch; // if showAlert fails, we will still have vibrated and turned the screen on
         showMyAlert(alert);
     }
@@ -407,8 +204,19 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             );
 
             if (res != null) {
-                showMyAlert(new DirectionAlert(res[0], res[1], settings.distanceImperialUnits));
-                return;
+                var direction = res[0];
+                var distanceM = res[1];
+
+                var dirText = direction >= 0 ? "Right" : "Left";
+                var distanceText = "";
+
+                if (settings.distanceImperialUnits) {
+                    var distanceFt = distanceM * 3.28084;
+                    distanceText = distanceFt.format("%.0f") + "ft";
+                } else {
+                    distanceText = distanceM.format("%.0f") + "m";
+                }
+                showMyAlert(dirText + " Turn In " + distanceText + " " + absN(direction) + "°");
             }
         }
     }
@@ -430,7 +238,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             if (routeOffTrackInfo.onTrack) {
                 offTrackInfo = routeOffTrackInfo.clone(); // never store the point we got or rescales could occur twice on the same object
                 if (settings.offTrackWrongDirection && offTrackInfo.wrongDirection) {
-                    showMyTrackAlert(epoch, new WrongDirectionAlert());
+                    showMyTrackAlert(epoch, "WRONG DIRECTION");
                 }
 
                 return;
@@ -462,7 +270,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         }
 
         if (settings.enableOffTrackAlerts) {
-            showMyTrackAlert(epoch, new OffTrackAlert());
+            showMyTrackAlert(epoch, "OFF TRACK");
         }
     }
 
@@ -472,8 +280,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         lastOffTrackAlertNotified = 0;
         lastOffTrackAlertChecked = 0;
         offTrackInfo = new OffTrackInfo(true, null, false);
-        imageAlert = null;
-        imageAlertShowAt = 0;
     }
 
     // did some testing on real device
@@ -501,23 +307,12 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
 
-        var imageAlertLocal = imageAlert;
-        if (imageAlertLocal != null) {
-            var epoch = Time.now().value();
-            if (epoch - imageAlertShowAt > 5 /*seconds*/) {
-                imageAlert = null;
-            } else {
-                imageAlertLocal.onUpdate(dc);
-                return;
-            }
-        }
-
         // logD("onUpdate");
         var renderer = _breadcrumbContext.breadcrumbRenderer;
         if (renderer.renderClearTrackUi(dc)) {
             return;
         }
-        
+
         // mode should be stored here, but is needed for rendering the ui
         // should structure this way better, but oh well (renderer per mode etc.)
         if (settings.mode == MODE_ELEVATION) {
@@ -551,9 +346,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     continue;
                 }
                 var routeColour = settings.routeColour(route.storageIndex);
-                if (
-                    settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING
-                ) {
+                if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
                     renderer.renderTrackName(dc, route, routeColour);
                 } else {
                     renderer.renderTrackNameUnrotated(dc, route, routeColour);
@@ -834,10 +627,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         if (info != null && info.currentSpeed != null) {
             currentSpeedMPS = info.currentSpeed as Float;
         }
-        var cacheHits =
-            "speed: " +
-            currentSpeedMPS.format("%.1f") +
-            "m/s";
+        var cacheHits = "speed: " + currentSpeedMPS.format("%.1f") + "m/s";
         dc.drawText(x, y, Graphics.FONT_XTINY, cacheHits, Graphics.TEXT_JUSTIFY_CENTER);
         y += spacing;
         dc.drawText(

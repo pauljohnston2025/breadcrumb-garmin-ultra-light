@@ -13,12 +13,6 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
 
     // see BreadcrumbDataFieldView if touch stops working
     function onTap(evt as WatchUi.ClickEvent) as Boolean {
-        var _viewLocal = $._view;
-        if (_viewLocal != null && _viewLocal.imageAlert != null) {
-            // any touch cancels the alert
-            _viewLocal.imageAlert = null;
-            return true;
-        }
         // logT("got tap (x,y): (" + evt.getCoordinates()[0] + "," +
         //                evt.getCoordinates()[1] + ")");
 

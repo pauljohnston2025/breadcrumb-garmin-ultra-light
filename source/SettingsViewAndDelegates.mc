@@ -323,19 +323,6 @@ function alertsCommon(menu as WatchUi.Menu2, settings as Settings) as Void {
         :settingsAlertsMinTurnAlertDistanceM,
         settings.minTurnAlertDistanceM.toString()
     );
-    var alertTypeString = "";
-    switch (settings.alertType) {
-        case ALERT_TYPE_TOAST:
-            alertTypeString = Rez.Strings.alertTypeToast;
-            break;
-        case ALERT_TYPE_ALERT:
-            alertTypeString = Rez.Strings.alertTypeAlert;
-            break;
-        case ALERT_TYPE_IMAGE:
-            alertTypeString = Rez.Strings.alertTypeImage;
-            break;
-    }
-    safeSetSubLabel(menu, :settingsAlertsAlertType, alertTypeString);
 }
 
 (:settingsView,:menu2)
@@ -859,34 +846,6 @@ class SettingsElevationModeDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 (:settingsView,:menu2)
-class SettingsAlertTypeDelegate extends WatchUi.Menu2InputDelegate {
-    var parent as SettingsAlerts or SettingsAlertsDisabled;
-    function initialize(parent as SettingsAlerts or SettingsAlertsDisabled) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-    }
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        var itemId = item.getId();
-        if (itemId == :settingsAlertTypeToast) {
-            settings.setAlertType(ALERT_TYPE_TOAST);
-        } else if (itemId == :settingsAlertTypeAlert) {
-            settings.setAlertType(ALERT_TYPE_ALERT);
-        } else if (itemId == :settingsAlertTypeImage) {
-            settings.setAlertType(ALERT_TYPE_IMAGE);
-        }
-
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-    }
-}
-
-(:settingsView,:menu2)
 class SettingsRenderModeDelegate extends WatchUi.Menu2InputDelegate {
     var parent as SettingsMain;
     function initialize(parent as SettingsMain) {
@@ -1168,12 +1127,6 @@ function onSelectAlertCommon(
                 settings.offTrackCheckIntervalS,
                 view
             )
-        );
-    } else if (itemId == :settingsAlertsAlertType) {
-        WatchUi.pushView(
-            new $.Rez.Menus.SettingsAlertType(),
-            new $.SettingsAlertTypeDelegate(view),
-            WatchUi.SLIDE_IMMEDIATE
         );
     }
 }

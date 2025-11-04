@@ -109,13 +109,6 @@
         <setting propertyKey="@Properties.offTrackAlertsMaxReportIntervalS" title="@Strings.offTrackAlertsMaxReportIntervalSTitle">
             <settingConfig type="numeric" min="0"/>
         </setting>
-        <setting propertyKey="@Properties.alertType" title="@Strings.alertTypeTitle">
-            <settingConfig type="list">
-                <listEntry value="0">@Strings.alertTypeToast</listEntry>
-                <listEntry value="1">@Strings.alertTypeAlert</listEntry>
-                <listEntry value="2">@Strings.alertTypeImage</listEntry>
-            </settingConfig>
-        </setting>
     <!-- </group> -->
 
     <!-- <group id="colours" title="@Strings.coloursTitle"> -->

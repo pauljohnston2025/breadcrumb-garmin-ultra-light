@@ -1,7 +1,4 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.png" scaleX="61" scaleY="61"/>
     <bitmap id="ColourIcon" class="ColourIcon" filename="launcher_icon.png" automaticPalette="false" dithering="none" scaleX="15%" scaleRelativeTo="screen" packingFormat="default"/>
-    <!-- online editor for svgs https://www.svgviewer.dev/ -->
-     <!-- would be nice to use compressed format, but its not supported on all devices-->
-    <bitmap id="OffTrackIcon" filename="OffTrackIcon.png" automaticPalette="true" dithering="none" scaleX="90%" scaleY="90%" packingFormat="default" compress="true"/>
 </drawables>

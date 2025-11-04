@@ -7,5 +7,4 @@
     <toggle-menu-item id="settingsAlertsEnabled" label="@Strings.enableOffTrackAlertsTitle"/>
     <menu-item id="settingsAlertsTurnAlertTimeS" label="@Strings.turnAlertTimeSTitle"/>
     <menu-item id="settingsAlertsMinTurnAlertDistanceM" label="@Strings.minTurnAlertDistanceMTitle"/>
-    <menu-item id="settingsAlertsAlertType" label="@Strings.alertTypeTitle"/>
 </menu2>
