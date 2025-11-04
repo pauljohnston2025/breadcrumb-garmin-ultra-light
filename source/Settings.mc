@@ -45,13 +45,6 @@ enum /*RenderMode*/ {
     RENDER_MODE_MAX,
 }
 
-enum /*RenderMode*/ {
-    ALERT_TYPE_TOAST,
-    ALERT_TYPE_ALERT,
-    ALERT_TYPE_IMAGE,
-    ALERT_TYPE_MAX,
-}
-
 (:background)
 function settingsAsDict() as Dictionary<String, PropertyValueType> {
     var routes = Application.Storage.getValue("routes"); // routes are saved to storage, does this even work on real devices? save/delete are documented to only work on 3.2.0
@@ -65,21 +58,12 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "turnAlertTimeS" => Application.Properties.getValue("turnAlertTimeS"),
             "minTurnAlertDistanceM" => Application.Properties.getValue("minTurnAlertDistanceM"),
             "maxTrackPoints" => Application.Properties.getValue("maxTrackPoints"),
-            "showDirectionPointTextUnderIndex" => Application.Properties.getValue(
-                "showDirectionPointTextUnderIndex"
-            ),
             "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
             "mapMoveScreenSize" => Application.Properties.getValue("mapMoveScreenSize"),
             "recalculateIntervalS" => Application.Properties.getValue("recalculateIntervalS"),
             "mode" => Application.Properties.getValue("mode"),
             "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
             "showPoints" => Application.Properties.getValue("showPoints"),
-            "drawLineToClosestTrack" => Application.Properties.getValue("drawLineToClosestTrack"),
-            "includeDebugPageInOnScreenUi" => Application.Properties.getValue(
-                "includeDebugPageInOnScreenUi"
-            ),
-            "drawHitBoxes" => Application.Properties.getValue("drawHitBoxes"),
-            "showDirectionPoints" => Application.Properties.getValue("showDirectionPoints"),
             "displayLatLong" => Application.Properties.getValue("displayLatLong"),
             "trackColour" => Application.Properties.getValue("trackColour"),
             "defaultRouteColour" => Application.Properties.getValue("defaultRouteColour"),
@@ -175,14 +159,6 @@ class Settings {
     var turnAlertTimeS as Number = -1; // -1 disables the check
     var minTurnAlertDistanceM as Number = -1; // -1 disables the check
     var maxTrackPoints as Number = 400;
-
-    // bunch of debug settings
-    var showPoints as Boolean = false;
-    var drawLineToClosestTrack as Boolean = false;
-    var includeDebugPageInOnScreenUi as Boolean = false;
-    var drawHitBoxes as Boolean = false;
-    var showDirectionPoints as Boolean = false;
-    var showDirectionPointTextUnderIndex as Number = 0;
 
     // these settings can only be modified externally, but we cache them for faster/easier lookup
     // https://www.youtube.com/watch?v=LasrD6SZkZk&ab_channel=JaylaB
@@ -453,34 +429,6 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setShowPoints(value as Boolean) as Void {
-        showPoints = value;
-        setValue("showPoints", showPoints);
-    }
-    (:settingsView,:menu2)
-    function setDrawLineToClosestTrack(value as Boolean) as Void {
-        drawLineToClosestTrack = value;
-        setValue("drawLineToClosestTrack", drawLineToClosestTrack);
-    }
-    (:settingsView,:menu2)
-    function setIncludeDebugPageInOnScreenUi(value as Boolean) as Void {
-        includeDebugPageInOnScreenUi = value;
-        setValue("includeDebugPageInOnScreenUi", includeDebugPageInOnScreenUi);
-    }
-
-    (:settingsView,:menu2)
-    function setDrawHitBoxes(value as Boolean) as Void {
-        drawHitBoxes = value;
-        setValue("drawHitBoxes", drawHitBoxes);
-    }
-
-    (:settingsView,:menu2)
-    function setShowDirectionPoints(value as Boolean) as Void {
-        showDirectionPoints = value;
-        setValue("showDirectionPoints", showDirectionPoints);
-    }
-
-    (:settingsView,:menu2)
     function setDisplayLatLong(value as Boolean) as Void {
         displayLatLong = value;
         setValue("displayLatLong", displayLatLong);
@@ -727,31 +675,6 @@ class Settings {
         setValue("drawLineToClosestPoint", drawLineToClosestPoint);
     }
     (:settingsView,:menu2)
-    function toggleShowPoints() as Void {
-        showPoints = !showPoints;
-        setValue("showPoints", showPoints);
-    }
-    (:settingsView,:menu2)
-    function toggleDrawLineToClosestTrack() as Void {
-        drawLineToClosestTrack = !drawLineToClosestTrack;
-        setValue("drawLineToClosestTrack", drawLineToClosestTrack);
-    }
-    (:settingsView,:menu2)
-    function toggleIncludeDebugPageInOnScreenUi() as Void {
-        includeDebugPageInOnScreenUi = !includeDebugPageInOnScreenUi;
-        setValue("includeDebugPageInOnScreenUi", includeDebugPageInOnScreenUi);
-    }
-    (:settingsView,:menu2)
-    function toggleDrawHitBoxes() as Void {
-        drawHitBoxes = !drawHitBoxes;
-        setValue("drawHitBoxes", drawHitBoxes);
-    }
-    (:settingsView,:menu2)
-    function toggleShowDirectionPoints() as Void {
-        showDirectionPoints = !showDirectionPoints;
-        setValue("showDirectionPoints", showDirectionPoints);
-    }
-    (:settingsView,:menu2)
     function toggleDisplayLatLong() as Void {
         displayLatLong = !displayLatLong;
         setValue("displayLatLong", displayLatLong);
@@ -788,10 +711,6 @@ class Settings {
         mode++;
         if (mode >= MODE_MAX) {
             mode = MODE_NORMAL;
-        }
-
-        if (mode == MODE_DEBUG && !includeDebugPageInOnScreenUi) {
-            nextMode();
         }
 
         setMode(mode);
@@ -1179,15 +1098,9 @@ class Settings {
         turnAlertTimeS = defaultSettings.turnAlertTimeS;
         minTurnAlertDistanceM = defaultSettings.minTurnAlertDistanceM;
         maxTrackPoints = defaultSettings.maxTrackPoints;
-        showDirectionPointTextUnderIndex = defaultSettings.showDirectionPointTextUnderIndex;
         centerUserOffsetY = defaultSettings.centerUserOffsetY;
         mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
         drawLineToClosestPoint = defaultSettings.drawLineToClosestPoint;
-        showPoints = defaultSettings.showPoints;
-        drawLineToClosestTrack = defaultSettings.drawLineToClosestTrack;
-        includeDebugPageInOnScreenUi = defaultSettings.includeDebugPageInOnScreenUi;
-        drawHitBoxes = defaultSettings.drawHitBoxes;
-        showDirectionPoints = defaultSettings.showDirectionPoints;
         displayLatLong = defaultSettings.displayLatLong;
         trackColour = defaultSettings.trackColour;
         defaultRouteColour = defaultSettings.defaultRouteColour;
@@ -1236,17 +1149,11 @@ class Settings {
                 "turnAlertTimeS" => turnAlertTimeS,
                 "minTurnAlertDistanceM" => minTurnAlertDistanceM,
                 "maxTrackPoints" => maxTrackPoints,
-                "showDirectionPointTextUnderIndex" => showDirectionPointTextUnderIndex,
                 "centerUserOffsetY" => centerUserOffsetY,
                 "mapMoveScreenSize" => mapMoveScreenSize,
                 "recalculateIntervalS" => recalculateIntervalS,
                 "mode" => mode,
                 "drawLineToClosestPoint" => drawLineToClosestPoint,
-                "showPoints" => showPoints,
-                "drawLineToClosestTrack" => drawLineToClosestTrack,
-                "includeDebugPageInOnScreenUi" => includeDebugPageInOnScreenUi,
-                "drawHitBoxes" => drawHitBoxes,
-                "showDirectionPoints" => showDirectionPoints,
                 "displayLatLong" => displayLatLong,
                 "trackColour" => trackColour.format("%X"),
                 "defaultRouteColour" => defaultRouteColour.format("%X"),
@@ -1311,24 +1218,12 @@ class Settings {
         turnAlertTimeS = parseNumber("turnAlertTimeS", turnAlertTimeS);
         minTurnAlertDistanceM = parseNumber("minTurnAlertDistanceM", minTurnAlertDistanceM);
         maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
-        showDirectionPointTextUnderIndex = parseNumber(
-            "showDirectionPointTextUnderIndex",
-            showDirectionPointTextUnderIndex
-        );
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
         mapMoveScreenSize = parseFloat("mapMoveScreenSize", mapMoveScreenSize);
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
         mode = parseNumber("mode", mode);
         drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
-        showPoints = parseBool("showPoints", showPoints);
-        drawLineToClosestTrack = parseBool("drawLineToClosestTrack", drawLineToClosestTrack);
-        includeDebugPageInOnScreenUi = parseBool(
-            "includeDebugPageInOnScreenUi",
-            includeDebugPageInOnScreenUi
-        );
-        drawHitBoxes = parseBool("drawHitBoxes", drawHitBoxes);
-        showDirectionPoints = parseBool("showDirectionPoints", showDirectionPoints);
         displayLatLong = parseBool("displayLatLong", displayLatLong);
         displayRouteNames = parseBool("displayRouteNames", displayRouteNames);
         enableOffTrackAlerts = parseBool("enableOffTrackAlerts", enableOffTrackAlerts);
@@ -1473,70 +1368,3 @@ class Settings {
         setValueSideEffect();
     }
 }
-
-// As the number of settings and number of cached variables updated are increasing stack overflows are becoming more common
-// I think the main issue is the setBlah methods are meant to be used for on app settings, so they all call into setValue()
-// but we need to not do that when we are comming from the context of onSettingsChanged, since we manually call the updateCachedValues at the end of onSettingsChanged
-
-// Error: Stack Overflow Error
-// Details: 'Failed invoking <symbol>'
-// Time: 2025-05-14T11:00:57Z
-// Part-Number: 006-B3704-00
-// Firmware-Version: '19.05'
-// Language-Code: eng
-// ConnectIQ-Version: 5.1.1
-// Filename: BreadcrumbDataField
-// Appname: BreadcrumbDataField
-// Stack:
-//   - pc: 0x10002541
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 875
-//     Function: getRouteIndexById
-//   - pc: 0x100024ef
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 813
-//     Function: routeEnabled
-//   - pc: 0x10008ec0
-//     File: 'BreadcrumbDataField\source\CachedValues.mc'
-//     Line: 114
-//     Function: calcOuterBoundingBoxFromTrackAndRoutes
-//   - pc: 0x1000833a
-//     File: 'BreadcrumbDataField\source\CachedValues.mc'
-//     Line: 170
-//     Function: getNewScaleAndUpdateCenter
-//   - pc: 0x100092f2
-//     File: 'BreadcrumbDataField\source\CachedValues.mc'
-//     Line: 128
-//     Function: updateScaleCenterAndMap
-//   - pc: 0x100093c8
-//     File: 'BreadcrumbDataField\source\CachedValues.mc'
-//     Line: 440
-//     Function: recalculateAll
-//   - pc: 0x100043d6
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 1169
-//     Function: updateCachedValues
-//   - pc: 0x10004359
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 417
-//     Function: setValue
-//   - pc: 0x10002a86
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 649
-//     Function: setTileLayerMax
-//   - pc: 0x10003948
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 541
-//     Function: updateMapChoiceChange
-//   - pc: 0x10003ff6
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 428
-//     Function: setMapChoice
-//   - pc: 0x10001e3e
-//     File: 'BreadcrumbDataField\source\Settings.mc'
-//     Line: 1817
-//     Function: onSettingsChanged
-//   - pc: 0x10006d39
-//     File: 'BreadcrumbDataField\source\BreadcrumbDataFieldApp.mc'
-//     Line: 253
-//     Function: onPhone

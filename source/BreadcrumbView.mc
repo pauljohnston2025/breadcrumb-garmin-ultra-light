@@ -174,7 +174,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     if (
                         settings.enableOffTrackAlerts ||
                         settings.drawLineToClosestPoint ||
-                        settings.drawLineToClosestTrack ||
                         settings.offTrackWrongDirection ||
                         settings.drawCheverons
                     ) {
@@ -385,20 +384,11 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             }
             var routeColour = settings.routeColour(route.storageIndex);
             renderer.renderTrack(dc, route, routeColour, true);
-            if (settings.showPoints) {
-                renderer.renderTrackPoints(dc, route, Graphics.COLOR_ORANGE);
-            }
             if (settings.drawCheverons) {
                 renderer.renderTrackCheverons(dc, route, routeColour);
             }
-            if (settings.showDirectionPoints || settings.showDirectionPointTextUnderIndex > 0) {
-                renderer.renderTrackDirectionPoints(dc, route, Graphics.COLOR_PURPLE);
-            }
         }
         renderer.renderTrack(dc, track, settings.trackColour, false);
-        if (settings.showPoints) {
-            renderer.renderTrackPoints(dc, track, Graphics.COLOR_ORANGE);
-        }
         renderOffTrackPoint(dc);
     }
 
@@ -418,20 +408,11 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             }
             var routeColour = settings.routeColour(route.storageIndex);
             renderer.renderTrackUnrotated(dc, route, routeColour, true);
-            if (settings.showPoints) {
-                renderer.renderTrackPointsUnrotated(dc, route, Graphics.COLOR_ORANGE);
-            }
             if (settings.drawCheverons) {
                 renderer.renderTrackCheveronsUnrotated(dc, route, routeColour);
             }
-            if (settings.showDirectionPoints || settings.showDirectionPointTextUnderIndex > 0) {
-                renderer.renderTrackDirectionPointsUnrotated(dc, route, Graphics.COLOR_PURPLE);
-            }
         }
         renderer.renderTrackUnrotated(dc, track, settings.trackColour, false);
-        if (settings.showPoints) {
-            renderer.renderTrackPointsUnrotated(dc, track, Graphics.COLOR_ORANGE);
-        }
 
         renderOffTrackPointUnrotated(dc);
     }
@@ -459,19 +440,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     Graphics.COLOR_RED
                 );
             }
-
-            // debug draw line to point
-            if (settings.drawLineToClosestTrack) {
-                if (offTrackInfo.onTrack && pointWeLeftTrack != null) {
-                    // points need to be scaled and rotated :(
-                    renderer.renderLineFromLastPointToRoute(
-                        dc,
-                        lastPoint,
-                        pointWeLeftTrack,
-                        Graphics.COLOR_PURPLE
-                    );
-                }
-            }
         }
     }
 
@@ -494,19 +462,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     pointWeLeftTrack,
                     Graphics.COLOR_RED
                 );
-            }
-
-            // debug draw line to point
-            if (settings.drawLineToClosestTrack) {
-                if (offTrackInfo.onTrack && pointWeLeftTrack != null) {
-                    // points need to be scaled and rotated :(
-                    renderer.renderLineFromLastPointToRouteUnrotated(
-                        dc,
-                        lastPoint,
-                        pointWeLeftTrack,
-                        Graphics.COLOR_PURPLE
-                    );
-                }
             }
         }
     }

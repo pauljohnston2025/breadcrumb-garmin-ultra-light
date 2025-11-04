@@ -158,32 +158,6 @@
             <settingConfig type="numeric"/>
         </setting>
     <!-- </group> -->
-    
-    <!-- <group id="debugSettings" title="@Strings.debugSettingsTitle"> -->
-        <setting propertyKey="@Properties.showPoints" title="@Strings.showPointsTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-
-        <setting propertyKey="@Properties.drawLineToClosestTrack" title="@Strings.drawLineToClosestTrackTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-
-        <setting propertyKey="@Properties.includeDebugPageInOnScreenUi" title="@Strings.includeDebugPageInOnScreenUiTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-
-        <setting propertyKey="@Properties.drawHitBoxes" title="@Strings.drawHitBoxesTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.showDirectionPoints" title="@Strings.showDirectionPointsTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-
-        <setting propertyKey="@Properties.showDirectionPointTextUnderIndex" title="@Strings.showDirectionPointTextUnderIndexTitle">
-            <settingConfig type="numeric" min="0"/>
-        </setting>
-    <!-- </group> -->
 
     <setting propertyKey="@Properties.returnToUser" title="@Strings.returnToUserTitle">
         <settingConfig type="boolean"/>
