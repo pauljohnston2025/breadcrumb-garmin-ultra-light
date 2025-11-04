@@ -1,6 +1,6 @@
 <strings>
-    <string id="AppName">LWBreadcrumbDataField</string>
-    <string id="settingsTitle">Light Weight Breadcrumb Data Field</string>
+    <string id="AppName">ULBreadcrumbDataField</string>
+    <string id="settingsTitle">Ultra Light Breadcrumb Data Field</string>
 
     <string id="modeTitle">Display Mode</string>
     <string id="elevationModeTitle">Elevation Mode</string>

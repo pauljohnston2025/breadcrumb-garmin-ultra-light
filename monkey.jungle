@@ -239,3 +239,8 @@ oregon7xx.excludeAnnotations = $(oregon7xx.excludeAnnotations);rectangle;noscale
 oregon7xx.resourcePath = $(oregon7xx.resourcePath);resources-high-memory;resources-menu2
 rino7xx.excludeAnnotations = $(rino7xx.excludeAnnotations);rectangle;noscaledbitmap;$(highMemExcludes)
 rino7xx.resourcePath = $(rino7xx.resourcePath);resources-high-memory;resources-menu2
+
+# 32768 devices
+approachs60.excludeAnnotations = $(approachs60.excludeAnnotations);rectangle;noscaledbitmap;$(lowMemExcludes)
+approachs60.resourcePath = $(approachs60.resourcePath);resources-low-memory
+
