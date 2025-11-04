@@ -960,9 +960,6 @@ class BreadcrumbRenderer {
             case MODE_MAP_MOVE:
                 modeLetter = "M";
                 break;
-            case MODE_DEBUG:
-                modeLetter = "D";
-                break;
         }
 
         dc.drawText(
@@ -972,11 +969,6 @@ class BreadcrumbRenderer {
             modeLetter,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
         );
-
-        if (settings.mode == MODE_DEBUG) {
-            // mode button is the only thing to show
-            return;
-        }
 
         // clear routes
         dc.drawText(

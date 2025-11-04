@@ -174,9 +174,6 @@ class SettingsMain extends Rez.Menus.SettingsMain {
             case MODE_MAP_MOVE:
                 modeString = Rez.Strings.mapMove;
                 break;
-            case MODE_DEBUG:
-                modeString = Rez.Strings.debug;
-                break;
         }
         safeSetSubLabel(me, :settingsMainMode, modeString);
         var uiModeString = "";
@@ -371,38 +368,6 @@ class SettingsColours extends Rez.Menus.SettingsColours {
             new ColourIcon(settings.normalModeColour)
         );
         safeSetIcon(me, :settingsColoursUiColour, new ColourIcon(settings.uiColour));
-        safeSetIcon(me, :settingsColoursDebugColour, new ColourIcon(settings.debugColour));
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsDebug extends Rez.Menus.SettingsDebug {
-    function initialize() {
-        Rez.Menus.SettingsDebug.initialize();
-        rerender();
-    }
-
-    function rerender() as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        safeSetToggle(me, :settingsDebugShowPoints, settings.showPoints);
-        safeSetToggle(me, :settingsDebugDrawLineToClosestTrack, settings.drawLineToClosestTrack);
-        safeSetToggle(
-            me,
-            :settingsDebugIncludeDebugPageInOnScreenUi,
-            settings.includeDebugPageInOnScreenUi
-        );
-        safeSetToggle(me, :settingsDebugDrawHitBoxes, settings.drawHitBoxes);
-        safeSetToggle(me, :settingsDebugShowDirectionPoints, settings.showDirectionPoints);
-        safeSetSubLabel(
-            me,
-            :settingsDebugShowDirectionPointTextUnderIndex,
-            settings.showDirectionPointTextUnderIndex.toString()
-        );
     }
 }
 
@@ -643,9 +608,6 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
         } else if (itemId == :settingsMainColours) {
             var view = new SettingsColours();
             WatchUi.pushView(view, new $.SettingsColoursDelegate(view), WatchUi.SLIDE_IMMEDIATE);
-        } else if (itemId == :settingsMainDebug) {
-            var view = new SettingsDebug();
-            WatchUi.pushView(view, new $.SettingsDebugDelegate(view), WatchUi.SLIDE_IMMEDIATE);
         } else if (itemId == :settingsMainMapMoveScreenSize) {
             startPicker(
                 new SettingsFloatPicker(
@@ -782,8 +744,6 @@ class SettingsModeDelegate extends WatchUi.Menu2InputDelegate {
             settings.setMode(MODE_ELEVATION);
         } else if (itemId == :settingsModeMapMove) {
             settings.setMode(MODE_MAP_MOVE);
-        } else if (itemId == :settingsModeMapDebug) {
-            settings.setMode(MODE_DEBUG);
         }
 
         parent.rerender();
@@ -1276,56 +1236,6 @@ class SettingsColoursDelegate extends WatchUi.Menu2InputDelegate {
         } else if (itemId == :settingsColoursUiColour) {
             startPicker(
                 new SettingsColourPicker(settings.method(:setUiColour), settings.uiColour, view)
-            );
-        } else if (itemId == :settingsColoursDebugColour) {
-            startPicker(
-                new SettingsColourPicker(
-                    settings.method(:setDebugColour),
-                    settings.debugColour,
-                    view
-                )
-            );
-        }
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsDebugDelegate extends WatchUi.Menu2InputDelegate {
-    var view as SettingsDebug;
-    function initialize(view as SettingsDebug) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.view = view;
-    }
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        var itemId = item.getId();
-        if (itemId == :settingsDebugShowPoints) {
-            settings.toggleShowPoints();
-            view.rerender();
-        } else if (itemId == :settingsDebugDrawLineToClosestTrack) {
-            settings.toggleDrawLineToClosestTrack();
-            view.rerender();
-        } else if (itemId == :settingsDebugIncludeDebugPageInOnScreenUi) {
-            settings.toggleIncludeDebugPageInOnScreenUi();
-            view.rerender();
-        } else if (itemId == :settingsDebugDrawHitBoxes) {
-            settings.toggleDrawHitBoxes();
-            view.rerender();
-        } else if (itemId == :settingsDebugShowDirectionPoints) {
-            settings.toggleShowDirectionPoints();
-            view.rerender();
-        } else if (itemId == :settingsDebugShowDirectionPointTextUnderIndex) {
-            startPicker(
-                new SettingsNumberPicker(
-                    settings.method(:setShowDirectionPointTextUnderIndex),
-                    settings.showDirectionPointTextUnderIndex,
-                    view
-                )
             );
         }
     }

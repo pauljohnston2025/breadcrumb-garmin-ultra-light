@@ -45,10 +45,6 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
             return true;
         }
 
-        if (settings.mode == MODE_DEBUG) {
-            return false;
-        }
-
         if (inHitbox(x, y, renderer.returnToUserX, renderer.returnToUserY, halfHitboxSize)) {
             // return to users location
             // bottom left

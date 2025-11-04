@@ -11,7 +11,7 @@ enum /*Mode*/ {
     MODE_NORMAL,
     MODE_ELEVATION,
     MODE_MAP_MOVE,
-    MODE_DEBUG,
+    /* MODE_DEBUG, */ 
     MODE_MAX,
 }
 
@@ -92,7 +92,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "normalModeColour" => Application.Properties.getValue("normalModeColour"),
             "routeMax" => Application.Properties.getValue("routeMax"),
             "uiColour" => Application.Properties.getValue("uiColour"),
-            "debugColour" => Application.Properties.getValue("debugColour"),
             "resetDefaults" => Application.Properties.getValue("resetDefaults"),
         }) as Dictionary<String, PropertyValueType>
     );
@@ -134,7 +133,6 @@ class Settings {
     var displayRouteNames as Boolean = true;
     var normalModeColour as Number = Graphics.COLOR_BLUE;
     var uiColour as Number = Graphics.COLOR_DK_GRAY;
-    var debugColour as Number = 0xfeffffff; // white, but colour_white results in FFFFFFFF (-1) when we parse it and that is fully transparent
     // I did get up to 4 large routes working with off track alerts, but any more than that and watchdog catches us out, 3 is a safer limit.
     // currently we still load disabled routes into memory, so its also not great having this large and a heap of disabled routes
     private var _routeMax as Number = 3;
@@ -158,7 +156,7 @@ class Settings {
     var recalculateIntervalS as Number = 5;
     var turnAlertTimeS as Number = -1; // -1 disables the check
     var minTurnAlertDistanceM as Number = -1; // -1 disables the check
-    var maxTrackPoints as Number = 400;
+    var maxTrackPoints as Number = 100;
 
     // these settings can only be modified externally, but we cache them for faster/easier lookup
     // https://www.youtube.com/watch?v=LasrD6SZkZk&ab_channel=JaylaB
@@ -652,12 +650,6 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setDebugColour(value as Number) as Void {
-        debugColour = value;
-        setValue("debugColour", debugColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
     function setUiColour(value as Number) as Void {
         uiColour = value;
         setValue("uiColour", uiColour.format("%X"));
@@ -1126,7 +1118,6 @@ class Settings {
         _routeMax = defaultSettings.routeMax();
         normalModeColour = defaultSettings.normalModeColour;
         uiColour = defaultSettings.uiColour;
-        debugColour = defaultSettings.debugColour;
 
         // raw write the settings to disk
         var dict = asDict();
@@ -1179,7 +1170,6 @@ class Settings {
                 "normalModeColour" => normalModeColour.format("%X"),
                 "routeMax" => _routeMax,
                 "uiColour" => uiColour.format("%X"),
-                "debugColour" => debugColour.format("%X"),
                 "resetDefaults" => false,
             }) as Dictionary<String, PropertyValueType>
         );
@@ -1240,7 +1230,6 @@ class Settings {
     function loadSettingsPart2() as Void {
         _routeMax = parseColour("routeMax", _routeMax);
         uiColour = parseColour("uiColour", uiColour);
-        debugColour = parseColour("debugColour", debugColour);
         metersAroundUser = parseNumber("metersAroundUser", metersAroundUser);
         zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);

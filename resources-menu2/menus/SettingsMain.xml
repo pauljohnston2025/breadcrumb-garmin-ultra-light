@@ -12,7 +12,6 @@
     <menu-item id="settingsMainRoutes" label="@Strings.routesTitle"/>
     <menu-item id="settingsMainAlerts" label="@Strings.offTrackAlertsGroupTitle"/>
     <menu-item id="settingsMainColours" label="@Strings.coloursTitle"/>
-    <menu-item id="settingsMainDebug" label="@Strings.debugSettingsTitle"/>
     <menu-item id="settingsMainClearStorage" label="@Strings.clearStorage"/>
     <menu-item id="settingsMainReturnToUser" label="@Strings.returnToUserTitle"/>
     <menu-item id="settingsMainResetDefaults" label="@Strings.resetDefaults"/>

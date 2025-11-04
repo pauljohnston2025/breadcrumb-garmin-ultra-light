@@ -2,5 +2,4 @@
     <menu-item id="settingsModeTrackRoute" label="@Strings.trackRouteMode"/>
     <menu-item id="settingsModeElevation" label="@Strings.elevationMode"/>
     <menu-item id="settingsModeMapMove" label="@Strings.mapMove"/>
-    <menu-item id="settingsModeDebug" label="@Strings.debug"/>
 </menu2>

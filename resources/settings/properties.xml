@@ -37,7 +37,7 @@
 
 	<property id="turnAlertTimeS" type="number">-1</property>
 	<property id="minTurnAlertDistanceM" type="number">-1</property>
-	<property id="maxTrackPoints" type="number">400</property>
+	<property id="maxTrackPoints" type="number">100</property>
 
 
     <!-- https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator -->

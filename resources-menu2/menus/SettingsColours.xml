@@ -5,5 +5,4 @@
     <icon-menu-item id="settingsColoursUserColour" label="@Strings.userColour" icon="@Drawables.LauncherIcon"/>
     <icon-menu-item id="settingsColoursNormalModeColour" label="@Strings.normalModeColour" icon="@Drawables.LauncherIcon"/>
     <icon-menu-item id="settingsColoursUiColour" label="@Strings.uiColour" icon="@Drawables.LauncherIcon"/>
-    <icon-menu-item id="settingsColoursDebugColour" label="@Strings.debugColour" icon="@Drawables.LauncherIcon"/>
 </menu2>

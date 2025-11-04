@@ -7,7 +7,6 @@
             <listEntry value="0">@Strings.trackRouteMode</listEntry>
             <listEntry value="1">@Strings.elevationMode</listEntry>
             <listEntry value="2">@Strings.mapMove</listEntry>
-            <listEntry value="3">@Strings.debug</listEntry>
         </settingConfig>
     </setting>
 
@@ -137,10 +136,6 @@
         </setting>
         
         <setting propertyKey="@Properties.uiColour" title="@Strings.uiColour" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.debugColour" title="@Strings.debugColour" prompt="@Strings.colourPrompt">
             <settingConfig type="alphaNumeric"/>
         </setting>
     <!-- </group> -->
