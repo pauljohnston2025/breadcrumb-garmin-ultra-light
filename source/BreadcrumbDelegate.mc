@@ -29,12 +29,6 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
             return false;
         }
 
-        if (renderer.handleClearRoute(x, y)) {
-            // returns true if it handles touches on top left
-            // also blocks input if we are in the menu
-            return true;
-        }
-
         // perhaps put this into new class to handle touch events, and have a
         // renderer for that ui would allow us to switch out ui and handle touched
         // differently also will alow setting the scren height

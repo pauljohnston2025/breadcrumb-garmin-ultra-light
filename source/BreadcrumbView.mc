@@ -268,9 +268,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
         // logD("onUpdate");
         var renderer = _breadcrumbContext.breadcrumbRenderer;
-        if (renderer.renderClearTrackUi(dc)) {
-            return;
-        }
 
         // mode should be stored here, but is needed for rendering the ui
         // should structure this way better, but oh well (renderer per mode etc.)

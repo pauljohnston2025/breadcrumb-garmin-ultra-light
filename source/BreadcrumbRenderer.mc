@@ -16,7 +16,6 @@ const UI_COLOUR = Graphics.COLOR_DK_GRAY;
 
 class BreadcrumbRenderer {
     // todo put into ui class
-    var _clearRouteProgress as Number = 0;
     var settings as Settings;
     var _cachedValues as CachedValues;
 
@@ -383,89 +382,6 @@ class BreadcrumbRenderer {
         }
     }
 
-    function renderYNUi(
-        dc as Dc,
-        text as ResourceId,
-        leftText as String,
-        rightText as String,
-        leftColour as Number,
-        rightColour as Number
-    ) as Void {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-        var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
-        var physicalScreenWidth = _cachedValues.physicalScreenWidth; // local lookup faster
-        var padding = xHalfPhysical / 2.0f;
-        var topText = yHalfPhysical / 2.0f;
-
-        dc.setColor(leftColour, leftColour);
-        dc.fillRectangle(0, 0, xHalfPhysical, physicalScreenHeight);
-        dc.setColor(rightColour, rightColour);
-        dc.fillRectangle(xHalfPhysical, 0, xHalfPhysical, physicalScreenHeight);
-
-        var textArea = new WatchUi.TextArea({
-            :text => text,
-            :color => UI_COLOUR,
-            :font => [Graphics.FONT_XTINY],
-            :justification => Graphics.TEXT_JUSTIFY_CENTER,
-            :locX => WatchUi.LAYOUT_HALIGN_CENTER,
-            :locY => topText,
-            :width => physicalScreenWidth * 0.8f, // round devices cannot show text at top of screen
-            :height => xHalfPhysical,
-        });
-        textArea.draw(dc);
-
-        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
-            xHalfPhysical - padding,
-            yHalfPhysical,
-            Graphics.FONT_XTINY,
-            leftText,
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-        dc.drawText(
-            xHalfPhysical + padding,
-            yHalfPhysical,
-            Graphics.FONT_XTINY,
-            rightText,
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-    }
-
-    function renderClearTrackUi(dc as Dc) as Boolean {
-        switch (_clearRouteProgress) {
-            case 0:
-                break;
-            case 1:
-            case 3: {
-                // press right to confirm, left cancels
-                renderYNUi(
-                    dc as Dc,
-                    _clearRouteProgress == 1 ? Rez.Strings.clearRoutes1 : Rez.Strings.clearRoutes3,
-                    "N",
-                    "Y",
-                    Graphics.COLOR_RED,
-                    Graphics.COLOR_GREEN
-                );
-                return true;
-            }
-            case 2: {
-                // press left to confirm, right cancels
-                renderYNUi(
-                    dc as Dc,
-                    Rez.Strings.clearRoutes2,
-                    "Y",
-                    "N",
-                    Graphics.COLOR_GREEN,
-                    Graphics.COLOR_RED
-                );
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function renderUi(dc as Dc) as Void {
         var currentScale = _cachedValues.currentScale; // local lookup faster
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
@@ -492,15 +408,6 @@ class BreadcrumbRenderer {
             modeSelectY,
             Graphics.FONT_XTINY,
             modeLetter,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-
-        // clear routes
-        dc.drawText(
-            clearRouteX,
-            clearRouteY,
-            Graphics.FONT_XTINY,
-            "C",
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
         );
 
@@ -560,56 +467,6 @@ class BreadcrumbRenderer {
         );
     }
 
-    function handleClearRoute(x as Number, y as Number) as Boolean {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-
-        if (
-            settings.mode != MODE_NORMAL &&
-            settings.mode != MODE_ELEVATION
-        ) {
-            return false; // debug and map move do not clear routes
-        }
-
-        switch (_clearRouteProgress) {
-            case 0:
-                // press top left to start clear route
-                if (inHitbox(x, y, clearRouteX, clearRouteY, halfHitboxSize)) {
-                    _clearRouteProgress = 1;
-                    return true;
-                }
-                return false;
-            case 1:
-                // press right to confirm, left cancels
-                if (x > xHalfPhysical) {
-                    _clearRouteProgress = 2;
-                    return true;
-                }
-                _clearRouteProgress = 0;
-                return true;
-
-            case 2:
-                // press left to confirm, right cancels
-                if (x < xHalfPhysical) {
-                    _clearRouteProgress = 3;
-                    return true;
-                }
-                _clearRouteProgress = 0;
-                return true;
-            case 3:
-                // press right to confirm, left cancels
-                if (x > xHalfPhysical) {
-                    var _breadcrumbContextLocal = $._breadcrumbContext;
-                    if (_breadcrumbContextLocal != null) {
-                        _breadcrumbContextLocal.clearRoute();
-                    }
-                }
-                _clearRouteProgress = 0;
-                return true;
-        }
-
-        return false;
-    }
-
     // todo move most of these into a ui class
     // and all the elevation ones into elevation class, or cached values if they are
     // things set to -1 are set by setScreenSize()
@@ -619,8 +476,6 @@ class BreadcrumbRenderer {
     var _halfYElevationHeight as Float = -1f;
     var yElevationTop as Float = -1f;
     var yElevationBottom as Float = -1f;
-    var clearRouteX as Float = -1f;
-    var clearRouteY as Float = -1f;
     var modeSelectX as Float = -1f;
     var modeSelectY as Float = -1f;
     var returnToUserX as Float = -1f;
@@ -658,10 +513,6 @@ class BreadcrumbRenderer {
             ((yHalfPhysical - halfHitboxSize) * (yHalfPhysical - halfHitboxSize)) / 2
         ).toFloat();
 
-        // top left
-        clearRouteX = xHalfPhysical - offsetSize;
-        clearRouteY = yHalfPhysical - offsetSize;
-
         // top right
         modeSelectX = xHalfPhysical + offsetSize;
         modeSelectY = yHalfPhysical - offsetSize;
@@ -675,10 +526,6 @@ class BreadcrumbRenderer {
     function setCornerPositions() as Void {
         var physicalScreenWidth = _cachedValues.physicalScreenWidth; // local lookup faster
         var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
-
-        // top left
-        clearRouteX = halfHitboxSize;
-        clearRouteY = halfHitboxSize;
 
         // top right
         modeSelectX = physicalScreenWidth - halfHitboxSize;
