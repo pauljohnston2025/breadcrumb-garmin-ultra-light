@@ -21,7 +21,6 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
         var y = coords[1];
         var renderer = _breadcrumbContext.breadcrumbRenderer;
         var settings = _breadcrumbContext.settings;
-        var cachedValues = _breadcrumbContext.cachedValues;
 
         var hitboxSize = renderer.hitboxSize;
         var halfHitboxSize = hitboxSize / 2.0f;
@@ -45,15 +44,6 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
             return true;
         }
 
-        if (inHitbox(x, y, renderer.returnToUserX, renderer.returnToUserY, halfHitboxSize)) {
-            // return to users location
-            // bottom left
-            // reset scale to user tracking mode (we auto set it when enterring move mode so we do not get weird zooms when we are panning)
-            // there is a chance the user already had a custom scale set (by pressing the +/- zoom  buttons on the track page)
-            // but we will just clear it when they click 'go back to user', and it will now be whatever is in the 'zoom at pace' settings
-            renderer.returnToUser();
-            return true;
-        }
         //  else if (
         //     y > renderer.mapEnabledY - halfHitboxSize &&
         //     y < renderer.mapEnabledY + halfHitboxSize &&
@@ -70,20 +60,7 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
         //     return false;
         // }
         // todo update these to use inHitbox ?
-        else if (y < hitboxSize) {
-            // top of screen
-            renderer.incScale();
-            return true;
-        } else if (y > cachedValues.physicalScreenHeight - hitboxSize) {
-            // bottom of screen
-            renderer.decScale();
-            return true;
-        } else if (x > cachedValues.physicalScreenWidth - hitboxSize) {
-            // right of screen
-            // handled by handleStartCacheRoute
-            // cachedValues.startCacheCurrentMapArea();
-            return true;
-        } else if (x < hitboxSize) {
+        else if (x < hitboxSize) {
             // left of screen
             settings.nextZoomAtPaceMode();
             return true;

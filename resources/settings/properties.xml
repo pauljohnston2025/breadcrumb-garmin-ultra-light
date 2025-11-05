@@ -9,14 +9,10 @@
 	<property id="metersAroundUser" type="number">500</property>
 	<property id="zoomAtPaceSpeedMPS" type="float">1.0</property>
 	
-	<property id="fixedLatitude" type="float">0</property>
-	<property id="fixedLongitude" type="float">0</property>
-
 	<property id="offTrackAlertsDistanceM" type="number">20</property>
 	<property id="offTrackCheckIntervalS" type="number">30</property>
 	<property id="offTrackAlertsMaxReportIntervalS" type="number">60</property>
 
-	<property id="returnToUser" type="boolean">false</property>
 	<property id="resetDefaults" type="boolean">false</property>
 
 	<property id="offTrackWrongDirection" type="boolean">false</property>

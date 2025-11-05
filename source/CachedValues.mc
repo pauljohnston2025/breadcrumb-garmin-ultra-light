@@ -17,11 +17,6 @@ class CachedValues {
     // cache some important maths to make everything faster
     // things set to -1 are updated on the first layout/calculate call
 
-    // updated when user manually pans around screen
-    var scale as Float? = null; // fixed map scale, when manually zooming or panning around map
-    var scaleCanInc as Boolean = true;
-    var scaleCanDec as Boolean = true;
-
     // updated whenever we change zoom level (speed changes, zoom at pace mode etc.)
     var centerPosition as RectangularPoint = new RectangularPoint(0f, 0f, 0f); // scaled to pixels
     var currentScale as Float = 0.0; // pixels per meter so <pixel count> / _currentScale = meters  or  meters * _currentScale = pixels
@@ -125,23 +120,19 @@ class CachedValues {
 
         if (currentlyZoomingAroundUser) {
             var renderDistanceM = _settings.metersAroundUser;
-            if (!calcCenterPoint()) {
-                var lastPoint = _breadcrumbContextLocal.track.coordinates.lastPoint();
-                if (lastPoint != null) {
-                    centerPosition = lastPoint;
-                    return calculateScale(renderDistanceM.toFloat());
-                }
-                // we are zooming around the user, but we do not have a last track point
-                // resort to using bounding box
-                var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
-                    _breadcrumbContextLocal.route,
-                    null
-                );
-                calcCenterPointForBoundingBox(boundingBox);
-                return calculateScale(renderDistanceM.toFloat());
+            var lastPoint = _breadcrumbContextLocal.track.coordinates.lastPoint();
+            if (lastPoint != null) {
+                centerPosition = lastPoint;
+                return calcScaleForScreenMeters(renderDistanceM.toFloat());
             }
-
-            return calculateScale(renderDistanceM.toFloat());
+            // we are zooming around the user, but we do not have a last track point
+            // resort to using bounding box
+            var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
+                _breadcrumbContextLocal.route,
+                null
+            );
+            calcCenterPointForBoundingBox(boundingBox);
+            return calcScaleForScreenMeters(renderDistanceM.toFloat());
         }
 
         var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
@@ -214,8 +205,7 @@ class CachedValues {
         // (rather than having to manually zoom in from the outer level) once zoomed
         // in we lock onto the user position anyway
         var weShouldZoomAroundUser =
-            (scale != null &&
-                _settings.zoomAtPaceMode != ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK) ||
+            (_settings.zoomAtPaceMode != ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK) ||
             (currentSpeed > _settings.zoomAtPaceSpeedMPS &&
                 _settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_PACE) ||
             (currentSpeed <= _settings.zoomAtPaceSpeedMPS &&
@@ -276,14 +266,6 @@ class CachedValues {
         }
     }
 
-    function calculateScale(maxDistanceM as Float) as Float {
-        if (scale != null) {
-            return scale;
-        }
-
-        return calcScaleForScreenMeters(maxDistanceM);
-    }
-
     function calcScaleForScreenMeters(maxDistanceM as Float) as Float {
         // we want the whole map to be show on the screen, we have 360 pixels on the
         // venu 2s
@@ -304,7 +286,7 @@ class CachedValues {
             maxDistanceM = 1f;
         }
 
-        return calculateScale(maxDistanceM);
+        return calcScaleForScreenMeters(maxDistanceM);
     }
 
     /** returns true if the scale changed */
@@ -351,35 +333,7 @@ class CachedValues {
         updateScaleCenter();
     }
 
-    function calcCenterPoint() as Boolean {
-        // when the scale is locked, we need to be where the user is, otherwise we
-        // could see a blank part of the map, when we are zoomed in and have no
-        // context
-        if (
-            scale != null &&
-            _settings.zoomAtPaceMode != ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK
-        ) {
-            // the hacks begin
-            var _breadcrumbContextLocal = $._breadcrumbContext;
-            if (_breadcrumbContextLocal == null) {
-                breadcrumbContextWasNull();
-                return false;
-            }
-            var lastPoint = _breadcrumbContextLocal.track.coordinates.lastPoint();
-            if (lastPoint != null) {
-                centerPosition = lastPoint;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function calcCenterPointForBoundingBox(boundingBox as [Float, Float, Float, Float]) as Void {
-        if (calcCenterPoint()) {
-            return;
-        }
-
         centerPosition = new RectangularPoint(
             boundingBox[0] + (boundingBox[2] - boundingBox[0]) / 2.0,
             boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2.0,
@@ -389,25 +343,5 @@ class CachedValues {
         if (currentScale != 0f) {
             centerPosition.rescaleInPlace(currentScale);
         }
-    }
-
-    function returnToUser() as Void {
-        setScale(null);
-    }
-
-    function setScale(_scale as Float?) as Void {
-        scale = _scale;
-        // be very careful about putting null into properties, it breaks everything
-        if (scale == null) {
-            updateScaleCenter();
-            // this is not the best guess, but will only require the user to tap zoom once to see that it cannot zoom
-            // getScaleDecIncAmount() only works when the scale is not null. We could update it to use the currentScale if scale is null?
-            // they are not actually in a user scale in this case though, so makes sense to show that we are tracking the users desired zoom instead of ours
-            scaleCanInc = true;
-            scaleCanDec = true;
-            return;
-        }
-
-        updateScaleCenter();
     }
 }

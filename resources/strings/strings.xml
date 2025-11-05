@@ -14,10 +14,8 @@
     <string id="drawCheveronsTitle">Draw Cheverons</string>
     <string id="drawLineToClosestPointTitle">Draw Line To Closest Point</string>
     <string id="clearStorage">Clear Storage</string>
-    <string id="returnToUserTitle">Return To User</string>
     <string id="resetDefaults">Restore Defaults</string>
     <string id="maxPendingWebRequests">Max Pending Web Requests</string>
-    <string id="scale">Scale (0 for auto)</string>
     <string id="metersAroundUser">Meters Around User</string>
     <string id="metersAroundUserPrompt">100</string>
     <string id="zoomAtPaceTitle">Zoom At Pace</string>

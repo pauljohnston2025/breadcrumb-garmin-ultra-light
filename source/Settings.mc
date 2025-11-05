@@ -622,15 +622,6 @@ class Settings {
             return;
         }
 
-        var returnToUser = Application.Properties.getValue("returnToUser") as Boolean;
-        if (returnToUser) {
-            Application.Properties.setValue("returnToUser", false);
-            var _breadcrumbContextLocal = $._breadcrumbContext;
-            if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.cachedValues.returnToUser();
-            }
-        }
-
         logT("loadSettings: Loading all settings");
         loadSettingsPart1();
         loadSettingsPart2();

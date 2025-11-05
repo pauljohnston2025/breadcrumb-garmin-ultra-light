@@ -16,7 +16,7 @@ enum /* Protocol */ {
     // PROTOCOL_ROUTE_DATA = 0, - removed in favour of PROTOCOL_ROUTE_DATA2, users must update companion app
     // PROTOCOL_MAP_TILE = 1, - removed watch has pulled tiles from phone rather than phone pushing for a while
     /*PROTOCOL_REQUEST_LOCATION_LOAD = 2,*/
-    PROTOCOL_RETURN_TO_USER = 3,
+    /*PROTOCOL_RETURN_TO_USER = 3,*/
     PROTOCOL_REQUEST_SETTINGS = 4,
     PROTOCOL_SAVE_SETTINGS = 5,
     /* PROTOCOL_COMPANION_APP_TILE_SERVER_CHANGED = 6, // generally because a new url has been selected on the companion app  */
@@ -197,10 +197,6 @@ function onPhone(data as Application.PersistableType) as Void {
             );
             mustUpdate();
             return;
-        } else if (type == PROTOCOL_RETURN_TO_USER) {
-            logT("got return to user req: " + rawData);
-            _breadcrumbContextLocal.cachedValues.returnToUser();
-            return;
         } else if (type == PROTOCOL_SAVE_SETTINGS) {
             logT("got save settings req: " + rawData);
             if (rawData.size() < 1) {
@@ -305,7 +301,7 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
             }
 
             var type = data[0] as Number;
-            var rawData = data.slice(1, null);
+            /*var rawData = data.slice(1, null);*/
 
             if (type == PROTOCOL_REQUEST_SETTINGS) {
                 logB("got send settings req: ");

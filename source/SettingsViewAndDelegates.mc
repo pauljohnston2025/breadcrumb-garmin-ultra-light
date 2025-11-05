@@ -503,23 +503,6 @@ class ResetSettingsDelegate extends WatchUi.ConfirmationDelegate {
 }
 
 (:settingsView,:menu2)
-class ReturnToUserDelegate extends WatchUi.ConfirmationDelegate {
-    function initialize() {
-        WatchUi.ConfirmationDelegate.initialize();
-    }
-    function onResponse(response as Confirm) as Boolean {
-        if (response == WatchUi.CONFIRM_YES) {
-            var _breadcrumbContextLocal = $._breadcrumbContext;
-            if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.cachedValues.returnToUser();
-            }
-        }
-
-        return true; // we always handle it
-    }
-}
-
-(:settingsView,:menu2)
 class ClearStorageDelegate extends WatchUi.ConfirmationDelegate {
     function initialize() {
         WatchUi.ConfirmationDelegate.initialize();

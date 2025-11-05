@@ -808,7 +808,6 @@ class BreadcrumbRenderer {
     function renderUi(dc as Dc) as Void {
         var currentScale = _cachedValues.currentScale; // local lookup faster
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var physicalScreenWidth = _cachedValues.physicalScreenWidth; // local lookup faster
         var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
         var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
         var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
@@ -849,33 +848,7 @@ class BreadcrumbRenderer {
         }
 
         // make this a const
-        var halfLineLength = 10;
-        var lineFromEdge = 10;
         var scaleFromEdge = 75; // guestimate
-
-        if (_cachedValues.scale != null) {
-            // crosshair
-            var centerX = returnToUserX;
-            var centerY = returnToUserY;
-            var halfSize = 25;
-
-            // Draw the outer circle and lines
-            dc.setPenWidth(2);
-
-            // Vertical line
-            dc.drawLine(centerX, centerY - halfSize, centerX, centerY + halfSize);
-            // Horizontal line
-            dc.drawLine(centerX - halfSize, centerY, centerX + halfSize, centerY);
-            // Outer circle (r=35)
-            dc.drawCircle(centerX, centerY, 18);
-
-            // Draw the middle circle
-            dc.setPenWidth(3);
-            dc.drawCircle(centerX, centerY, 12);
-
-            // Draw the inner, filled circle
-            dc.fillCircle(centerX, centerY, 7);
-        }
 
         if (settings.displayLatLong) {
             if (currentScale != 0f) {
@@ -894,38 +867,6 @@ class BreadcrumbRenderer {
                     );
                 }
             }
-        }
-
-        // plus at the top of screen
-        if (!_cachedValues.scaleCanInc) {
-            // no smoking
-            drawNoSmokingSign(dc, xHalfPhysical, NO_SMOKING_RADIUS);
-        } else {
-            dc.drawLine(
-                xHalfPhysical - halfLineLength,
-                lineFromEdge,
-                xHalfPhysical + halfLineLength,
-                lineFromEdge
-            );
-            dc.drawLine(
-                xHalfPhysical,
-                lineFromEdge - halfLineLength,
-                xHalfPhysical,
-                lineFromEdge + halfLineLength
-            );
-        }
-
-        // minus at the bottom
-        if (!_cachedValues.scaleCanDec) {
-            // no smoking
-            drawNoSmokingSign(dc, xHalfPhysical, physicalScreenHeight - NO_SMOKING_RADIUS);
-        } else {
-            dc.drawLine(
-                xHalfPhysical - halfLineLength,
-                physicalScreenHeight - lineFromEdge,
-                xHalfPhysical + halfLineLength,
-                physicalScreenHeight - lineFromEdge
-            );
         }
 
         // M - default, moving is zoomed view, stopped if full view
@@ -956,120 +897,6 @@ class BreadcrumbRenderer {
             fvText,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
         );
-    }
-
-    function drawNoSmokingSign(dc as Dc, x as Float, y as Float) as Void {
-        var PEN_WIDTH = 2;
-        dc.setPenWidth(PEN_WIDTH);
-
-        // Draw the circle
-        dc.drawCircle(x, y, NO_SMOKING_RADIUS);
-
-        // TODO consider hard coding these once they are locked in
-
-        // --- Draw the Diagonal Line ---
-        // Calculate the endpoints so the line touches the *inner* edge of the circle's stroke.
-        // The radius for the line's endpoints is the outer radius minus the full pen width.
-        var lineEndpointRadius = NO_SMOKING_RADIUS - PEN_WIDTH;
-
-        // For a 45-degree line, the x and y offsets from the center are equal.
-        // Using Pythagorean theorem: offset^2 + offset^2 = radius^2
-        // So, offset = radius / sqrt(2)
-        var offset = lineEndpointRadius / Math.sqrt(2);
-
-        // Calculate the start (top-left) and end (bottom-right) points of the line
-        var startX = x - offset;
-        var startY = y - offset;
-        var endX = x + offset;
-        var endY = y + offset;
-
-        dc.drawLine(startX, startY, endX, endY);
-    }
-
-    function getScaleDecIncAmount(direction as Number) as Float {
-        var scale = _cachedValues.scale;
-        if (scale == null) {
-            // wtf we never call this when its null
-            return 0f;
-        }
-
-        var scaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
-        var scaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
-        var scaleData = getScaleSizeGeneric(
-            _cachedValues.currentScale,
-            DESIRED_SCALE_PIXEL_WIDTH,
-            scaleKeys as Array<Number>,
-            scaleValues as Array<String>
-        );
-        var iInc = direction;
-        var currentDistanceM = scaleData[1];
-
-        for (var i = 0; i < scaleKeys.size(); ++i) {
-            var distanceM = scaleKeys[i];
-            if (currentDistanceM == distanceM) {
-                var nextScaleIndex = i - iInc;
-                if (nextScaleIndex >= scaleKeys.size()) {
-                    nextScaleIndex = scaleKeys.size() - 1;
-                }
-
-                if (nextScaleIndex < 0) {
-                    nextScaleIndex = 0;
-                }
-
-                // we want the result to be
-                var nextDistanceM = scaleKeys[nextScaleIndex] / (1000f as Float);
-                // -2 since we need some fudge factor to make sure we are very close to desired length, but not past it
-                var desiredScale = (DESIRED_SCALE_PIXEL_WIDTH - 2) / nextDistanceM;
-                var toInc = desiredScale - scale;
-                return toInc;
-            }
-        }
-
-        return direction * MIN_SCALE;
-    }
-
-    function incScale() as Void {
-        if (settings.mode != MODE_NORMAL) {
-            return;
-        }
-
-        if (_cachedValues.scale == null) {
-            _cachedValues.setScale(_cachedValues.currentScale);
-        }
-        var scale = _cachedValues.scale;
-        if (scale == null) {
-            // wtf we just set it?
-            return;
-        }
-
-        _cachedValues.setScale(scale + getScaleDecIncAmount(1));
-        _cachedValues.scaleCanDec = true; // we can zoom out again
-        _cachedValues.scaleCanInc = getScaleDecIncAmount(1) != 0f; // get the next inc amount so that it does not require one extra click
-    }
-
-    function decScale() as Void {
-        if (settings.mode != MODE_NORMAL) {
-            return;
-        }
-
-        if (_cachedValues.scale == null) {
-            _cachedValues.setScale(_cachedValues.currentScale);
-        }
-        var scale = _cachedValues.scale;
-        if (scale == null) {
-            // wtf we just set it?
-            return;
-        }
-        _cachedValues.setScale(scale + getScaleDecIncAmount(-1));
-        _cachedValues.scaleCanInc = true; // we can zoom in again
-        _cachedValues.scaleCanDec = getScaleDecIncAmount(-1) != 0f; // get the next dec amount so that it does not require one extra click
-
-        // prevent negative values (dont think this ever gets hit, since we caluclate off of the predefined scales)
-        if (scale <= 0f) {
-            _cachedValues.setScale(MIN_SCALE);
-            _cachedValues.scaleCanInc = true; // we can zoom in again
-            _cachedValues.scaleCanDec = getScaleDecIncAmount(-1) != 0f; // get the next dec amount so that it does not require one extra click
-        }
     }
 
     function handleClearRoute(x as Number, y as Number) as Boolean {
@@ -1120,13 +947,6 @@ class BreadcrumbRenderer {
         }
 
         return false;
-    }
-
-    function returnToUser() as Void {
-        if (settings.mode != MODE_NORMAL) {
-            return;
-        }
-        _cachedValues.returnToUser();
     }
 
     // todo move most of these into a ui class

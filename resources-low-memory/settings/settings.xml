@@ -90,10 +90,6 @@
         </setting>
     <!-- </group> -->
     
-    <setting propertyKey="@Properties.returnToUser" title="@Strings.returnToUserTitle">
-        <settingConfig type="boolean"/>
-    </setting>
-
     <setting propertyKey="@Properties.resetDefaults" title="@Strings.resetDefaults">
         <settingConfig type="boolean"/>
     </setting>
