@@ -107,32 +107,6 @@
         </setting>
     <!-- </group> -->
 
-    <!-- <group id="colours" title="@Strings.coloursTitle"> -->
-        <setting propertyKey="@Properties.trackColour" title="@Strings.trackColourTitle" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-
-        <setting propertyKey="@Properties.defaultRouteColour" title="@Strings.defaultRouteColourTitle" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-
-        <setting propertyKey="@Properties.elevationColour" title="@Strings.elevationColourTitle" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.userColour" title="@Strings.userColour" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.normalModeColour" title="@Strings.normalModeColour" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.uiColour" title="@Strings.uiColour" prompt="@Strings.colourPrompt">
-            <settingConfig type="alphaNumeric"/>
-        </setting>
-    <!-- </group> -->
-
     <!-- <group id="routesdesc" title="@Strings.routesTitle"> -->
         <setting propertyKey="@Properties.routesEnabled" title="@Strings.routesEnabled">
             <settingConfig type="boolean"/>

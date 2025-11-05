@@ -53,10 +53,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
             "showPoints" => Application.Properties.getValue("showPoints"),
             "displayLatLong" => Application.Properties.getValue("displayLatLong"),
-            "trackColour" => Application.Properties.getValue("trackColour"),
-            "defaultRouteColour" => Application.Properties.getValue("defaultRouteColour"),
-            "elevationColour" => Application.Properties.getValue("elevationColour"),
-            "userColour" => Application.Properties.getValue("userColour"),
             "metersAroundUser" => Application.Properties.getValue("metersAroundUser"),
             "zoomAtPaceMode" => Application.Properties.getValue("zoomAtPaceMode"),
             "zoomAtPaceSpeedMPS" => Application.Properties.getValue("zoomAtPaceSpeedMPS"),
@@ -74,8 +70,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
                 "offTrackAlertsMaxReportIntervalS"
             ),
             "offTrackCheckIntervalS" => Application.Properties.getValue("offTrackCheckIntervalS"),
-            "normalModeColour" => Application.Properties.getValue("normalModeColour"),
-            "uiColour" => Application.Properties.getValue("uiColour"),
             "resetDefaults" => Application.Properties.getValue("resetDefaults"),
         }) as Dictionary<String, PropertyValueType>
     );
@@ -94,11 +88,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
 class Settings {
     var mode as Number = MODE_NORMAL;
 
-    var trackColour as Number = Graphics.COLOR_GREEN;
-    var defaultRouteColour as Number = Graphics.COLOR_BLUE;
-    var elevationColour as Number = Graphics.COLOR_ORANGE;
-    var userColour as Number = Graphics.COLOR_ORANGE;
-
     // Renders around the users position
     var metersAroundUser as Number = 500; // keep this fairly high by default, too small and the map tiles start to go blurry
     var centerUserOffsetY as Float = 0.5f; // fraction of the screen to move the user down the page 0.5 - user appears in center, 0.75 - user appears 3/4 down the screen. Useful to see more of the route in front of the user.
@@ -110,9 +99,7 @@ class Settings {
     var fixedLongitude as Float? = null;
 
     var routesEnabled as Boolean = true;
-    var normalModeColour as Number = Graphics.COLOR_BLUE;
-    var uiColour as Number = Graphics.COLOR_DK_GRAY;
-
+    
     // note this only works if a single track is enabled (multiple tracks would always error)
     var enableOffTrackAlerts as Boolean = true;
     var offTrackAlertsDistanceM as Number = 20;
@@ -363,42 +350,6 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setTrackColour(value as Number) as Void {
-        trackColour = value;
-        setValue("trackColour", trackColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
-    function setDefaultRouteColour(value as Number) as Void {
-        defaultRouteColour = value;
-        setValue("defaultRouteColour", defaultRouteColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
-    function setUserColour(value as Number) as Void {
-        userColour = value;
-        setValue("userColour", userColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
-    function setNormalModeColour(value as Number) as Void {
-        normalModeColour = value;
-        setValue("normalModeColour", normalModeColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
-    function setUiColour(value as Number) as Void {
-        uiColour = value;
-        setValue("uiColour", uiColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
-    function setElevationColour(value as Number) as Void {
-        elevationColour = value;
-        setValue("elevationColour", elevationColour.format("%X"));
-    }
-
-    (:settingsView,:menu2)
     function toggleDrawLineToClosestPoint() as Void {
         drawLineToClosestPoint = !drawLineToClosestPoint;
         setValue("drawLineToClosestPoint", drawLineToClosestPoint);
@@ -469,73 +420,6 @@ class Settings {
             return;
         }
         _breadcrumbContextLocal.cachedValues.recalculateAll();
-    }
-
-    // some times these parserswere throwing when it was an empty strings seem to result in, or wrong type
-    //
-    // Error: Unhandled Exception
-    // Exception: UnexpectedTypeException: Expected Number/Float/Long/Double/Char, given null/Number
-    function parseColour(key as String, defaultValue as Number) as Number {
-        try {
-            return parseColourRaw(key, Application.Properties.getValue(key), defaultValue);
-        } catch (e) {
-            logE("Error parsing float: " + key);
-        }
-        return defaultValue;
-    }
-
-    static function parseColourRaw(
-        key as String,
-        colourString as PropertyValueType,
-        defaultValue as Number
-    ) as Number {
-        try {
-            if (colourString == null) {
-                return defaultValue;
-            }
-
-            if (colourString instanceof String) {
-                // want final string as AARRGGBB
-                // colourString = padStart(colourString, 6, '0'); // fill in 24 bit colour with 0's
-                // colourString = padStart(colourString, 8, 'F'); // pad alpha channel with FF
-                // empty or invalid strings convert to null
-                // anything with leading FF (when 8 characters supplied) needs to be a long, because its too big to fit in Number
-                // if a user chooses FFFFFFFF (white) it is (-1) which is fully transparent, should choose FFFFFF (no alpha) or something close like FFFFFFFE
-                // in any case we are currently ignoring alpha because we use setColor (text does not support alpha)
-                var long = null;
-                if (colourString has :toLongWithBase) {
-                    long = colourString.toLongWithBase(16);
-                } else {
-                    // this could be a problem for older apis if the colour string is set with leading FF (or any high bit is set)
-                    if (colourString.length() > 6) {
-                        colourString =
-                            colourString.substring(
-                                colourString.length() - 6,
-                                colourString.length()
-                            ) as String;
-                    }
-                    long = colourString.toNumberWithBase(16);
-                }
-                if (long == null) {
-                    return defaultValue;
-                }
-                // may have been a number from previous toNumberWithBase call
-                long = long.toLong();
-
-                // calling tonumber breaks - because its out of range, but we need to set the alpha bits
-                var number = (long & 0xffffffffl).toNumber();
-                if (number == 0xffffffff) {
-                    // -1 is transparent and will not render
-                    number = 0xfeffffff;
-                }
-                return number;
-            }
-
-            return parseNumberRaw(key, colourString, defaultValue);
-        } catch (e) {
-            logE("Error parsing colour: " + key + " " + colourString);
-        }
-        return defaultValue;
     }
 
     function parseNumber(key as String, defaultValue as Number) as Number {
@@ -732,10 +616,6 @@ class Settings {
         mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
         drawLineToClosestPoint = defaultSettings.drawLineToClosestPoint;
         displayLatLong = defaultSettings.displayLatLong;
-        trackColour = defaultSettings.trackColour;
-        defaultRouteColour = defaultSettings.defaultRouteColour;
-        elevationColour = defaultSettings.elevationColour;
-        userColour = defaultSettings.userColour;
         metersAroundUser = defaultSettings.metersAroundUser;
         zoomAtPaceMode = defaultSettings.zoomAtPaceMode;
         zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
@@ -750,8 +630,6 @@ class Settings {
         offTrackAlertsDistanceM = defaultSettings.offTrackAlertsDistanceM;
         offTrackAlertsMaxReportIntervalS = defaultSettings.offTrackAlertsMaxReportIntervalS;
         offTrackCheckIntervalS = defaultSettings.offTrackCheckIntervalS;
-        normalModeColour = defaultSettings.normalModeColour;
-        uiColour = defaultSettings.uiColour;
 
         // raw write the settings to disk
         var dict = asDict();
@@ -779,10 +657,6 @@ class Settings {
                 "mode" => mode,
                 "drawLineToClosestPoint" => drawLineToClosestPoint,
                 "displayLatLong" => displayLatLong,
-                "trackColour" => trackColour.format("%X"),
-                "defaultRouteColour" => defaultRouteColour.format("%X"),
-                "elevationColour" => elevationColour.format("%X"),
-                "userColour" => userColour.format("%X"),
                 "metersAroundUser" => metersAroundUser,
                 "zoomAtPaceMode" => zoomAtPaceMode,
                 "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
@@ -797,8 +671,6 @@ class Settings {
                 "offTrackAlertsDistanceM" => offTrackAlertsDistanceM,
                 "offTrackAlertsMaxReportIntervalS" => offTrackAlertsMaxReportIntervalS,
                 "offTrackCheckIntervalS" => offTrackCheckIntervalS,
-                "normalModeColour" => normalModeColour.format("%X"),
-                "uiColour" => uiColour.format("%X"),
                 "resetDefaults" => false,
             }) as Dictionary<String, PropertyValueType>
         );
@@ -841,15 +713,9 @@ class Settings {
         offTrackWrongDirection = parseBool("offTrackWrongDirection", offTrackWrongDirection);
         drawCheverons = parseBool("drawCheverons", drawCheverons);
         routesEnabled = parseBool("routesEnabled", routesEnabled);
-        trackColour = parseColour("trackColour", trackColour);
-        defaultRouteColour = parseColour("defaultRouteColour", defaultRouteColour);
-        elevationColour = parseColour("elevationColour", elevationColour);
-        userColour = parseColour("userColour", userColour);
-        normalModeColour = parseColour("normalModeColour", normalModeColour);
     }
 
     function loadSettingsPart2() as Void {
-        uiColour = parseColour("uiColour", uiColour);
         metersAroundUser = parseNumber("metersAroundUser", metersAroundUser);
         zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
@@ -900,26 +766,6 @@ class Settings {
         // setFixedPosition(-27.297773, 152.753883);
         // // cachedValues.setScale(0.39); // zoomed out a bit
         // cachedValues.setScale(1.96); // really close
-    }
-
-    function emptyString(key as String, value as PropertyValueType) as String {
-        return parseStringRaw(key, value, "");
-    }
-
-    function defaultNumberParser(key as String, value as PropertyValueType) as Number {
-        return parseNumberRaw(key, value, 0);
-    }
-
-    function defaultFalse(key as String, value as PropertyValueType) as Boolean {
-        if (value instanceof Boolean) {
-            return value;
-        }
-
-        return false;
-    }
-
-    function defaultColourParser(key as String, value as PropertyValueType) as Number {
-        return parseColourRaw(key, value, Graphics.COLOR_RED);
     }
 
     function onSettingsChanged() as Void {

@@ -255,28 +255,6 @@ class SettingsNumberPicker extends NumberPicker {
 }
 
 (:settingsView,:menu2)
-class SettingsColourPicker extends NumberPicker {
-    private var callback as (Method(value as Number) as Void);
-    private var parent as Renderable;
-    private var defaultVal as Number;
-    function initialize(callback as (Method(value as Number) as Void), defaultVal as Number, parent as Renderable) {
-        NumberPicker.initialize("0123456789ABCDEF", 6);
-        self.defaultVal = defaultVal;
-        self.callback = callback;
-        self.parent = parent;
-    }
-
-    protected function onReading(value as String) as Void {
-        callback.invoke(Settings.parseColourRaw("key", value, defaultVal));
-        parent.rerender();
-    }
-
-    protected function backgroundColour(value as String) as Number {
-        return Settings.parseColourRaw("key", value, Graphics.COLOR_BLACK);
-    }
-}
-
-(:settingsView,:menu2)
 class RerenderIgnoredView extends WatchUi.View {
     function initialize() {
         View.initialize();

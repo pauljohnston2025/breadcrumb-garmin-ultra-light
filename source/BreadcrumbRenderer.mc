@@ -16,6 +16,8 @@ const ARROW_SIZE = 20.0f;
 const ARROW_PEN_WIDTH = 2;
 const ARROW_WALL_OFFSET = 6.0f;
 
+const UI_COLOUR = Graphics.COLOR_DK_GRAY;
+
 class BreadcrumbRenderer {
     // todo put into ui class
     var _clearRouteProgress as Number = 0;
@@ -194,7 +196,7 @@ class BreadcrumbRenderer {
         }
 
         var y = _cachedValues.physicalScreenHeight - 25;
-        dc.setColor(settings.normalModeColour, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
         dc.drawLine(
             _cachedValues.xHalfPhysical - pixelWidth / 2.0f,
@@ -379,7 +381,7 @@ class BreadcrumbRenderer {
             triangleRightX = triangleRightXRot;
         }
 
-        dc.setColor(settings.userColour, Graphics.COLOR_BLACK);
+        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
         dc.setPenWidth(6);
         dc.drawLine(triangleTopX, triangleTopY, triangleRightX, triangleRightY);
         dc.drawLine(triangleRightX, triangleRightY, triangleLeftX, triangleLeftY);
@@ -746,7 +748,7 @@ class BreadcrumbRenderer {
 
         var textArea = new WatchUi.TextArea({
             :text => text,
-            :color => settings.uiColour,
+            :color => UI_COLOUR,
             :font => [Graphics.FONT_XTINY],
             :justification => Graphics.TEXT_JUSTIFY_CENTER,
             :locX => WatchUi.LAYOUT_HALIGN_CENTER,
@@ -756,7 +758,7 @@ class BreadcrumbRenderer {
         });
         textArea.draw(dc);
 
-        dc.setColor(settings.uiColour, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
         dc.drawText(
             xHalfPhysical - padding,
             yHalfPhysical,
@@ -815,7 +817,7 @@ class BreadcrumbRenderer {
         var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
         var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
 
-        dc.setColor(settings.uiColour, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
 
         // current mode displayed
@@ -1319,7 +1321,7 @@ class BreadcrumbRenderer {
         );
         var vPixelWidth = vScaleData[0];
 
-        dc.setColor(settings.uiColour, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
 
         // vertical and horizontal lines for extreems
@@ -1392,7 +1394,7 @@ class BreadcrumbRenderer {
             );
         }
 
-        dc.setColor(settings.elevationColour, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(3);
 
         if (hPixelWidth != 0) {

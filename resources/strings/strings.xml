@@ -5,26 +5,17 @@
     <string id="modeTitle">Display Mode</string>
     <string id="elevationMode">Elevation</string>
     <string id="trackRouteMode">Track/Route</string>
-    <string id="trackColourTitle">Track Colour</string>
-    <string id="defaultRouteColourTitle">Default Route Colour</string>
-    <string id="routeColourTitle">Route Colour</string>
-    <string id="routeDelete">Delete</string>
-    <string id="uiColour">UI Colour</string>
-    <string id="normalModeColour">Normal Mode Colour</string>
-    <string id="displayRouteNamesTitle">Display Route Names</string>
     <string id="offTrackAlertsDistanceMTitle">Off Track Alert Distance (m)</string>
-    <string id="offTrackAlertsMaxReportIntervalSTitle">Max AlertReport Interval (s)</string>
+    <string id="offTrackAlertsMaxReportIntervalSTitle">Max Alert Report Interval (s)</string>
     <string id="offTrackCheckIntervalSTitle">Max Alert Check Interval (s)</string>
     <string id="offTrackAlertsGroupTitle">Alerts</string>
     <string id="enableOffTrackAlertsTitle">Off Track Alerts</string>
     <string id="offTrackWrongDirectionTitle">Wrong Direction Alerts</string>
     <string id="drawCheveronsTitle">Draw Cheverons</string>
     <string id="drawLineToClosestPointTitle">Draw Line To Closest Point</string>
-    <string id="elevationColourTitle">Elevation Colour</string>
     <string id="clearStorage">Clear Storage</string>
     <string id="returnToUserTitle">Return To User</string>
     <string id="resetDefaults">Restore Defaults</string>
-    <string id="userColour">User Colour</string>
     <string id="maxPendingWebRequests">Max Pending Web Requests</string>
     <string id="scale">Scale (0 for auto)</string>
     <string id="metersAroundUser">Meters Around User</string>
@@ -52,16 +43,8 @@
     <string id="fixedLongitude">Fixed Latitude</string>
     <string id="fixedLongitudePrompt">0 - disabled, -180 to 180</string>
     <string id="recalculateIntervalSTitle">Compute Interval (s)</string>
-    <string id="packingFormatTitle">Packing Format</string>
-    <string id="packingFormatDefault">Default</string>
-    <string id="packingFormatYUV">YUV</string>
-    <string id="packingFormatPNG">PNG</string>
-    <string id="packingFormatJPG">JPG</string>
 
 
-    <string id="coloursTitle">Colours</string>
-
-    <string id="colourPrompt">Colour in AARRGGBB format</string>
     <string id="displayLatLongTitle">Display Lat/Long</string>
 
     <string id="routesTitle">Routes</string>

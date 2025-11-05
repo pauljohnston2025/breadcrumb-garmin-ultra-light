@@ -1,7 +1,6 @@
 <properties>
     <!-- https://developer.garmin.com/connect-iq/core-topics/properties-and-app-settings/ -->
 	<property id="mode" type="number">0</property>
-	<property id="elevationMode" type="number">0</property>
 	<property id="uiMode" type="number">0</property>
 	<property id="renderMode" type="number">1</property>
 
@@ -10,15 +9,6 @@
 	<property id="metersAroundUser" type="number">500</property>
 	<property id="zoomAtPaceSpeedMPS" type="float">1.0</property>
 	
-	<property id="trackColour" type="string">00FF00</property>
-	<property id="routeColour" type="string">0000FF</property>
-	<property id="elevationColour" type="string">FF5500</property>
-	<property id="userColour" type="string">FF5500</property>
-	<property id="normalModeColour" type="string">0000FF</property>
-	<property id="uiColour" type="string">555555</property>
-	<property id="debugColour" type="string">FEFFFFFF</property>
-	<property id="defaultRouteColour" type="string">00AAFF</property>
-
 	<property id="fixedLatitude" type="float">0</property>
 	<property id="fixedLongitude" type="float">0</property>
 
@@ -43,8 +33,6 @@
 	<!-- any setting that defaults to true seems to be stuck that way, so defaulting these all to false and adding a hidden property that i will set for 'first app load' -->
 	<property id="enableOffTrackAlerts" type="boolean">false</property>
 	<property id="drawLineToClosestPoint" type="boolean">false</property>
-	<property id="enableRotation" type="boolean">false</property>
-	<property id="displayRouteNames" type="boolean">false</property>
 	<property id="routesEnabled" type="boolean">false</property>
 	<property id="haveDoneFirstLoadSetup" type="boolean">false</property>
 	<property id="displayLatLong" type="boolean">false</property>

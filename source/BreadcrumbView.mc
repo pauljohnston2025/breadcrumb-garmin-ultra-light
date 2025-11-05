@@ -348,12 +348,12 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         if (route != null) {
-            renderer.renderTrack(dc, route, settings.defaultRouteColour, true);
+            renderer.renderTrack(dc, route, Graphics.COLOR_BLUE, true);
             if (settings.drawCheverons) {
-                renderer.renderTrackCheverons(dc, route, settings.defaultRouteColour);
+                renderer.renderTrackCheverons(dc, route, Graphics.COLOR_BLUE);
             }
         }
-        renderer.renderTrack(dc, track, settings.trackColour, false);
+        renderer.renderTrack(dc, track, Graphics.COLOR_GREEN, false);
         renderOffTrackPoint(dc);
     }
 
@@ -363,12 +363,12 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         if (route != null) {
-            renderer.renderTrackUnrotated(dc, route, settings.defaultRouteColour, true);
+            renderer.renderTrackUnrotated(dc, route, Graphics.COLOR_BLUE, true);
             if (settings.drawCheverons) {
-                renderer.renderTrackCheveronsUnrotated(dc, route, settings.defaultRouteColour);
+                renderer.renderTrackCheveronsUnrotated(dc, route, Graphics.COLOR_BLUE);
             }
         }
-        renderer.renderTrackUnrotated(dc, track, settings.trackColour, false);
+        renderer.renderTrackUnrotated(dc, track, Graphics.COLOR_GREEN, false);
 
         renderOffTrackPointUnrotated(dc);
     }
@@ -460,7 +460,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 dc,
                 renderer._xElevationStart,
                 route,
-                settings.defaultRouteColour,
+                Graphics.COLOR_BLUE,
                 hScale,
                 vScale,
                 startAt
@@ -470,7 +470,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             dc,
             renderer._xElevationStart,
             track,
-            settings.trackColour,
+            Graphics.COLOR_GREEN,
             hScale,
             vScale,
             startAt
