@@ -24,8 +24,6 @@
 	<property id="centerUserOffsetY" type="float">0.5</property>
 	<property id="mapMoveScreenSize" type="float">0.3</property>
 
-	<property id="turnAlertTimeS" type="number">-1</property>
-	<property id="minTurnAlertDistanceM" type="number">-1</property>
 	<property id="maxTrackPoints" type="number">100</property>
 
 

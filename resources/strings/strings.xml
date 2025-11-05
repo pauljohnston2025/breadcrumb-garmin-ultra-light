@@ -52,9 +52,6 @@
     <string id="mapMove">Map Move</string>
     <string id="clearRoutes">Clear All Routes</string>
 
-    <string id="turnAlertTimeSTitle">Turn Alert Time (s)</string>
-    <string id="minTurnAlertDistanceMTitle">Min Turn Alert Distance (m)</string>
-    <string id="turnAlertPrompt">-1 to disable</string>
     <string id="maxTrackPointsTitle">Max Track Points</string>
     
     <string id="clearRoutes1">Clearing all routes, are you sure?</string>

@@ -179,40 +179,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     ) {
                         handleOffTrackAlerts(epoch, lastPoint);
                     }
-
-                    if (settings.turnAlertTimeS >= 0 || settings.minTurnAlertDistanceM >= 0) {
-                        handleDirections(lastPoint);
-                    }
                 }
-            }
-        }
-    }
-
-    // new point is already pre scaled
-    function handleDirections(newPoint as RectangularPoint) as Void {
-        var route = _breadcrumbContext.route;
-        if (route != null) {
-            var res = route.checkDirections(
-                newPoint,
-                settings.turnAlertTimeS,
-                settings.minTurnAlertDistanceM,
-                _cachedValues
-            );
-
-            if (res != null) {
-                var direction = res[0];
-                var distanceM = res[1];
-
-                var dirText = direction >= 0 ? "Right" : "Left";
-                var distanceText = "";
-
-                if (settings.distanceImperialUnits) {
-                    var distanceFt = distanceM * 3.28084;
-                    distanceText = distanceFt.format("%.0f") + "ft";
-                } else {
-                    distanceText = distanceM.format("%.0f") + "m";
-                }
-                showMyAlert(dirText + " Turn In " + distanceText + " " + absN(direction) + "°");
             }
         }
     }

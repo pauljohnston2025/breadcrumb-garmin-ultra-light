@@ -77,9 +77,6 @@ class BreadcrumbTrack {
     var lastClosePoint as RectangularPoint? = null; // SCALED (note: altitude is currently unscaled)
     var createdAt as Number = 0;
     var coordinates as PointArray = new PointArray(0); // SCALED (note: altitude is currently unscaled)
-    var directions as DirectionPointArray = new DirectionPointArray();
-    var lastDirectionIndex as Number = -1;
-    var lastDirectionSpeedPPS as Float = -1f;
     var seenStartupPoints as Number = 0;
     var possibleBadPointsAdded as Number = 0;
     var inRestartMode as Boolean = true;
@@ -103,8 +100,6 @@ class BreadcrumbTrack {
         // we might have enabled/disabled searching for directions or offtrack
         // This is mainly because the turn by turn direction alerts need to know where we are on track, or fall back to using the directions themselves.
         // If we turn off 'off track' alerts calculation the turn by turn directions will think we are always at that location and will not progress.
-        lastDirectionIndex = -1;
-        lastDirectionSpeedPPS = -1f;
         lastClosePoint = null;
         lastClosePointIndex = null;
         _lastDistanceToNextPoint = null;
@@ -131,13 +126,11 @@ class BreadcrumbTrack {
 
     function handleRouteV2(
         routeData as Array<Float>,
-        directions as Array<Number>,
         cachedValues as CachedValues
     ) as Boolean {
         // trust the app completely
         coordinates._internalArrayBuffer = routeData;
         coordinates._size = routeData.size();
-        me.directions._internalArrayBuffer = directions;
         // we could optimise this further if the app provides us with binding box, center max/min elevation
         // but it makes it really hard to add any more cached data to the route, that the companion app then has to send
         // by making these rectangular coordinates, we skip a huge amount of math converting them from lat/long
@@ -165,10 +158,6 @@ class BreadcrumbTrack {
                 coordinates._internalArrayBuffer as Array<PropertyValueType>
             );
             Storage.setValue(key + "coordsSize", coordinates._size);
-            Storage.setValue(
-                key + "directions",
-                directions._internalArrayBuffer as Array<PropertyValueType>
-            );
             Storage.setValue(key + "distanceTotal", distanceTotal);
             Storage.setValue(key + "elevationMin", elevationMin);
             Storage.setValue(key + "elevationMax", elevationMax);
@@ -188,7 +177,6 @@ class BreadcrumbTrack {
         Storage.deleteValue(key + "bbc");
         Storage.deleteValue(key + "coords");
         Storage.deleteValue(key + "coordsSize");
-        Storage.deleteValue(key + "directions");
         Storage.deleteValue(key + "distanceTotal");
         Storage.deleteValue(key + "elevationMin");
         Storage.deleteValue(key + "elevationMax");
@@ -213,11 +201,6 @@ class BreadcrumbTrack {
             var coordsSize = Storage.getValue(key + "coordsSize");
             if (coordsSize == null) {
                 return null;
-            }
-
-            var directions = Storage.getValue(key + "directions");
-            if (directions == null) {
-                directions = []; // back compat
             }
 
             var distanceTotal = Storage.getValue(key + "distanceTotal");
@@ -252,7 +235,6 @@ class BreadcrumbTrack {
             );
             track.coordinates._internalArrayBuffer = coords as Array<Float>;
             track.coordinates._size = coordsSize as Number;
-            track.directions._internalArrayBuffer = directions as Array<Number>;
             track.distanceTotal = distanceTotal as Float;
             track.elevationMin = elevationMin as Float;
             track.elevationMax = elevationMax as Float;
@@ -510,263 +492,6 @@ class BreadcrumbTrack {
         return [closestSegmentDistance, closestX, closestY];
     }
 
-    function weAreStillCloseToTheLastDirectionPoint() as Boolean {
-        // note: this logic is the same as in checkDirections but is only needed for when we go backwards on the path
-        // so we can skip a heap of logic, checkDirections is more optimised for when it needs to check a heap more things
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return false;
-        }
-
-        var checkPoint = _breadcrumbContextLocal.track.lastPoint();
-        if (checkPoint == null) {
-            return false;
-        }
-
-        var cachedValues = _breadcrumbContextLocal.cachedValues;
-        var directionsRaw = directions._internalArrayBuffer; // raw dog access means we can do the calcs much faster
-        var coordinatesRaw = coordinates._internalArrayBuffer; // raw dog access means we can do the calcs much faster
-
-        var settings = _breadcrumbContextLocal.settings;
-        var turnAlertTimeS = settings.turnAlertTimeS;
-        var minTurnAlertDistanceM = settings.minTurnAlertDistanceM;
-
-        var currentSpeedPPS = 1f; // assume a slow walk if we cannot get the current speed
-        var info = Activity.getActivityInfo();
-        if (info != null && info.currentSpeed != null) {
-            currentSpeedPPS = info.currentSpeed as Float;
-        }
-
-        // it's in meters before this point then switches to pixels per second
-        if (cachedValues.currentScale != 0f) {
-            currentSpeedPPS *= cachedValues.currentScale;
-        }
-
-        if (lastDirectionIndex < 0 || lastDirectionIndex >= directions.pointSize()) {
-            return false;
-        }
-
-        var oldCoordinatesIndexTemp = directionsRaw[lastDirectionIndex] & 0xffff;
-        // blind trust that the phone app sent the correct data and we are not accessing out of bounds array access
-        var oldLastDirectionPointDistance = distance(
-            coordinatesRaw[oldCoordinatesIndexTemp * ARRAY_POINT_SIZE],
-            coordinatesRaw[oldCoordinatesIndexTemp * ARRAY_POINT_SIZE + 1],
-            checkPoint.x,
-            checkPoint.y
-        );
-        // if we have slowed down still keep the larger perimeter, if we speed up when we exit the corner we also need to take the higher speed so we do not clear
-        // the index and then add it straight back again when the distance increases because the speed increased
-        var oldDistancePixelsCheck = turnAlertDistancePx(
-            maxF(lastDirectionSpeedPPS, currentSpeedPPS),
-            turnAlertTimeS,
-            minTurnAlertDistanceM,
-            cachedValues.currentScale
-        );
-        return oldLastDirectionPointDistance < oldDistancePixelsCheck;
-    }
-
-    // checkpoint should already be scaled, as should distanceCheck
-    // returns [turnAngleDeg, distancePx] or null if no direction within range
-    function checkDirections(
-        checkPoint as RectangularPoint,
-        turnAlertTimeS as Number,
-        minTurnAlertDistanceM as Number,
-        cachedValues as CachedValues
-    ) as [Number, Float]? {
-        var currentSpeedPPS = 1f; // assume a slow walk if we cannot get the current speed
-        var info = Activity.getActivityInfo();
-        if (info != null && info.currentSpeed != null) {
-            currentSpeedPPS = info.currentSpeed as Float;
-        }
-
-        // it's in meters before this point then switches to pixels per second
-        if (cachedValues.currentScale != 0f) {
-            currentSpeedPPS *= cachedValues.currentScale;
-        }
-
-        var distancePixelsCheck = turnAlertDistancePx(
-            currentSpeedPPS,
-            turnAlertTimeS,
-            minTurnAlertDistanceM,
-            cachedValues.currentScale
-        );
-        var directionsRaw = directions._internalArrayBuffer; // raw dog access means we can do the calcs much faster
-        var coordinatesRaw = coordinates._internalArrayBuffer; // raw dog access means we can do the calcs much faster
-        // note: extremely short out and back sections with a single point may trigger strange alerts
-        // eg.
-        // - = route/track
-        // | = route/track
-        // * = direction turn point
-        // + = standard track/route point
-        //
-        //         *       OUT AND BACK SECTION
-        //         |
-        //         |
-        //         |
-        //  *-----**--------- END
-        //  |
-        //  |
-        // START
-        //
-        // When we come into the corner with 2 points (traveling to the right of the page), we get a turn alert (left), but then we check for the next turn alert (up to 5 points away).
-        // This skips the point at the top of the page, but then checks the second point on the corner and tells us that we should then turn left (as if we were coming out of the corner).
-        // All of this happens before we even turn though, so we get 2 direction alerts very close together that are confusing, then it skips the OUT AND BACK SECTION turn alert, because it
-        // thinks we are already up to exiting the corner.
-        //
-        // Consider another case though where we intentionally skip going down the turn because we do not want to do the out and back since its so short, it should skip ahead to the next direction.
-
-        // We also need this to work with back to back corners
-        //
-        // Case 2, back-to-back corners
-        //      * END
-        //      |
-        //      |
-        //      |
-        //  *-*-*
-        //  |
-        //  |
-        // START
-        //
-        // We need to ensure we look ahead, because although we are currently in range of the first turn we did, we want to tell the user that they are in range of another turn.
-        // If off track alerts are enabled, we know when we have moved closer to the next turn, but if they are not enabled, we need to ensure the user gets the next turn alert.
-        //
-        // There is a third case though too, where there ar e many points leading up to the turn - we need to be able to skip over them so we can get an alert many meters from the turn
-        // Case 3 - many points before turn
-        //      * END
-        //      |
-        //      |
-        //      |
-        //         +
-        //         *   THE TURN POINT IS THE 4th point in the corner, but its still within "Turn alert Time (s)" or "Min Turn Alert Distance (m)"
-        //  *---+++
-        //  |
-        //  |
-        // START
-        //
-        // So we need the lookahead, but it does not work very well for short out and back sections- we will just have to live with this. They should be rare.
-        // I should probably write some unit test code for these 3 cases ...
-
-        // longer routes with more points allow more look ahead (up to some percentage of the route)
-        var allowedCoordinatePerimeter = 5;
-        var oldLastClosePointIndex = lastClosePointIndex;
-        var stillNearTheLastDirectionPoint = false;
-        var startAt = 0;
-        var oldCoordinatesIndex = -1;
-        if (lastDirectionIndex >= 0 && lastDirectionIndex < directions.pointSize()) {
-            startAt = lastDirectionIndex;
-            var oldCoordinatesIndexTemp = directionsRaw[lastDirectionIndex] & 0xffff;
-            // blind trust that the phone app sent the correct data and we are not accessing out of bounds array access
-            var oldLastDirectionPointDistance = distance(
-                coordinatesRaw[oldCoordinatesIndexTemp * ARRAY_POINT_SIZE],
-                coordinatesRaw[oldCoordinatesIndexTemp * ARRAY_POINT_SIZE + 1],
-                checkPoint.x,
-                checkPoint.y
-            );
-            // if we have slowed down still keep the larger perimeter, if we speed up when we exit the corner we also need to take the higher speed so we do not clear
-            // the index and then add it straight back again when the distance increases because the speed increased
-            var oldDistancePixelsCheck = turnAlertDistancePx(
-                maxF(lastDirectionSpeedPPS, currentSpeedPPS),
-                turnAlertTimeS,
-                minTurnAlertDistanceM,
-                cachedValues.currentScale
-            );
-            stillNearTheLastDirectionPoint = oldLastDirectionPointDistance < oldDistancePixelsCheck;
-            if (stillNearTheLastDirectionPoint) {
-                // only use it if we are still close, otherwise we will get locked to this coordinate when we move forwards if we do not know our current position on the track
-                oldCoordinatesIndex = oldCoordinatesIndexTemp;
-            }
-        }
-        if (oldLastClosePointIndex != null && oldLastClosePointIndex > oldCoordinatesIndex) {
-            // we are further along the track already, look for directions from here
-            oldCoordinatesIndex = oldLastClosePointIndex;
-        }
-
-        // we do not know where we are on the track, either off track alerts are not enabled, or we are off track
-        // in this case, we want to search all directions, since we could rejoin the track at any point
-        var stopAt = directionsRaw.size();
-        for (var i = startAt; i < stopAt; ++i) {
-            // any points ahead of us are valid, since we have no idea where we are on the route, but don't allow points to go backwards
-            var coordinatesIndex = directionsRaw[i] & 0xffff;
-            if (coordinatesIndex <= oldCoordinatesIndex) {
-                // skip any of the directions in the past, this should not really ever happen since we start at the index, but protect ourselves from ourselves
-                continue;
-            }
-
-            if (
-                oldCoordinatesIndex > 0 &&
-                coordinatesIndex - oldCoordinatesIndex > allowedCoordinatePerimeter
-            ) {
-                // prevent any overlap of points further on in the route that go through the same intersection
-                // we probably need to include a bit of padding here, since the overlap could be slightly miss-aligned
-                // This is done in the loop to allow quick turns in succession to be alerted, but not the directions at the end of the route thats in the same intersection.
-                // eg. a left turn followed by a right turn
-                // we use the direction alert to know roughly where we are on the route
-                // whilst we are within the circle of the last direction only consider the next X points
-                return null;
-            }
-
-            // blind trust that the phone app sent the correct data and we are not accessing out of bounds array access
-            var distancePx = distance(
-                coordinatesRaw[coordinatesIndex * ARRAY_POINT_SIZE],
-                coordinatesRaw[coordinatesIndex * ARRAY_POINT_SIZE + 1],
-                checkPoint.x,
-                checkPoint.y
-            );
-            if (distancePx < distancePixelsCheck) {
-                lastDirectionIndex = i;
-                lastDirectionSpeedPPS = currentSpeedPPS;
-                // inline for perf, no function call overhead but unreadable :(
-                var angle = ((directionsRaw[i] & 0xffff0000) >> 16) - 180;
-                // by the time we get here we have parsed all the off track calculations and direction checks
-                // if this takes some time (seconds) the distance we get could be off, as the user has traveled closer to the intersection
-                // so we get the users location and calculate it from where they currently are
-                var distanceM = getCurrentDistanceToDirection(
-                    coordinatesRaw[coordinatesIndex * ARRAY_POINT_SIZE],
-                    coordinatesRaw[coordinatesIndex * ARRAY_POINT_SIZE + 1],
-                    distancePx,
-                    cachedValues
-                );
-                return [angle, distanceM];
-            }
-        }
-
-        if (!stillNearTheLastDirectionPoint) {
-            // consider all directions again, we have moved outside the perimeter of the last direction
-            // this is so we can rejoin at the start
-            lastDirectionIndex = -1;
-            lastDirectionSpeedPPS = -1f;
-        }
-        return null;
-    }
-
-    function getCurrentDistanceToDirection(
-        xPx as Float,
-        yPx as Float,
-        distancePx as Float,
-        cachedValues as CachedValues
-    ) as Float {
-        if (cachedValues.currentScale == 0f) {
-            return distancePx;
-        }
-
-        var info = Activity.getActivityInfo();
-        if (info == null) {
-            return distancePx / cachedValues.currentScale;
-        }
-        var currentPoint = pointFromActivityInfo(info);
-        if (currentPoint == null || !currentPoint.valid()) {
-            return distancePx / cachedValues.currentScale;
-        }
-
-        return distance(
-            xPx / cachedValues.currentScale,
-            yPx / cachedValues.currentScale,
-            currentPoint.x,
-            currentPoint.y
-        );
-    }
-
     function updateOffTrackInfo(
         newIndex as Number,
         checkPoint as RectangularPoint,
@@ -825,14 +550,6 @@ class BreadcrumbTrack {
             0f
         );
 
-        if (wrongDirection) {
-            // only reset this if we have left the radius area
-            // we do not want to reset if we are still near the last direction point, because that would make us get multiple alerts. One for the wrong direction, and then another one for the turn.
-            if (!weAreStillCloseToTheLastDirectionPoint()) {
-                lastDirectionIndex = -1; // reset direction alerts
-                lastDirectionSpeedPPS = -1f;
-            }
-        }
         return new OffTrackInfo(true, lastClosePoint, wrongDirection);
     }
 

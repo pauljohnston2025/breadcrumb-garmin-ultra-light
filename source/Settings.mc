@@ -43,8 +43,6 @@ enum /*RenderMode*/ {
 function settingsAsDict() as Dictionary<String, PropertyValueType> {
     return (
         ({
-            "turnAlertTimeS" => Application.Properties.getValue("turnAlertTimeS"),
-            "minTurnAlertDistanceM" => Application.Properties.getValue("minTurnAlertDistanceM"),
             "maxTrackPoints" => Application.Properties.getValue("maxTrackPoints"),
             "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
             "mapMoveScreenSize" => Application.Properties.getValue("mapMoveScreenSize"),
@@ -117,8 +115,6 @@ class Settings {
     // how many seconds should we wait before even considering the next point
     // changes in speed/angle/zoom are not effected by this number. Though maybe they should be?
     var recalculateIntervalS as Number = 5;
-    var turnAlertTimeS as Number = -1; // -1 disables the check
-    var minTurnAlertDistanceM as Number = -1; // -1 disables the check
     var maxTrackPoints as Number = 100;
 
     // these settings can only be modified externally, but we cache them for faster/easier lookup
@@ -255,18 +251,6 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setTurnAlertTimeS(value as Number) as Void {
-        turnAlertTimeS = value;
-        setValue("turnAlertTimeS", turnAlertTimeS);
-    }
-
-    (:settingsView,:menu2)
-    function setMinTurnAlertDistanceM(value as Number) as Void {
-        minTurnAlertDistanceM = value;
-        setValue("minTurnAlertDistanceM", minTurnAlertDistanceM);
-    }
-
-    (:settingsView,:menu2)
     function setMaxTrackPoints(value as Number) as Void {
         var oldmaxTrackPoints = maxTrackPoints;
         maxTrackPoints = value;
@@ -283,12 +267,6 @@ class Settings {
             return;
         }
         _breadcrumbContextLocal.track.coordinates.restrictPointsToMaxMemory(maxTrackPoints);
-    }
-
-    (:settingsView,:menu2)
-    function setShowDirectionPointTextUnderIndex(value as Number) as Void {
-        showDirectionPointTextUnderIndex = value;
-        setValue("showDirectionPointTextUnderIndex", showDirectionPointTextUnderIndex);
     }
 
     (:settingsView,:menu2)
@@ -609,8 +587,6 @@ class Settings {
 
         // note: this pulls the defaults from whatever we have at the top of the file these may differ from the defaults in properties.xml
         var defaultSettings = new Settings();
-        turnAlertTimeS = defaultSettings.turnAlertTimeS;
-        minTurnAlertDistanceM = defaultSettings.minTurnAlertDistanceM;
         maxTrackPoints = defaultSettings.maxTrackPoints;
         centerUserOffsetY = defaultSettings.centerUserOffsetY;
         mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
@@ -648,8 +624,6 @@ class Settings {
 
         return (
             ({
-                "turnAlertTimeS" => turnAlertTimeS,
-                "minTurnAlertDistanceM" => minTurnAlertDistanceM,
                 "maxTrackPoints" => maxTrackPoints,
                 "centerUserOffsetY" => centerUserOffsetY,
                 "mapMoveScreenSize" => mapMoveScreenSize,
@@ -699,8 +673,6 @@ class Settings {
     }
 
     function loadSettingsPart1() as Void {
-        turnAlertTimeS = parseNumber("turnAlertTimeS", turnAlertTimeS);
-        minTurnAlertDistanceM = parseNumber("minTurnAlertDistanceM", minTurnAlertDistanceM);
         maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
         mapMoveScreenSize = parseFloat("mapMoveScreenSize", mapMoveScreenSize);

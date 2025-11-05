@@ -87,27 +87,6 @@ function logB(message as String) as Void {
 function logB(message as String) as Void {
 }
 
-function padStart(str as String?, targetLength as Number, padChar as Char) as String {
-    var currentStr = str == null ? "" : str;
-    var currentLength = currentStr.length();
-
-    if (targetLength <= 0 || currentLength >= targetLength) {
-        return currentStr; // No padding needed or invalid target length
-    }
-
-    var paddingNeeded = targetLength - currentLength;
-    var padding = "";
-
-    // Build the padding string
-    // Note: Repeated string concatenation can be inefficient in MonkeyC
-    // for VERY long padding, but is usually fine for typical use cases.
-    for (var i = 0; i < paddingNeeded; i++) {
-        padding += padChar;
-    }
-
-    return padding + currentStr;
-}
-
 function distance(x1 as Float, y1 as Float, x2 as Float, y2 as Float) as Float {
     var xDist = x2 - x1;
     var yDist = y2 - y1;
@@ -129,58 +108,9 @@ function inHitbox(
     );
 }
 
-function unsupported(dc as Dc, message as String) as Void {
-    dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-    dc.drawText(
-        dc.getWidth() / 2,
-        dc.getHeight() / 2,
-        Graphics.FONT_SYSTEM_XTINY,
-        message + " unsupported",
-        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-    );
-}
-
-// todo should we cache this calculation? It's ran max 3 times per route when drawing the debug circles and turn based alerts are on
-function turnAlertDistancePx(
-    currentSpeedPPS as Float,
-    turnAlertTimeS as Number,
-    minTurnAlertDistanceM as Number,
-    currentScale as Float
-) as Float {
-    var timeBasedPx = currentSpeedPPS * turnAlertTimeS;
-    var distanceBasedPx = minTurnAlertDistanceM.toFloat();
-    if (currentScale != 0f) {
-        distanceBasedPx *= currentScale;
-    }
-
-    if (minTurnAlertDistanceM < 0) {
-        // assume we are time based only
-        return timeBasedPx;
-    }
-
-    if (turnAlertTimeS < 0) {
-        // assume we are distance based only
-        return distanceBasedPx;
-    }
-
-    return maxF(distanceBasedPx, timeBasedPx);
-}
-
-function safeSetStorage(
-    key as Application.PropertyKeyType,
-    value as Application.PropertyValueType
-) as Void {
-    try {
-        Application.Storage.setValue(key, value);
-    } catch (e) {
-        logE("failed to set storage key: " + key + " " + e.getErrorMessage());
-    }
-}
-
 function mustUpdate() as Void {
     WatchUi.showToast(Rez.Strings.mustUpdate, {});
 }
-
 
 (:release)
 function breadcrumbContextWasNull() as Void {

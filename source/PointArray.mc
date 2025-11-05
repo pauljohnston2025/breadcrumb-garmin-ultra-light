@@ -288,23 +288,3 @@ class PointArray {
         resize(0);
     }
 }
-
-// a flat array for memory perf Array<Float> where Array[0] = X1 Array[1] = Y1 etc. similar to the coordinates array
-// [xLatRect, YLatRect, angleToTurnDegrees (-180 to 180), coordinatesIndex]
-class DirectionPointArray {
-    // we pack the turn angle direction and the index into a single number to save memory space, index is the only variabl frequently access, so its stored in the lower 16 bits
-    // ie.
-    // index = _internalArrayBuffer[i] & 0x0000FFFF
-    // angleDeg (-180 to 180) = ((_internalArrayBuffer[i] & 0xFFFF0000) >> 16) - 180
-    var _internalArrayBuffer as Array<Number> = new [0] as Array<Number>;
-
-    // the raw size
-    function size() as Number {
-        return _internalArrayBuffer.size();
-    }
-
-    // the number of points
-    function pointSize() as Number {
-        return size();
-    }
-}
