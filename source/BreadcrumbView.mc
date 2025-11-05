@@ -283,12 +283,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             return;
         }
 
-        if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
-            renderUnbufferedRotating(dc);
-        } else {
-            var track = _breadcrumbContext.track;
-            rederUnrotated(dc, _breadcrumbContext.route, track);
-        }
+        renderUnbufferedRotating(dc);
 
         // move based on the last scale we drew
         if (_breadcrumbContext.settings.uiMode == UI_MODE_SHOW_ALL) {
@@ -303,10 +298,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         }
     }
 
-    (:noUnbufferedRotations)
-    function renderUnbufferedRotating(dc as Dc) as Void {}
-
-    (:unbufferedRotations)
     function renderUnbufferedRotating(dc as Dc) as Void {
         var route = _breadcrumbContext.route;
         var track = _breadcrumbContext.track;
@@ -324,26 +315,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         renderOffTrackPoint(dc);
     }
 
-    function rederUnrotated(dc as Dc, route as BreadcrumbTrack?, track as BreadcrumbTrack) as Void {
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-        if (route != null) {
-            renderer.renderTrackUnrotated(dc, route, Graphics.COLOR_BLUE, true);
-            if (settings.drawCheverons) {
-                renderer.renderTrackCheveronsUnrotated(dc, route, Graphics.COLOR_BLUE);
-            }
-        }
-        renderer.renderTrackUnrotated(dc, track, Graphics.COLOR_GREEN, false);
-
-        renderOffTrackPointUnrotated(dc);
-    }
-
-    (:noUnbufferedRotations)
-    function renderOffTrackPoint(dc as Dc) as Void {}
-
-    (:unbufferedRotations)
     function renderOffTrackPoint(dc as Dc) as Void {
         var lastPoint = _breadcrumbContext.track.lastPoint();
         var renderer = _breadcrumbContext.breadcrumbRenderer;
@@ -357,29 +328,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             ) {
                 // points need to be scaled and rotated :(
                 renderer.renderLineFromLastPointToRoute(
-                    dc,
-                    lastPoint,
-                    pointWeLeftTrack,
-                    Graphics.COLOR_RED
-                );
-            }
-        }
-    }
-
-    function renderOffTrackPointUnrotated(dc as Dc) as Void {
-        var lastPoint = _breadcrumbContext.track.lastPoint();
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-        var pointWeLeftTrack = offTrackInfo.pointWeLeftTrack;
-        if (lastPoint != null) {
-            // only ever not null if feature enabled
-
-            if (
-                !offTrackInfo.onTrack &&
-                pointWeLeftTrack != null &&
-                settings.drawLineToClosestPoint
-            ) {
-                // points need to be scaled and rotated :(
-                renderer.renderLineFromLastPointToRouteUnrotated(
                     dc,
                     lastPoint,
                     pointWeLeftTrack,

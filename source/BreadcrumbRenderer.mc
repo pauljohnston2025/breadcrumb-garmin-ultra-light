@@ -209,16 +209,6 @@ class BreadcrumbRenderer {
         );
     }
 
-    (:noUnbufferedRotations)
-    function renderLineFromLastPointToRoute(
-        dc as Dc,
-        lastPoint as RectangularPoint,
-        offTrackPoint as RectangularPoint,
-        colour as Number
-    ) as Void {}
-
-    // points should already be scaled
-    (:unbufferedRotations)
     function renderLineFromLastPointToRoute(
         dc as Dc,
         lastPoint as RectangularPoint,
@@ -267,42 +257,6 @@ class BreadcrumbRenderer {
         );
     }
 
-    function renderLineFromLastPointToRouteUnrotated(
-        dc as Dc,
-        lastPoint as RectangularPoint,
-        offTrackPoint as RectangularPoint,
-        colour as Number
-    ) as Void {
-        if (settings.mode != MODE_NORMAL) {
-            // its very confusing seeing the routes disappear when scrolling
-            // and it makes sense to want to sroll around the route too
-            return;
-        }
-
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-
-        var lastPointUnrotatedX =
-            rotateAroundScreenXOffsetFactoredIn + (lastPoint.x - centerPosition.x);
-        var lastPointUnrotatedY =
-            rotateAroundScreenYOffsetFactoredIn - (lastPoint.y - centerPosition.y);
-
-        var offTrackPointUnrotatedX =
-            rotateAroundScreenXOffsetFactoredIn + (offTrackPoint.x - centerPosition.x);
-        var offTrackPointUnrotatedY =
-            rotateAroundScreenYOffsetFactoredIn - (offTrackPoint.y - centerPosition.y);
-
-        dc.setPenWidth(4);
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.drawLine(
-            lastPointUnrotatedX,
-            lastPointUnrotatedY,
-            offTrackPointUnrotatedX,
-            offTrackPointUnrotatedY
-        );
-    }
-
     // last location should already be scaled
     function renderUser(dc as Dc, usersLastLocation as RectangularPoint) as Void {
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
@@ -316,15 +270,6 @@ class BreadcrumbRenderer {
 
         var userPosRotatedX = rotateAroundScreenXOffsetFactoredIn + userPosUnrotatedX;
         var userPosRotatedY = rotateAroundScreenYOffsetFactoredIn - userPosUnrotatedY;
-        if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
-            userPosRotatedX =
-                rotateAroundScreenXOffsetFactoredIn +
-                rotateCos * userPosUnrotatedX -
-                rotateSin * userPosUnrotatedY;
-            userPosRotatedY =
-                rotateAroundScreenYOffsetFactoredIn -
-                (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
-        }
 
         var triangleSizeY = 10;
         var triangleSizeX = 4;
@@ -340,97 +285,11 @@ class BreadcrumbRenderer {
         var triangleCenterX = userPosRotatedX;
         var triangleCenterY = userPosRotatedY;
 
-        if (settings.renderMode != RENDER_MODE_UNBUFFERED_ROTATING) {
-            // todo: load user arrow from bitmap and draw rotated instead
-            // we normally rotate the track, but we now need to rotate the user
-            var triangleTopXRot =
-                triangleCenterX +
-                rotateCos * (triangleTopX - triangleCenterX) -
-                rotateSin * (triangleTopY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleTopY =
-                triangleCenterY +
-                (rotateSin * (triangleTopX - triangleCenterX) +
-                    rotateCos * (triangleTopY - triangleCenterY));
-            triangleTopX = triangleTopXRot;
-
-            var triangleLeftXRot =
-                triangleCenterX +
-                rotateCos * (triangleLeftX - triangleCenterX) -
-                rotateSin * (triangleLeftY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleLeftY =
-                triangleCenterY +
-                (rotateSin * (triangleLeftX - triangleCenterX) +
-                    rotateCos * (triangleLeftY - triangleCenterY));
-            triangleLeftX = triangleLeftXRot;
-
-            var triangleRightXRot =
-                triangleCenterX +
-                rotateCos * (triangleRightX - triangleCenterX) -
-                rotateSin * (triangleRightY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleRightY =
-                triangleCenterY +
-                (rotateSin * (triangleRightX - triangleCenterX) +
-                    rotateCos * (triangleRightY - triangleCenterY));
-            triangleRightX = triangleRightXRot;
-        }
-
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
         dc.setPenWidth(6);
         dc.drawLine(triangleTopX, triangleTopY, triangleRightX, triangleRightY);
         dc.drawLine(triangleRightX, triangleRightY, triangleLeftX, triangleLeftY);
         dc.drawLine(triangleLeftX, triangleLeftY, triangleTopX, triangleTopY);
-    }
-
-    function renderTrackUnrotated(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType,
-        drawEndMarker as Boolean
-    ) as Void {
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-
-        if (settings.mode != MODE_NORMAL) {
-            // its very cofusing seeing the routes disappear when scrolling
-            // and it makes sense to want to sroll around the route too
-            return;
-        }
-
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(4);
-
-        var size = breadcrumb.coordinates.size();
-        var coordinatesRaw = breadcrumb.coordinates._internalArrayBuffer;
-
-        // note: size is using the overload of points array (the reduced pointarray size)
-        // but we draw from the raw points
-        if (size >= ARRAY_POINT_SIZE * 2) {
-            var firstXScaledAtCenter = coordinatesRaw[0] - centerPosition.x;
-            var firstYScaledAtCenter = coordinatesRaw[1] - centerPosition.y;
-            var firstX = rotateAroundScreenXOffsetFactoredIn + firstXScaledAtCenter;
-            var firstY = rotateAroundScreenYOffsetFactoredIn - firstYScaledAtCenter;
-            var lastX = firstX;
-            var lastY = firstY;
-
-            for (var i = ARRAY_POINT_SIZE; i < size; i += ARRAY_POINT_SIZE) {
-                var nextX =
-                    rotateAroundScreenXOffsetFactoredIn + (coordinatesRaw[i] - centerPosition.x);
-                var nextY =
-                    rotateAroundScreenYOffsetFactoredIn -
-                    (coordinatesRaw[i + 1] - centerPosition.y);
-
-                dc.drawLine(lastX, lastY, nextX, nextY);
-
-                lastX = nextX;
-                lastY = nextY;
-            }
-
-            renderStartAndEnd(dc, firstX, firstY, lastX, lastY, drawEndMarker);
-        }
     }
 
     const CHEVRON_SPREAD_RADIANS = 0.75;
@@ -468,15 +327,6 @@ class BreadcrumbRenderer {
         dc.drawLine(lastX, lastY, arm2EndX, arm2EndY);
     }
 
-    (:noUnbufferedRotations)
-    function renderTrackCheverons(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType
-    ) as Void {
-    }
-        
-    (:unbufferedRotations)
     function renderTrackCheverons(
         dc as Dc,
         breadcrumb as BreadcrumbTrack,
@@ -549,88 +399,6 @@ class BreadcrumbRenderer {
         }
     }
 
-    // function name is to keep consistency with other methods, the chverons themselves will be rotated
-    function renderTrackCheveronsUnrotated(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType
-    ) as Void {
-        var lastClosePointIndex = breadcrumb.lastClosePointIndex;
-        if (lastClosePointIndex == null) {
-            // we have never seen the track, cheverons only extend out from the users last point on the track
-            // this means off track alerts must be enabled too
-            return;
-        }
-
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-
-        if (settings.mode != MODE_NORMAL) {
-            // its very cofusing seeing the routes disappear when scrolling
-            // and it makes sense to want to sroll around the route too
-            return;
-        }
-
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(4);
-
-        var size = breadcrumb.coordinates.size();
-        var coordinatesRaw = breadcrumb.coordinates._internalArrayBuffer;
-
-        var nextClosePointIndexRaw = lastClosePointIndex * ARRAY_POINT_SIZE + ARRAY_POINT_SIZE;
-        if (nextClosePointIndexRaw < size - ARRAY_POINT_SIZE) {
-            var lastX =
-                rotateAroundScreenXOffsetFactoredIn +
-                coordinatesRaw[nextClosePointIndexRaw] -
-                centerPosition.x;
-            var lastY =
-                rotateAroundScreenYOffsetFactoredIn -
-                coordinatesRaw[nextClosePointIndexRaw + 1] -
-                centerPosition.y;
-
-            for (
-                var i = nextClosePointIndexRaw + ARRAY_POINT_SIZE;
-                i < size && i <= nextClosePointIndexRaw + CHEVRON_POINTS * ARRAY_POINT_SIZE;
-                i += ARRAY_POINT_SIZE
-            ) {
-                var nextX =
-                    rotateAroundScreenXOffsetFactoredIn + (coordinatesRaw[i] - centerPosition.x);
-                var nextY =
-                    rotateAroundScreenYOffsetFactoredIn -
-                    (coordinatesRaw[i + 1] - centerPosition.y);
-
-                drawCheveron(dc, lastX, lastY, nextX, nextY);
-
-                lastX = nextX;
-                lastY = nextY;
-            }
-        }
-    }
-
-    (:noUnbufferedRotations)
-    function renderTrack(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType,
-        drawEndMarker as Boolean
-    ) as Void {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-
-        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        dc.drawText(
-            xHalfPhysical,
-            yHalfPhysical,
-            Graphics.FONT_XTINY,
-            "RENDER MODE\nNOT SUPPORTED",
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-    }
-
-    (:unbufferedRotations)
     function renderTrack(
         dc as Dc,
         breadcrumb as BreadcrumbTrack,

@@ -21,13 +21,6 @@
         <settingConfig type="numeric" min="1"/>
     </setting>
 
-    <setting propertyKey="@Properties.renderMode" title="@Strings.renderModeTitle">
-        <settingConfig type="list">
-            <listEntry value="1">@Strings.renderModeUnbufferedRotating</listEntry>
-            <listEntry value="3">@Strings.renderModeNoBufferedNoRotating</listEntry>
-        </settingConfig>
-    </setting>
-
     <setting propertyKey="@Properties.centerUserOffsetY" title="@Strings.centerUserOffsetYTitle">
         <settingConfig type="numeric" min="0" max="1"/>
     </setting>

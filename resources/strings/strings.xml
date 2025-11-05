@@ -28,9 +28,6 @@
     <string id="zoomAtPaceSpeedMPS">Zoom Speed (m/s)</string>
     <string id="zoomAtPaceSpeedMPSPrompt">1.0</string>
     <string id="centerUserOffsetYTitle">Center User Offset Y (ratio)</string>
-    <string id="renderModeTitle">Render Mode</string>
-    <string id="renderModeUnbufferedRotating">Unbuffered Rotations - low memory</string>
-    <string id="renderModeNoBufferedNoRotating">No Buffer No Rotations - low memory</string>
     <string id="uiModeTitle">UI Mode</string>
     <string id="uiModeShowAll">Show On Top</string>
     <string id="uiModeHidden">Hidden</string>

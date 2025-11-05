@@ -237,15 +237,11 @@ class CachedValues {
         var centerUserOffsetY = _settings.centerUserOffsetY;
 
         virtualScreenWidth = physicalScreenWidth; // always the same, just using naming for consistency
-        if (_settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
-            if (centerUserOffsetY >= 0.5) {
-                virtualScreenHeight = physicalScreenHeight * centerUserOffsetY * 2;
-            } else {
-                virtualScreenHeight =
-                    (physicalScreenHeight - physicalScreenHeight * centerUserOffsetY) * 2;
-            }
+        if (centerUserOffsetY >= 0.5) {
+            virtualScreenHeight = physicalScreenHeight * centerUserOffsetY * 2;
         } else {
-            virtualScreenHeight = physicalScreenHeight;
+            virtualScreenHeight =
+                (physicalScreenHeight - physicalScreenHeight * centerUserOffsetY) * 2;
         }
 
         minVirtualScreenDim = minF(virtualScreenWidth, virtualScreenHeight);

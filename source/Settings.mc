@@ -31,14 +31,6 @@ enum /*UiMode*/ {
     UI_MODE_MAX,
 }
 
-enum /*RenderMode*/ {
-    /*RENDER_MODE_BUFFERED_ROTATING = 0,*/
-    RENDER_MODE_UNBUFFERED_ROTATING = 1,
-    /* RENDER_MODE_BUFFERED_NO_ROTATION = 2,*/
-    RENDER_MODE_UNBUFFERED_NO_ROTATION = 3,
-    RENDER_MODE_MAX,
-}
-
 (:background)
 function settingsAsDict() as Dictionary<String, PropertyValueType> {
     return (
@@ -55,7 +47,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "zoomAtPaceSpeedMPS" => Application.Properties.getValue("zoomAtPaceSpeedMPS"),
             "uiMode" => Application.Properties.getValue("uiMode"),
             "alertType" => Application.Properties.getValue("alertType"),
-            "renderMode" => Application.Properties.getValue("renderMode"),
             "routesEnabled" => Application.Properties.getValue("routesEnabled"),
             "enableOffTrackAlerts" => Application.Properties.getValue("enableOffTrackAlerts"),
             "offTrackWrongDirection" => Application.Properties.getValue("offTrackWrongDirection"),
@@ -103,9 +94,6 @@ class Settings {
     var drawLineToClosestPoint as Boolean = true;
     var displayLatLong as Boolean = true;
 
-    // scratchpad used for rotations, but it also means we have a large bitmap stored around
-    // I will also use that bitmap for re-renders though, and just do rotations every render rather than re-drawing all the tracks/tiles again
-    var renderMode as Number = RENDER_MODE_UNBUFFERED_ROTATING;
     // how many seconds should we wait before even considering the next point
     // changes in speed/angle/zoom are not effected by this number. Though maybe they should be?
     var recalculateIntervalS as Number = 5;
@@ -130,14 +118,6 @@ class Settings {
     function setUiMode(_uiMode as Number) as Void {
         uiMode = _uiMode;
         setValue("uiMode", uiMode);
-    }
-
-    (:settingsView,:menu2)
-    function setRenderMode(_renderMode as Number) as Void {
-        renderMode = _renderMode;
-        setValue("renderMode", renderMode);
-        updateCachedValues();
-        updateViewSettings();
     }
 
     function setValue(key as String, value as PropertyValueType) as Void {
@@ -506,7 +486,6 @@ class Settings {
         zoomAtPaceMode = defaultSettings.zoomAtPaceMode;
         zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
         uiMode = defaultSettings.uiMode;
-        renderMode = defaultSettings.renderMode;
         routesEnabled = defaultSettings.routesEnabled;
         enableOffTrackAlerts = defaultSettings.enableOffTrackAlerts;
         offTrackWrongDirection = defaultSettings.offTrackWrongDirection;
@@ -542,7 +521,6 @@ class Settings {
                 "zoomAtPaceMode" => zoomAtPaceMode,
                 "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
                 "uiMode" => uiMode,
-                "renderMode" => renderMode,
                 "routesEnabled" => routesEnabled,
                 "enableOffTrackAlerts" => enableOffTrackAlerts,
                 "offTrackWrongDirection" => offTrackWrongDirection,
@@ -596,7 +574,6 @@ class Settings {
         zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
         uiMode = parseNumber("uiMode", uiMode);
-        renderMode = parseNumber("renderMode", renderMode);
 
         offTrackAlertsDistanceM = parseNumber("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
         offTrackAlertsMaxReportIntervalS = parseNumber(
