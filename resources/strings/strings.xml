@@ -11,7 +11,6 @@
     <string id="offTrackAlertsGroupTitle">Alerts</string>
     <string id="enableOffTrackAlertsTitle">Off Track Alerts</string>
     <string id="offTrackWrongDirectionTitle">Wrong Direction Alerts</string>
-    <string id="drawCheveronsTitle">Draw Cheverons</string>
     <string id="drawLineToClosestPointTitle">Draw Line To Closest Point</string>
     <string id="clearStorage">Clear Storage</string>
     <string id="resetDefaults">Restore Defaults</string>

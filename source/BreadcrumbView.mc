@@ -174,8 +174,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     if (
                         settings.enableOffTrackAlerts ||
                         settings.drawLineToClosestPoint ||
-                        settings.offTrackWrongDirection ||
-                        settings.drawCheverons
+                        settings.offTrackWrongDirection
                     ) {
                         handleOffTrackAlerts(epoch, lastPoint);
                     }
@@ -307,9 +306,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         dc.clear();
         if (route != null) {
             renderer.renderTrack(dc, route, Graphics.COLOR_BLUE, true);
-            if (settings.drawCheverons) {
-                renderer.renderTrackCheverons(dc, route, Graphics.COLOR_BLUE);
-            }
         }
         renderer.renderTrack(dc, track, Graphics.COLOR_GREEN, false);
         renderOffTrackPoint(dc);
