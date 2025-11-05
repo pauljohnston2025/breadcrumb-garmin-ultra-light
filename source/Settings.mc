@@ -15,12 +15,6 @@ enum /*Mode*/ {
     MODE_MAX,
 }
 
-enum /*ElevationMode*/ {
-    ELEVATION_MODE_STACKED,
-    ELEVATION_MODE_ORDERED_ROUTES,
-    ELEVATION_MODE_MAX,
-}
-
 enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_PACE,
     ZOOM_AT_PACE_MODE_STOPPED,
@@ -47,12 +41,6 @@ enum /*RenderMode*/ {
 
 (:background)
 function settingsAsDict() as Dictionary<String, PropertyValueType> {
-    var routes = Application.Storage.getValue("routes"); // routes are saved to storage, does this even work on real devices? save/delete are documented to only work on 3.2.0
-    if (routes == null) {
-        // its storage, not properties, so it can be null
-        routes = [];
-    }
-
     return (
         ({
             "turnAlertTimeS" => Application.Properties.getValue("turnAlertTimeS"),
@@ -73,14 +61,11 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "zoomAtPaceMode" => Application.Properties.getValue("zoomAtPaceMode"),
             "zoomAtPaceSpeedMPS" => Application.Properties.getValue("zoomAtPaceSpeedMPS"),
             "uiMode" => Application.Properties.getValue("uiMode"),
-            "elevationMode" => Application.Properties.getValue("elevationMode"),
             "alertType" => Application.Properties.getValue("alertType"),
             "renderMode" => Application.Properties.getValue("renderMode"),
             "fixedLatitude" => Application.Properties.getValue("fixedLatitude"),
             "fixedLongitude" => Application.Properties.getValue("fixedLongitude"),
-            "routes" => routes,
             "routesEnabled" => Application.Properties.getValue("routesEnabled"),
-            "displayRouteNames" => Application.Properties.getValue("displayRouteNames"),
             "enableOffTrackAlerts" => Application.Properties.getValue("enableOffTrackAlerts"),
             "offTrackWrongDirection" => Application.Properties.getValue("offTrackWrongDirection"),
             "drawCheverons" => Application.Properties.getValue("drawCheverons"),
@@ -90,7 +75,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             ),
             "offTrackCheckIntervalS" => Application.Properties.getValue("offTrackCheckIntervalS"),
             "normalModeColour" => Application.Properties.getValue("normalModeColour"),
-            "routeMax" => Application.Properties.getValue("routeMax"),
             "uiColour" => Application.Properties.getValue("uiColour"),
             "resetDefaults" => Application.Properties.getValue("resetDefaults"),
         }) as Dictionary<String, PropertyValueType>
@@ -109,7 +93,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
 // * Works fine
 class Settings {
     var mode as Number = MODE_NORMAL;
-    var elevationMode as Number = ELEVATION_MODE_STACKED;
 
     var trackColour as Number = Graphics.COLOR_GREEN;
     var defaultRouteColour as Number = Graphics.COLOR_BLUE;
@@ -126,16 +109,9 @@ class Settings {
     var fixedLatitude as Float? = null;
     var fixedLongitude as Float? = null;
 
-    // see keys below in routes = getArraySchema(...)
-    // see oddity with route name and route loading new in context.newRoute
-    var routes as Array<Dictionary> = [];
     var routesEnabled as Boolean = true;
-    var displayRouteNames as Boolean = true;
     var normalModeColour as Number = Graphics.COLOR_BLUE;
     var uiColour as Number = Graphics.COLOR_DK_GRAY;
-    // I did get up to 4 large routes working with off track alerts, but any more than that and watchdog catches us out, 3 is a safer limit.
-    // currently we still load disabled routes into memory, so its also not great having this large and a heap of disabled routes
-    private var _routeMax as Number = 3;
 
     // note this only works if a single track is enabled (multiple tracks would always error)
     var enableOffTrackAlerts as Boolean = true;
@@ -165,28 +141,12 @@ class Settings {
     var elevationImperialUnits as Boolean =
         System.getDeviceSettings().elevationUnits == System.UNIT_STATUTE;
 
-    (:lowMemory)
-    function routeMax() as Number {
-        return 1; // can only get 1 route (second route crashed on storage save), we also still need space for the track
-    }
-
-    (:highMemory)
-    function routeMax() as Number {
-        return _routeMax;
-    }
-
     function setMode(_mode as Number) as Void {
         mode = _mode;
         // directly set mode, its only for what is displayed, which takes effect ont he next onUpdate
         // we do not want to call view.onSettingsChanged because it clears timestamps when going to the debug page.
         // The setValue method on this class calls the view changed method, so do not call it.
         Application.Properties.setValue("mode", mode);
-    }
-
-    (:settingsView,:menu2)
-    function setElevationMode(value as Number) as Void {
-        elevationMode = value;
-        setValue("elevationMode", elevationMode);
     }
 
     (:settingsView,:menu2)
@@ -278,7 +238,6 @@ class Settings {
     function setValueSideEffect() as Void {
         updateCachedValues();
         updateViewSettings();
-        updateRouteSettings();
     }
 
     function setZoomAtPaceMode(_zoomAtPaceMode as Number) as Void {
@@ -367,40 +326,6 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setRouteMax(value as Number) as Void {
-        var oldRouteMax = _routeMax;
-        _routeMax = value;
-        if (oldRouteMax > _routeMax) {
-            routeMaxReduced();
-        }
-        setValue("routeMax", _routeMax);
-        updateCachedValues();
-        updateViewSettings();
-    }
-
-    function routeMaxReduced() as Void {
-        // remove the first oes or the last ones? we do not have an age, so just remove the last ones.
-        var routesToRemove = [] as Array<Number>;
-        for (var i = _routeMax; i < routes.size(); ++i) {
-            var oldRouteEntry = routes[i];
-            var oldRouteId = oldRouteEntry["routeId"] as Number;
-            routesToRemove.add(oldRouteId);
-        }
-        for (var i = 0; i < routesToRemove.size(); ++i) {
-            var routeId = routesToRemove[i];
-            clearRouteFromContext(routeId);
-            // do not use the clear route helper method, it will stack overflow
-            var routeIndex = getRouteIndexById(routeId);
-            if (routeIndex == null) {
-                continue;
-            }
-            routes.remove(routes[routeIndex]);
-        }
-
-        saveRoutesNoSideEffect();
-    }
-
-    (:settingsView,:menu2)
     function setMapMoveScreenSize(value as Float) as Void {
         mapMoveScreenSize = value;
         setValue("mapMoveScreenSize", mapMoveScreenSize);
@@ -431,198 +356,10 @@ class Settings {
         displayLatLong = value;
         setValue("displayLatLong", displayLatLong);
     }
-    (:settingsView,:menu2)
-    function setDisplayRouteNames(_displayRouteNames as Boolean) as Void {
-        displayRouteNames = _displayRouteNames;
-        setValue("displayRouteNames", displayRouteNames);
-    }
-
+    
     function setRoutesEnabled(_routesEnabled as Boolean) as Void {
         routesEnabled = _routesEnabled;
         setValue("routesEnabled", routesEnabled);
-    }
-
-    function routeColour(routeId as Number) as Number {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return defaultRouteColour;
-        }
-
-        return routes[routeIndex]["colour"] as Number;
-    }
-
-    // see oddity with route name and route loading new in context.newRoute
-    function routeName(routeId as Number) as String {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return "";
-        }
-
-        return routes[routeIndex]["name"] as String;
-    }
-
-    (:storage)
-    function atLeast1RouteEnabled() as Boolean {
-        if (!routesEnabled) {
-            return false;
-        }
-
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (route["enabled"]) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    function routeEnabled(routeId as Number) as Boolean {
-        if (!routesEnabled) {
-            return false;
-        }
-
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return false;
-        }
-        return routes[routeIndex]["enabled"] as Boolean;
-    }
-
-    function routeReversed(routeId as Number) as Boolean {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return false;
-        }
-        return routes[routeIndex]["reversed"] as Boolean;
-    }
-
-    function setRouteColour(routeId as Number, value as Number) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["colour"] = value;
-        saveRoutes();
-    }
-
-    // see oddity with route name and route loading new in context.newRoute
-    function setRouteName(routeId as Number, value as String) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["name"] = value;
-        saveRoutes();
-    }
-
-    function setRouteEnabled(routeId as Number, value as Boolean) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["enabled"] = value;
-        saveRoutes();
-        updateViewSettings(); // routes enabled/disabled can effect off track alerts and other view renderring
-    }
-
-    function setRouteReversed(routeId as Number, value as Boolean) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        var oldVal = routes[routeIndex]["reversed"];
-        if (oldVal != value) {
-            var _breadcrumbContextLocal = $._breadcrumbContext;
-            if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.reverseRouteId(routeId);
-            }
-        }
-        routes[routeIndex]["reversed"] = value;
-        saveRoutes();
-        updateViewSettings();
-    }
-
-    function ensureRouteId(routeId as Number) as Void {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex != null) {
-            return;
-        }
-
-        if (routes.size() >= _routeMax) {
-            return;
-        }
-
-        routes.add({
-            "routeId" => routeId,
-            "name" => routeName(routeId),
-            "enabled" => true,
-            "colour" => routeColour(routeId),
-            "reversed" => routeReversed(routeId),
-        });
-        saveRoutes();
-    }
-
-    function getRouteIndexById(routeId as Number) as Number? {
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (route["routeId"] == routeId) {
-                return i;
-            }
-        }
-
-        return null;
-    }
-
-    function clearRoutes() as Void {
-        routes = [];
-        saveRoutes();
-    }
-
-    function clearRoute(routeId as Number) as Void {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-        routes.remove(routes[routeIndex]);
-        saveRoutes();
-    }
-
-    function routesToSave() as Array<Dictionary<String, PropertyValueType> > {
-        var toSave = [] as Array<Dictionary<String, PropertyValueType> >;
-        for (var i = 0; i < routes.size(); ++i) {
-            var entry = routes[i];
-            var toAdd =
-                ({
-                    "routeId" => entry["routeId"] as Number,
-                    "name" => entry["name"] as String,
-                    "enabled" => entry["enabled"] as Boolean,
-                    "colour" => (entry["colour"] as Number).format("%X"), // this is why we have to copy it :(
-                    "reversed" => entry["reversed"] as Boolean,
-                }) as Dictionary<String, PropertyValueType>;
-            toSave.add(toAdd);
-        }
-        return toSave;
-    }
-
-    function saveRoutes() as Void {
-        saveRoutesNoSideEffect();
-        setValueSideEffect();
-    }
-
-    function saveRoutesNoSideEffect() as Void {
-        var toSave = routesToSave();
-        // note toSave is Array<Dictionary<String, PropertyValueType>>
-        // but the compiler only allows "Array<PropertyValueType>" even though the array of dicts seems to work on sim and real watch
-        safeSetStorage("routes", toSave as Array<PropertyValueType>);
     }
 
     (:settingsView,:menu2)
@@ -670,11 +407,6 @@ class Settings {
     function toggleDisplayLatLong() as Void {
         displayLatLong = !displayLatLong;
         setValue("displayLatLong", displayLatLong);
-    }
-    (:settingsView,:menu2)
-    function toggleDisplayRouteNames() as Void {
-        displayRouteNames = !displayRouteNames;
-        setValue("displayRouteNames", displayRouteNames);
     }
     (:settingsView,:menu2)
     function toggleEnableOffTrackAlerts() as Void {
@@ -730,24 +462,6 @@ class Settings {
         }
     }
 
-    function updateRouteSettings() as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var contextRoutes = _breadcrumbContextLocal.routes;
-        for (var i = 0; i < contextRoutes.size(); ++i) {
-            var route = contextRoutes[i];
-            // we do not care if its curently disabled, nuke the data anyway
-            // if (!routeEnabled(route.storageIndex)) {
-            //     continue;
-            // }
-            // todo only call this if setting sthat effect it changed, taking nuclear approach for now
-            route.settingsChanged();
-        }
-    }
-
     function updateCachedValues() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -755,33 +469,6 @@ class Settings {
             return;
         }
         _breadcrumbContextLocal.cachedValues.recalculateAll();
-    }
-
-    function clearContextRoutes() as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        _breadcrumbContextLocal.clearRoutes();
-    }
-
-    function clearRouteFromContext(routeId as Number) as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        _breadcrumbContextLocal.clearRouteId(routeId);
-    }
-
-    function purgeRoutesFromContext() as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        _breadcrumbContextLocal.purgeRoutes();
     }
 
     // some times these parserswere throwing when it was an empty strings seem to result in, or wrong type
@@ -1031,55 +718,6 @@ class Settings {
         return defaultValue;
     }
 
-    function getArraySchema(
-        key as String,
-        expectedKeys as Array<String>,
-        parsers as Array<Method>,
-        defaultValue as Array<Dictionary>
-    ) as Array<Dictionary> {
-        var value = null;
-        try {
-            value = Application.Storage.getValue(key);
-            if (value == null) {
-                return defaultValue;
-            }
-
-            if (!(value instanceof Array)) {
-                return defaultValue;
-            }
-
-            // The dict we get is memory mapped, do not use it directly - need to create a copy so we can change the colour type from string to int
-            // If we use it directly the storage value gets overwritten
-            var result = [] as Array<Dictionary>;
-            for (var i = 0; i < value.size(); ++i) {
-                var entry = value[i];
-                var entryOut = {};
-                if (!(entry instanceof Dictionary)) {
-                    return defaultValue;
-                }
-
-                for (var j = 0; j < expectedKeys.size(); ++j) {
-                    var thisKey = expectedKeys[j];
-                    var thisParser = parsers[j];
-                    if (!entry.hasKey(thisKey)) {
-                        return defaultValue;
-                    }
-
-                    entryOut[thisKey] = thisParser.invoke(
-                        key + "." + i + "." + thisKey,
-                        entry[thisKey]
-                    );
-                }
-                result.add(entryOut);
-            }
-
-            return result;
-        } catch (e) {
-            logE("Error parsing array: " + key + " " + value);
-        }
-        return defaultValue;
-    }
-
     function resetDefaults() as Void {
         logT("Resetting settings to default values");
         // clear the flag first thing in case of crash we do not want to try clearing over and over
@@ -1102,20 +740,16 @@ class Settings {
         zoomAtPaceMode = defaultSettings.zoomAtPaceMode;
         zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
         uiMode = defaultSettings.uiMode;
-        elevationMode = defaultSettings.elevationMode;
         renderMode = defaultSettings.renderMode;
         fixedLatitude = defaultSettings.fixedLatitude;
         fixedLongitude = defaultSettings.fixedLongitude;
-        routes = defaultSettings.routes;
         routesEnabled = defaultSettings.routesEnabled;
-        displayRouteNames = defaultSettings.displayRouteNames;
         enableOffTrackAlerts = defaultSettings.enableOffTrackAlerts;
         offTrackWrongDirection = defaultSettings.offTrackWrongDirection;
         drawCheverons = defaultSettings.drawCheverons;
         offTrackAlertsDistanceM = defaultSettings.offTrackAlertsDistanceM;
         offTrackAlertsMaxReportIntervalS = defaultSettings.offTrackAlertsMaxReportIntervalS;
         offTrackCheckIntervalS = defaultSettings.offTrackCheckIntervalS;
-        _routeMax = defaultSettings.routeMax();
         normalModeColour = defaultSettings.normalModeColour;
         uiColour = defaultSettings.uiColour;
 
@@ -1125,7 +759,6 @@ class Settings {
 
         // purge storage, all routes and caches
         Application.Storage.clearValues();
-        purgeRoutesFromContext();
         updateCachedValues();
         updateViewSettings();
     }
@@ -1154,13 +787,10 @@ class Settings {
                 "zoomAtPaceMode" => zoomAtPaceMode,
                 "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
                 "uiMode" => uiMode,
-                "elevationMode" => elevationMode,
                 "renderMode" => renderMode,
                 "fixedLatitude" => fixedLatitude == null ? 0f : fixedLatitude,
                 "fixedLongitude" => fixedLongitude == null ? 0f : fixedLongitude,
-                "routes" => routesToSave(),
                 "routesEnabled" => routesEnabled,
-                "displayRouteNames" => displayRouteNames,
                 "enableOffTrackAlerts" => enableOffTrackAlerts,
                 "offTrackWrongDirection" => offTrackWrongDirection,
                 "drawCheverons" => drawCheverons,
@@ -1168,7 +798,6 @@ class Settings {
                 "offTrackAlertsMaxReportIntervalS" => offTrackAlertsMaxReportIntervalS,
                 "offTrackCheckIntervalS" => offTrackCheckIntervalS,
                 "normalModeColour" => normalModeColour.format("%X"),
-                "routeMax" => _routeMax,
                 "uiColour" => uiColour.format("%X"),
                 "resetDefaults" => false,
             }) as Dictionary<String, PropertyValueType>
@@ -1184,14 +813,7 @@ class Settings {
             // for now just blindly trust the users
             // we do reload which sanitizes, but they could break garmins settings page with unexpected types
             try {
-                if (key.equals("routes")) {
-                    Application.Storage.setValue(
-                        key,
-                        value as Dictionary<PropertyKeyType, PropertyValueType>
-                    );
-                } else {
-                    Application.Properties.setValue(key, value as PropertyValueType);
-                }
+                Application.Properties.setValue(key, value as PropertyValueType);
             } catch (e) {
                 logE("failed property save: " + e.getErrorMessage() + " " + key + ":" + value);
                 ++$.globalExceptionCounter;
@@ -1215,7 +837,6 @@ class Settings {
         mode = parseNumber("mode", mode);
         drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
         displayLatLong = parseBool("displayLatLong", displayLatLong);
-        displayRouteNames = parseBool("displayRouteNames", displayRouteNames);
         enableOffTrackAlerts = parseBool("enableOffTrackAlerts", enableOffTrackAlerts);
         offTrackWrongDirection = parseBool("offTrackWrongDirection", offTrackWrongDirection);
         drawCheverons = parseBool("drawCheverons", drawCheverons);
@@ -1228,31 +849,16 @@ class Settings {
     }
 
     function loadSettingsPart2() as Void {
-        _routeMax = parseColour("routeMax", _routeMax);
         uiColour = parseColour("uiColour", uiColour);
         metersAroundUser = parseNumber("metersAroundUser", metersAroundUser);
         zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
         uiMode = parseNumber("uiMode", uiMode);
-        elevationMode = parseNumber("elevationMode", elevationMode);
         renderMode = parseNumber("renderMode", renderMode);
 
         fixedLatitude = parseOptionalFloat("fixedLatitude", fixedLatitude);
         fixedLongitude = parseOptionalFloat("fixedLongitude", fixedLongitude);
         setFixedPositionWithoutUpdate(fixedLatitude, fixedLongitude);
-        routes = getArraySchema(
-            "routes",
-            ["routeId", "name", "enabled", "colour", "reversed"],
-            [
-                method(:defaultNumberParser),
-                method(:emptyString),
-                method(:defaultFalse),
-                method(:defaultColourParser),
-                method(:defaultFalse),
-            ],
-            routes
-        );
-        logT("parsed routes: " + routes);
         offTrackAlertsDistanceM = parseNumber("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
         offTrackAlertsMaxReportIntervalS = parseNumber(
             "offTrackAlertsMaxReportIntervalS",
@@ -1318,37 +924,8 @@ class Settings {
 
     function onSettingsChanged() as Void {
         logT("onSettingsChanged: Setting Changed, loading");
-        var oldRoutes = routes;
-        var oldRouteMax = _routeMax;
         var oldMaxTrackPoints = maxTrackPoints;
         loadSettings();
-        // route settins do not work because garmins setting spage cannot edit them
-        // when any property is modified, so we have to explain to users not to touch the settings, but we cannot because it looks
-        // like garmmins settings are not rendering desciptions anymore :(
-        for (var i = 0; i < oldRoutes.size(); ++i) {
-            var oldRouteEntry = oldRoutes[i];
-            var oldRouteId = oldRouteEntry["routeId"] as Number;
-
-            var routeIndex = getRouteIndexById(oldRouteId);
-            if (routeIndex != null) {
-                // we have the same route
-                if (oldRouteEntry["reversed"] != routes[routeIndex]["reversed"]) {
-                    var _breadcrumbContextLocal = $._breadcrumbContext;
-                    if (_breadcrumbContextLocal != null) {
-                        _breadcrumbContextLocal.reverseRouteId(oldRouteId);
-                    }
-                }
-
-                continue;
-            }
-
-            // clear the route
-            clearRouteFromContext(oldRouteId);
-        }
-
-        if (oldRouteMax > _routeMax) {
-            routeMaxReduced();
-        }
 
         if (oldMaxTrackPoints != maxTrackPoints) {
             maxTrackPointsChanged();

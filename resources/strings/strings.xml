@@ -3,9 +3,6 @@
     <string id="settingsTitle">Ultra Light Breadcrumb Data Field</string>
 
     <string id="modeTitle">Display Mode</string>
-    <string id="elevationModeTitle">Elevation Mode</string>
-    <string id="elevationModeStacked">Stacked</string>
-    <string id="elevationModeOrderedRoutes">Ordered Routes</string>
     <string id="elevationMode">Elevation</string>
     <string id="trackRouteMode">Track/Route</string>
     <string id="trackColourTitle">Track Colour</string>
@@ -68,11 +65,6 @@
     <string id="displayLatLongTitle">Display Lat/Long</string>
 
     <string id="routesTitle">Routes</string>
-    <string id="routeId">Id</string>
-    <string id="routeName">Name</string>
-    <string id="routeMax">Max Routes</string>
-    <string id="routeEnabled">Enabled</string>
-    <string id="routeReversed">Reversed</string>
     <string id="routesEnabled">Enable Routes</string>
     <string id="mapMove">Map Move</string>
     <string id="clearRoutes">Clear All Routes</string>

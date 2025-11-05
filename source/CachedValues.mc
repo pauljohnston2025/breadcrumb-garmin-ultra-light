@@ -70,8 +70,8 @@ class CachedValues {
         recalculateAll();
     }
 
-    function calcOuterBoundingBoxFromTrackAndRoutes(
-        routes as Array<BreadcrumbTrack>,
+    function calcOuterBoundingBoxFromTrackAndRoute(
+        route as BreadcrumbTrack?,
         trackBoundingBox as [Float, Float, Float, Float]?
     ) as [Float, Float, Float, Float] {
         var scaleDivisor = currentScale;
@@ -88,12 +88,7 @@ class CachedValues {
             outerBoundingBox[3] = trackBoundingBox[3] / scaleDivisor;
         }
 
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (!_settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
-
+        if(route != null) {
             // tmp vars so we can inline the function and remove it
             var outerBoundingBox0Tmp = outerBoundingBox[0] as Float;
             var outerBoundingBox1Tmp = outerBoundingBox[1] as Float;
@@ -144,8 +139,8 @@ class CachedValues {
                 }
                 // we are zooming around the user, but we do not have a last track point
                 // resort to using bounding box
-                var boundingBox = calcOuterBoundingBoxFromTrackAndRoutes(
-                    _breadcrumbContextLocal.routes,
+                var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
+                    _breadcrumbContextLocal.route,
                     null
                 );
                 calcCenterPointForBoundingBox(boundingBox);
@@ -155,11 +150,11 @@ class CachedValues {
             return calculateScale(renderDistanceM.toFloat());
         }
 
-        var boundingBox = calcOuterBoundingBoxFromTrackAndRoutes(
-            _breadcrumbContextLocal.routes,
+        var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
+            _breadcrumbContextLocal.route,
             // if no roues we will try and render the track instead
             _settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK &&
-                _breadcrumbContextLocal.routes.size() != 0
+                _breadcrumbContextLocal.route != null
                 ? null
                 : optionalTrackBoundingBox()
         );
@@ -349,9 +344,8 @@ class CachedValues {
             scaleFactor = newScale / currentScale;
         }
 
-        var routes = _breadcrumbContextLocal.routes;
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
+        var route = _breadcrumbContextLocal.route;
+        if(route != null) {
             route.rescale(scaleFactor); // rescale all routes, even if they are not enabled
         }
         _breadcrumbContextLocal.track.rescale(scaleFactor);

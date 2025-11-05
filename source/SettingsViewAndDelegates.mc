@@ -11,36 +11,6 @@ typedef Renderable as interface {
 };
 
 (:settingsView,:menu2)
-class SettingsStringPicker extends MyTextPickerDelegate {
-    private var callback as (Method(value as String) as Void);
-    public var parent as Renderable;
-    function initialize(
-        callback as (Method(value as String) as Void),
-        parent as Renderable,
-        picker as TextPickerView
-    ) {
-        MyTextPickerDelegate.initialize(me.method(:onTextEntered), picker);
-        self.callback = callback;
-        self.parent = parent;
-    }
-
-    function onTextEntered(text as Lang.String) as Lang.Boolean {
-        logT("onTextEntered: " + text);
-
-        callback.invoke(text);
-        parent.rerender();
-
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        return true;
-    }
-
-    function onCancel() as Boolean {
-        logT("canceled");
-        return true;
-    }
-}
-
-(:settingsView,:menu2)
 function startPicker(
     picker as SettingsFloatPicker or SettingsColourPicker or SettingsNumberPicker
 ) as Void {
@@ -189,16 +159,6 @@ class SettingsMain extends Rez.Menus.SettingsMain {
                 break;
         }
         safeSetSubLabel(me, :settingsMainModeUiMode, uiModeString);
-        var elevationModeString = "";
-        switch (settings.elevationMode) {
-            case ELEVATION_MODE_STACKED:
-                elevationModeString = Rez.Strings.elevationModeStacked;
-                break;
-            case ELEVATION_MODE_ORDERED_ROUTES:
-                elevationModeString = Rez.Strings.elevationModeOrderedRoutes;
-                break;
-        }
-        safeSetSubLabel(me, :settingsMainModeElevationMode, elevationModeString);
         safeSetSubLabel(
             me,
             :settingsMainRecalculateIntervalS,
@@ -372,58 +332,6 @@ class SettingsColours extends Rez.Menus.SettingsColours {
 }
 
 (:settingsView,:menu2)
-class SettingsRoute extends Rez.Menus.SettingsRoute {
-    var settings as Settings;
-    var routeId as Number;
-    var parent as SettingsRoutes;
-    function initialize(settings as Settings, routeId as Number, parent as SettingsRoutes) {
-        Rez.Menus.SettingsRoute.initialize();
-        self.settings = settings;
-        self.routeId = routeId;
-        self.parent = parent;
-        rerender();
-    }
-
-    function rerender() as Void {
-        var name = settings.routeName(routeId);
-        setTitle(name);
-        safeSetSubLabel(me, :settingsRouteName, name);
-        safeSetToggle(me, :settingsRouteEnabled, settings.routeEnabled(routeId));
-        safeSetIcon(me, :settingsRouteColour, new ColourIcon(settings.routeColour(routeId)));
-        safeSetToggle(me, :settingsRouteReversed, settings.routeReversed(routeId));
-        parent.rerender();
-    }
-
-    function setName(value as String) as Void {
-        settings.setRouteName(routeId, value);
-    }
-
-    function setEnabled(value as Boolean) as Void {
-        settings.setRouteEnabled(routeId, value);
-    }
-
-    function setReversed(value as Boolean) as Void {
-        settings.setRouteReversed(routeId, value);
-    }
-
-    function routeEnabled() as Boolean {
-        return settings.routeEnabled(routeId);
-    }
-
-    function routeReversed() as Boolean {
-        return settings.routeReversed(routeId);
-    }
-
-    function routeColour() as Number {
-        return settings.routeColour(routeId);
-    }
-
-    function setColour(value as Number) as Void {
-        settings.setRouteColour(routeId, value);
-    }
-}
-
-(:settingsView,:menu2)
 class SettingsRoutes extends WatchUi.Menu2 {
     var settings as Settings;
     function initialize(settings as Settings) {
@@ -450,25 +358,6 @@ class SettingsRoutes extends WatchUi.Menu2 {
         }
 
         addItem(
-            new ToggleMenuItem(
-                Rez.Strings.displayRouteNamesTitle,
-                "", // sublabel
-                :settingsDisplayRouteNames,
-                settings.displayRouteNames,
-                {}
-            )
-        );
-
-        addItem(
-            new MenuItem(
-                Rez.Strings.routeMax,
-                settings.routeMax().toString(),
-                :settingsDisplayRouteMax,
-                {}
-            )
-        );
-
-        addItem(
             new MenuItem(
                 Rez.Strings.clearRoutes,
                 "", // sublabel
@@ -476,43 +365,10 @@ class SettingsRoutes extends WatchUi.Menu2 {
                 {}
             )
         );
-
-        for (var i = 0; i < settings.routeMax(); ++i) {
-            var routeIndex = settings.getRouteIndexById(i);
-            if (routeIndex == null) {
-                // do not show routes that are not in the settings array
-                // but still show disabled routes that are in the array
-                continue;
-            }
-            var routeName = settings.routeName(i);
-            var enabledStr = settings.routeEnabled(i) ? "Enabled" : "Disabled";
-            var reversedStr = settings.routeReversed(i) ? "Reversed" : "Forward";
-            addItem(
-                // do not be tempted to switch this to a menuitem (IconMenuItem is supported since API 3.0.0, MenuItem only supports icons from API 3.4.0)
-                new IconMenuItem(
-                    routeName.equals("") ? "<unlabeled>" : routeName,
-                    enabledStr + " " + reversedStr,
-                    i,
-                    new ColourIcon(settings.routeColour(i)),
-                    {
-                        // only get left or right, no center :(
-                        :alignment => MenuItem.MENU_ITEM_LABEL_ALIGN_LEFT,
-                    }
-                )
-            );
-        }
     }
 
     function rerender() as Void {
         safeSetToggle(me, :settingsRoutesEnabled, settings.routesEnabled);
-        safeSetToggle(me, :settingsDisplayRouteNames, settings.displayRouteNames);
-        safeSetSubLabel(me, :settingsDisplayRouteMax, settings.routeMax().toString());
-        for (var i = 0; i < settings.routeMax(); ++i) {
-            var routeName = settings.routeName(i);
-            safeSetLabel(me, i, routeName.equals("") ? "<unlabeled>" : routeName);
-            safeSetIcon(me, i, new ColourIcon(settings.routeColour(i)));
-            safeSetSubLabel(me, i, settings.routeEnabled(i) ? "Enabled" : "Disabled");
-        }
     }
 }
 
@@ -542,12 +398,6 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.pushView(
                 new $.Rez.Menus.SettingsUiMode(),
                 new $.SettingsUiModeDelegate(view),
-                WatchUi.SLIDE_IMMEDIATE
-            );
-        } else if (itemId == :settingsMainModeElevationMode) {
-            WatchUi.pushView(
-                new $.Rez.Menus.SettingsElevationMode(),
-                new $.SettingsElevationModeDelegate(view),
                 WatchUi.SLIDE_IMMEDIATE
             );
         } else if (itemId == :settingsMainRecalculateIntervalS) {
@@ -679,44 +529,8 @@ class ClearStorageDelegate extends WatchUi.ConfirmationDelegate {
             Application.Storage.clearValues(); // purge the storage, but we have to clean up all our classes that load from storage too
             var _breadcrumbContextLocal = $._breadcrumbContext;
             if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.clearRoutes(); // also clear the routes to mimic storage being removed
+                _breadcrumbContextLocal.clearRoute(); // also clear the routes to mimic storage being removed
             }
-        }
-
-        return true; // we always handle it
-    }
-}
-
-(:settingsView,:menu2)
-class DeleteRouteDelegate extends WatchUi.ConfirmationDelegate {
-    var routeId as Number;
-    var settings as Settings;
-    function initialize(_routeId as Number, _settings as Settings) {
-        WatchUi.ConfirmationDelegate.initialize();
-        routeId = _routeId;
-        settings = _settings;
-    }
-    function onResponse(response as Confirm) as Boolean {
-        if (response == WatchUi.CONFIRM_YES) {
-            var _breadcrumbContextLocal = $._breadcrumbContext;
-            if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.clearRoute(routeId);
-            }
-
-            // WARNING: this is a massive hack, probably dependant on platform
-            // just poping the vew and replacing does not work, because the confirmation is still active whilst we are in this function
-            // so we need to pop the confirmation too
-            // but the confirmation is also about to call WatchUi.popView()
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE); // pop confirmation
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE); // pop route view
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE); // pop routes view
-            var view = new $.SettingsRoutes(settings);
-            WatchUi.pushView(
-                view,
-                new $.SettingsRoutesDelegate(view, settings),
-                WatchUi.SLIDE_IMMEDIATE
-            ); // replace with new updated routes view
-            WatchUi.pushView(new DummyView(), null, WatchUi.SLIDE_IMMEDIATE); // push dummy view for the confirmation to pop
         }
 
         return true; // we always handle it
@@ -772,32 +586,6 @@ class SettingsUiModeDelegate extends WatchUi.Menu2InputDelegate {
             settings.setUiMode(UI_MODE_HIDDEN);
         } else if (itemId == :settingsUiModeNone) {
             settings.setUiMode(UI_MODE_NONE);
-        }
-
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsElevationModeDelegate extends WatchUi.Menu2InputDelegate {
-    var parent as SettingsMain;
-    function initialize(parent as SettingsMain) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-    }
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        var itemId = item.getId();
-        if (itemId == :settingsElevationModeStacked) {
-            settings.setElevationMode(ELEVATION_MODE_STACKED);
-        } else if (itemId == :settingsElevationModeOrderedRoutes) {
-            settings.setElevationMode(ELEVATION_MODE_ORDERED_ROUTES);
         }
 
         parent.rerender();
@@ -905,78 +693,11 @@ class SettingsRoutesDelegate extends WatchUi.Menu2InputDelegate {
         if (itemId == :settingsRoutesEnabled) {
             settings.toggleRoutesEnabled();
             reloadView();
-        } else if (itemId == :settingsDisplayRouteNames) {
-            settings.toggleDisplayRouteNames();
-            view.rerender();
-        } else if (itemId == :settingsDisplayRouteMax) {
-            startPicker(new SettingsNumberPicker(method(:setRouteMax), settings.routeMax(), view));
         } else if (itemId == :settingsRoutesClearAll) {
             var dialog = new WatchUi.Confirmation(
                 WatchUi.loadResource(Rez.Strings.clearRoutes1) as String
             );
             WatchUi.pushView(dialog, new ClearRoutesDelegate(), WatchUi.SLIDE_IMMEDIATE);
-        }
-
-        // itemId should now be the route storageIndex = routeId
-        if (itemId instanceof Number) {
-            var thisView = new $.SettingsRoute(settings, itemId, view);
-            WatchUi.pushView(
-                thisView,
-                new $.SettingsRouteDelegate(thisView, settings),
-                WatchUi.SLIDE_IMMEDIATE
-            );
-        }
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsRouteDelegate extends WatchUi.Menu2InputDelegate {
-    var view as SettingsRoute;
-    var settings as Settings;
-    function initialize(view as SettingsRoute, settings as Settings) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.view = view;
-        me.settings = settings;
-    }
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var itemId = item.getId();
-        if (itemId == :settingsRouteName) {
-            var pickerView = new TextPickerView(
-                "Route Name",
-                "",
-                0,
-                256,
-                settings.routeName(view.routeId)
-            );
-            var picker = new SettingsStringPicker(view.method(:setName), view, pickerView);
-            WatchUi.pushView(pickerView, picker, WatchUi.SLIDE_IMMEDIATE);
-        } else if (itemId == :settingsRouteEnabled) {
-            if (view.routeEnabled()) {
-                view.setEnabled(false);
-            } else {
-                view.setEnabled(true);
-            }
-            view.rerender();
-        } else if (itemId == :settingsRouteReversed) {
-            if (view.routeReversed()) {
-                view.setReversed(false);
-            } else {
-                view.setReversed(true);
-            }
-            view.rerender();
-        } else if (itemId == :settingsRouteColour) {
-            startPicker(
-                new SettingsColourPicker(view.method(:setColour), view.routeColour(), view)
-            );
-        } else if (itemId == :settingsRouteDelete) {
-            var dialog = new WatchUi.Confirmation(
-                WatchUi.loadResource(Rez.Strings.routeDelete) as String
-            );
-            WatchUi.pushView(
-                dialog,
-                new DeleteRouteDelegate(view.routeId, settings),
-                WatchUi.SLIDE_IMMEDIATE
-            );
         }
     }
 }

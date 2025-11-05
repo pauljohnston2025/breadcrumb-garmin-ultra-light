@@ -170,19 +170,14 @@ function onPhone(data as Application.PersistableType) as Void {
                 return;
             }
 
-            var name = rawData[0] as String;
+            /* var name = rawData[0] as String;*/
             var routeData = rawData[1] as Array<Float>;
             var directions = [] as Array<Number>; // back compat empty array
             if (rawData.size() > 2) {
                 directions = rawData[2] as Array<Number>;
             }
             if (routeData.size() % ARRAY_POINT_SIZE == 0) {
-                var route = _breadcrumbContextLocal.newRoute(name);
-                if (route == null) {
-                    logE("Failed to add route");
-                    mustUpdate();
-                    return;
-                }
+                var route = _breadcrumbContextLocal.newRoute();
                 var routeWrote = route.handleRouteV2(
                     routeData,
                     directions,
@@ -190,7 +185,7 @@ function onPhone(data as Application.PersistableType) as Void {
                 );
                 logT("Parsing route data 2 complete, wrote to storage: " + routeWrote);
                 if (!routeWrote) {
-                    _breadcrumbContextLocal.clearRoute(route.storageIndex);
+                    _breadcrumbContextLocal.clearRoute();
                 }
                 return;
             }

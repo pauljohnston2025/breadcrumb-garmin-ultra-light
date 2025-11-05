@@ -17,13 +17,6 @@
             <listEntry value="2">@Strings.uiModeNone</listEntry>
         </settingConfig>
     </setting>
-    
-    <setting propertyKey="@Properties.elevationMode" title="@Strings.elevationModeTitle">
-        <settingConfig type="list">
-            <listEntry value="0">@Strings.elevationModeStacked</listEntry>
-            <listEntry value="1">@Strings.elevationModeOrderedRoutes</listEntry>
-        </settingConfig>
-    </setting>
 
     <setting propertyKey="@Properties.recalculateIntervalS" title="@Strings.recalculateIntervalSTitle">
         <settingConfig type="numeric" min="1"/>
@@ -145,13 +138,6 @@
             <settingConfig type="boolean"/>
         </setting>
         
-        <setting propertyKey="@Properties.displayRouteNames" title="@Strings.displayRouteNamesTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-        
-        <setting propertyKey="@Properties.routeMax" title="@Strings.routeMax">
-            <settingConfig type="numeric"/>
-        </setting>
     <!-- </group> -->
 
     <setting propertyKey="@Properties.returnToUser" title="@Strings.returnToUserTitle">

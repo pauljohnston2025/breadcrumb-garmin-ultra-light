@@ -76,9 +76,6 @@ class BreadcrumbTrack {
     // single route use case is more common though, so we will optimise for that. in multi route we could store 'last route we were on'
     var lastClosePoint as RectangularPoint? = null; // SCALED (note: altitude is currently unscaled)
     var createdAt as Number = 0;
-    // storageIndex is the id of the route (-1 is the in progress track)
-    var storageIndex as Number = 0;
-    var name as String;
     var coordinates as PointArray = new PointArray(0); // SCALED (note: altitude is currently unscaled)
     var directions as DirectionPointArray = new DirectionPointArray();
     var lastDirectionIndex as Number = -1;
@@ -96,25 +93,10 @@ class BreadcrumbTrack {
     var elevationMax as Float = FLOAT_MIN; // UNSCALED
     var _neverStarted as Boolean;
 
-    function initialize(routeIndex as Number, name as String, initalPointCount as Number) {
+    function initialize(initalPointCount as Number) {
         _neverStarted = true;
         createdAt = Time.now().value();
-        storageIndex = routeIndex;
         coordinates = new PointArray(initalPointCount);
-        self.name = name;
-    }
-
-    function reverse() as Void {
-        // distanceTotal  // we can't reverse the track, (the only one tracking distance total)
-
-        coordinates.reversePoints();
-        directions.reversePoints(coordinates.pointSize());
-        lastDirectionIndex = -1;
-        lastDirectionSpeedPPS = -1f;
-        lastClosePointIndex = null;
-        _lastDistanceToNextPoint = null;
-        lastClosePoint = null; // we want to recalculate off track, since the cheveron direction will change
-        writeToDisk(ROUTE_KEY); // write ourselves back to storage in reverse, so next time we load (on app restart) it is correct
     }
 
     function settingsChanged() as Void {
@@ -172,7 +154,6 @@ class BreadcrumbTrack {
     // writeToDisk should always be in raw meters coordinates // UNSCALED
     function writeToDisk(key as String) as Boolean {
         try {
-            key = key + storageIndex;
             Storage.setValue(key + "bb", boundingBox);
             Storage.setValue(key + "bbc", [
                 boundingBoxCenter.x,
@@ -192,7 +173,6 @@ class BreadcrumbTrack {
             Storage.setValue(key + "elevationMin", elevationMin);
             Storage.setValue(key + "elevationMax", elevationMax);
             Storage.setValue(key + "createdAt", createdAt);
-            Storage.setValue(key + "name", name);
         } catch (e) {
             // it will still be in memory, just not persisted, this is bad as the user will think it worked, so return false to indicate error
             logE("failed route save: " + e.getErrorMessage());
@@ -202,8 +182,7 @@ class BreadcrumbTrack {
         return true;
     }
 
-    static function clearRoute(key as String, storageIndex as Number) as Void {
-        key = key + storageIndex;
+    static function clearRoute(key as String) as Void {
         // removing any key should cause it to fail to load next time, but would look weird when debugging, so remove all keys
         Storage.deleteValue(key + "bb");
         Storage.deleteValue(key + "bbc");
@@ -214,11 +193,9 @@ class BreadcrumbTrack {
         Storage.deleteValue(key + "elevationMin");
         Storage.deleteValue(key + "elevationMax");
         Storage.deleteValue(key + "createdAt");
-        Storage.deleteValue(key + "name");
     }
 
-    static function readFromDisk(key as String, storageIndex as Number) as BreadcrumbTrack? {
-        key = key + storageIndex;
+    static function readFromDisk(key as String) as BreadcrumbTrack? {
         try {
             var bb = Storage.getValue(key + "bb");
             if (bb == null) {
@@ -263,12 +240,7 @@ class BreadcrumbTrack {
                 return null;
             }
 
-            var name = Storage.getValue(key + "name");
-            if (name == null || !(name instanceof String)) {
-                return null;
-            }
-
-            var track = new BreadcrumbTrack(storageIndex, name, 0);
+            var track = new BreadcrumbTrack(0);
             track.boundingBox = bb as [Float, Float, Float, Float];
             if (track.boundingBox.size() != 4) {
                 return null;

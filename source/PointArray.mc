@@ -251,40 +251,6 @@ class PointArray {
         return true;
     }
 
-    function reversePoints() as Void {
-        var pointsCount = pointSize();
-        if (pointsCount <= 1) {
-            return;
-        }
-
-        for (
-            var leftIndex = -1, rightIndex = _size - ARRAY_POINT_SIZE;
-            leftIndex < rightIndex;
-            rightIndex -= ARRAY_POINT_SIZE /*left increment done in loop*/
-        ) {
-            // hard code instead of for loop to hopefully optimise better
-            var rightIndex0 = rightIndex;
-            var rightIndex1 = rightIndex + 1;
-            var rightIndex2 = rightIndex + 2;
-            ++leftIndex;
-            var temp = _internalArrayBuffer[leftIndex];
-            _internalArrayBuffer[leftIndex] = _internalArrayBuffer[rightIndex0];
-            _internalArrayBuffer[rightIndex0] = temp;
-
-            ++leftIndex;
-            temp = _internalArrayBuffer[leftIndex];
-            _internalArrayBuffer[leftIndex] = _internalArrayBuffer[rightIndex1];
-            _internalArrayBuffer[rightIndex1] = temp;
-
-            ++leftIndex;
-            temp = _internalArrayBuffer[leftIndex];
-            _internalArrayBuffer[leftIndex] = _internalArrayBuffer[rightIndex2];
-            _internalArrayBuffer[rightIndex2] = temp;
-        }
-
-        logD("reversePoints occurred");
-    }
-
     function _add(item as Float) as Void {
         if (_size < _internalArrayBuffer.size()) {
             _internalArrayBuffer[_size] = item;
@@ -331,36 +297,6 @@ class DirectionPointArray {
     // index = _internalArrayBuffer[i] & 0x0000FFFF
     // angleDeg (-180 to 180) = ((_internalArrayBuffer[i] & 0xFFFF0000) >> 16) - 180
     var _internalArrayBuffer as Array<Number> = new [0] as Array<Number>;
-
-    function reversePoints(coordinatesPointSize as Number) as Void {
-        var pointsCount = pointSize();
-        if (pointsCount <= 1) {
-            return;
-        }
-
-        for (
-            var leftIndex = -1, rightIndex = size() - 1;
-            leftIndex < rightIndex;
-            --rightIndex /*left increment done in loop*/
-        ) {
-            // hard code instead of for loop to hopefully optimise better
-            var rightIndex0 = rightIndex;
-            ++leftIndex;
-            // the angle must be flipped, and the index now starts from the opposite end of the array
-            var left = _internalArrayBuffer[leftIndex];
-            var leftCoordIndex = left & 0x0000ffff;
-            var leftAngle = ((left & 0xffff0000) >> 16) - 180;
-            var right = _internalArrayBuffer[rightIndex0];
-            var rightCoordIndex = right & 0x0000ffff;
-            var rightAngle = ((right & 0xffff0000) >> 16) - 180;
-            _internalArrayBuffer[leftIndex] =
-                ((-rightAngle + 180) << 16) | (coordinatesPointSize - 1 - rightCoordIndex);
-            _internalArrayBuffer[rightIndex0] =
-                ((-leftAngle + 180) << 16) | (coordinatesPointSize - 1 - leftCoordIndex);
-        }
-
-        logD("reverseDirectionPoints occurred");
-    }
 
     // the raw size
     function size() as Number {

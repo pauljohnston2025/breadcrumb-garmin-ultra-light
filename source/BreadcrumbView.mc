@@ -190,11 +190,8 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
     // new point is already pre scaled
     function handleDirections(newPoint as RectangularPoint) as Void {
-        for (var i = 0; i < _breadcrumbContext.routes.size(); ++i) {
-            var route = _breadcrumbContext.routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
+        var route = _breadcrumbContext.route;
+        if (route != null) {
             var res = route.checkDirections(
                 newPoint,
                 settings.turnAlertTimeS,
@@ -223,11 +220,8 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
     // new point is already pre scaled
     function handleOffTrackAlerts(epoch as Number, newPoint as RectangularPoint) as Void {
         var atLeastOneEnabled = false;
-        for (var i = 0; i < _breadcrumbContext.routes.size(); ++i) {
-            var route = _breadcrumbContext.routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
+        var route = _breadcrumbContext.route;
+        if (route != null) {
             atLeastOneEnabled = true;
             var routeOffTrackInfo = route.checkOffTrack(
                 newPoint,
@@ -315,36 +309,18 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // mode should be stored here, but is needed for rendering the ui
         // should structure this way better, but oh well (renderer per mode etc.)
         if (settings.mode == MODE_ELEVATION) {
-            renderElevation(dc);
+            renderElevationStacked(dc);
             if (_breadcrumbContext.settings.uiMode == UI_MODE_SHOW_ALL) {
                 renderer.renderUi(dc);
             }
             return;
-        } 
+        }
 
         if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
             renderUnbufferedRotating(dc);
         } else {
-            var routes = _breadcrumbContext.routes;
             var track = _breadcrumbContext.track;
-            rederUnrotated(dc, routes, track);
-        }
-
-        var routes = _breadcrumbContext.routes;
-
-        if (settings.displayRouteNames) {
-            for (var i = 0; i < routes.size(); ++i) {
-                var route = routes[i];
-                if (!settings.routeEnabled(route.storageIndex)) {
-                    continue;
-                }
-                var routeColour = settings.routeColour(route.storageIndex);
-                if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
-                    renderer.renderTrackName(dc, route, routeColour);
-                } else {
-                    renderer.renderTrackNameUnrotated(dc, route, routeColour);
-                }
-            }
+            rederUnrotated(dc, _breadcrumbContext.route, track);
         }
 
         // move based on the last scale we drew
@@ -365,45 +341,31 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
     (:unbufferedRotations)
     function renderUnbufferedRotating(dc as Dc) as Void {
-        var routes = _breadcrumbContext.routes;
+        var route = _breadcrumbContext.route;
         var track = _breadcrumbContext.track;
 
         var renderer = _breadcrumbContext.breadcrumbRenderer;
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
-            var routeColour = settings.routeColour(route.storageIndex);
-            renderer.renderTrack(dc, route, routeColour, true);
+        if (route != null) {
+            renderer.renderTrack(dc, route, settings.defaultRouteColour, true);
             if (settings.drawCheverons) {
-                renderer.renderTrackCheverons(dc, route, routeColour);
+                renderer.renderTrackCheverons(dc, route, settings.defaultRouteColour);
             }
         }
         renderer.renderTrack(dc, track, settings.trackColour, false);
         renderOffTrackPoint(dc);
     }
 
-    function rederUnrotated(
-        dc as Dc,
-        routes as Array<BreadcrumbTrack>,
-        track as BreadcrumbTrack
-    ) as Void {
+    function rederUnrotated(dc as Dc, route as BreadcrumbTrack?, track as BreadcrumbTrack) as Void {
         var renderer = _breadcrumbContext.breadcrumbRenderer;
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
-            var routeColour = settings.routeColour(route.storageIndex);
-            renderer.renderTrackUnrotated(dc, route, routeColour, true);
+        if (route != null) {
+            renderer.renderTrackUnrotated(dc, route, settings.defaultRouteColour, true);
             if (settings.drawCheverons) {
-                renderer.renderTrackCheveronsUnrotated(dc, route, routeColour);
+                renderer.renderTrackCheveronsUnrotated(dc, route, settings.defaultRouteColour);
             }
         }
         renderer.renderTrackUnrotated(dc, track, settings.trackColour, false);
@@ -460,21 +422,12 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         }
     }
 
-    function renderElevation(dc as Dc) as Void {
-        if (settings.elevationMode == ELEVATION_MODE_STACKED) {
-            renderElevationStacked(dc);
-            return;
-        }
-
-        renderElevationOrderedRoutes(dc);
-    }
-
     function renderElevationStacked(dc as Dc) as Void {
-        var routes = _breadcrumbContext.routes;
+        var route = _breadcrumbContext.route;
         var track = _breadcrumbContext.track;
         var renderer = _breadcrumbContext.breadcrumbRenderer;
 
-        var elevationScale = renderer.getElevationScale(track, routes);
+        var elevationScale = renderer.getElevationScale(track, route);
         var hScale = elevationScale[0];
         var vScale = elevationScale[1];
         var startAt = elevationScale[2];
@@ -502,85 +455,16 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             track.distanceTotal,
             elevationText
         );
-        if (routes.size() != 0) {
-            for (var i = 0; i < routes.size(); ++i) {
-                var route = routes[i];
-                if (!settings.routeEnabled(route.storageIndex)) {
-                    continue;
-                }
-                renderer.renderTrackElevation(
-                    dc,
-                    renderer._xElevationStart,
-                    route,
-                    settings.routeColour(route.storageIndex),
-                    hScale,
-                    vScale,
-                    startAt
-                );
-            }
-        }
-        renderer.renderTrackElevation(
-            dc,
-            renderer._xElevationStart,
-            track,
-            settings.trackColour,
-            hScale,
-            vScale,
-            startAt
-        );
-    }
-
-    function renderElevationOrderedRoutes(dc as Dc) as Void {
-        var routes = _breadcrumbContext.routes;
-        var track = _breadcrumbContext.track;
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-
-        var elevationScale = renderer.getElevationScaleOrderedRoutes(track, routes);
-        var hScale = elevationScale[0];
-        var vScale = elevationScale[1];
-        var startAt = elevationScale[2];
-        var hScalePPM = elevationScale[3];
-
-        var lastPoint = track.lastPoint();
-        var elevationText = "";
-
-        if (lastPoint == null) {
-            elevationText = "";
-        } else {
-            if (settings.elevationImperialUnits) {
-                var elevationFt = lastPoint.altitude * 3.28084;
-                elevationText = elevationFt.format("%.0f") + "ft";
-            } else {
-                elevationText = lastPoint.altitude.format("%.0f") + "m";
-            }
-        }
-
-        var elevationStartX = renderer._xElevationStart;
-
-        renderer.renderElevationChart(
-            dc,
-            hScalePPM,
-            vScale,
-            startAt,
-            track.distanceTotal,
-            elevationText
-        );
-        if (routes.size() != 0) {
-            for (var i = 0; i < routes.size(); ++i) {
-                var route = routes[i];
-                if (!settings.routeEnabled(route.storageIndex)) {
-                    continue;
-                }
-                elevationStartX = renderer.renderTrackElevation(
-                    dc,
-                    elevationStartX,
-                    route,
-                    settings.routeColour(route.storageIndex),
-                    hScale,
-                    vScale,
-                    startAt
-                );
-            }
+        if (route != null) {
+            renderer.renderTrackElevation(
+                dc,
+                renderer._xElevationStart,
+                route,
+                settings.defaultRouteColour,
+                hScale,
+                vScale,
+                startAt
+            );
         }
         renderer.renderTrackElevation(
             dc,

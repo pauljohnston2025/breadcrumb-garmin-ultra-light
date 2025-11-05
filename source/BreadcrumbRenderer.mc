@@ -611,72 +611,6 @@ class BreadcrumbRenderer {
     }
 
     (:noUnbufferedRotations)
-    function renderTrackName(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType
-    ) as Void {}
-
-    (:unbufferedRotations)
-    function renderTrackName(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType
-    ) as Void {
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(4);
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-        var rotateCos = _cachedValues.rotateCos; // local lookup faster
-        var rotateSin = _cachedValues.rotateSin; // local lookup faster
-
-        var xScaledAtCenter = breadcrumb.boundingBoxCenter.x - centerPosition.x;
-        var yScaledAtCenter = breadcrumb.boundingBoxCenter.y - centerPosition.y;
-
-        var x =
-            rotateAroundScreenXOffsetFactoredIn +
-            rotateCos * xScaledAtCenter -
-            rotateSin * yScaledAtCenter;
-        var y =
-            rotateAroundScreenYOffsetFactoredIn -
-            (rotateSin * xScaledAtCenter + rotateCos * yScaledAtCenter);
-        dc.drawText(
-            x,
-            y,
-            Graphics.FONT_XTINY,
-            settings.routeName(breadcrumb.storageIndex),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-    }
-
-    function renderTrackNameUnrotated(
-        dc as Dc,
-        breadcrumb as BreadcrumbTrack,
-        colour as Graphics.ColorType
-    ) as Void {
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(4);
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-
-        var xScaledAtCenter = breadcrumb.boundingBoxCenter.x - centerPosition.x;
-        var yScaledAtCenter = breadcrumb.boundingBoxCenter.y - centerPosition.y;
-
-        var x = rotateAroundScreenXOffsetFactoredIn + xScaledAtCenter;
-        var y = rotateAroundScreenYOffsetFactoredIn - yScaledAtCenter;
-
-        dc.drawText(
-            x,
-            y,
-            Graphics.FONT_XTINY,
-            settings.routeName(breadcrumb.storageIndex),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-    }
-
-    (:noUnbufferedRotations)
     function renderTrack(
         dc as Dc,
         breadcrumb as BreadcrumbTrack,
@@ -873,66 +807,6 @@ class BreadcrumbRenderer {
         return false;
     }
 
-    (:noDrawHitBoxes)
-    function drawHitBoxes(
-        dc as Dc,
-        physicalScreenWidth as Float,
-        physicalScreenHeight as Float
-    ) as Void {
-        unsupported(dc, "draw hit boxes");
-    }
-
-    (:drawHitBoxes)
-    function drawHitBoxes(
-        dc as Dc,
-        physicalScreenWidth as Float,
-        physicalScreenHeight as Float
-    ) as Void {
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(1);
-        dc.drawRectangle(
-            clearRouteX - halfHitboxSize,
-            clearRouteY - halfHitboxSize,
-            hitboxSize,
-            hitboxSize
-        );
-        dc.drawRectangle(
-            modeSelectX - halfHitboxSize,
-            modeSelectY - halfHitboxSize,
-            hitboxSize,
-            hitboxSize
-        );
-        dc.drawRectangle(
-            returnToUserX - halfHitboxSize,
-            returnToUserY - halfHitboxSize,
-            hitboxSize,
-            hitboxSize
-        );
-        dc.drawRectangle(
-            mapEnabledX - halfHitboxSize,
-            mapEnabledY - halfHitboxSize,
-            hitboxSize,
-            hitboxSize
-        );
-
-        // top bottom left right
-        dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(0, hitboxSize, physicalScreenWidth, hitboxSize);
-        dc.drawLine(
-            0,
-            physicalScreenHeight - hitboxSize,
-            physicalScreenWidth,
-            physicalScreenHeight - hitboxSize
-        );
-        dc.drawLine(hitboxSize, 0, hitboxSize, physicalScreenHeight);
-        dc.drawLine(
-            physicalScreenWidth - hitboxSize,
-            0,
-            physicalScreenWidth - hitboxSize,
-            physicalScreenHeight
-        );
-    }
-
     function renderUi(dc as Dc) as Void {
         var currentScale = _cachedValues.currentScale; // local lookup faster
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
@@ -940,10 +814,6 @@ class BreadcrumbRenderer {
         var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
         var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
         var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-
-        if (settings.drawHitBoxes) {
-            drawHitBoxes(dc, physicalScreenWidth, physicalScreenHeight);
-        }
 
         dc.setColor(settings.uiColour, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
@@ -1277,10 +1147,6 @@ class BreadcrumbRenderer {
             return false; // debug and map move do not clear routes
         }
 
-        if (exclusiveOpRunning(3)) {
-            return false; // something else is running, do not handle touch events
-        }
-
         switch (_clearRouteProgress) {
             case 0:
                 // press top left to start clear route
@@ -1311,7 +1177,7 @@ class BreadcrumbRenderer {
                 if (x > xHalfPhysical) {
                     var _breadcrumbContextLocal = $._breadcrumbContext;
                     if (_breadcrumbContextLocal != null) {
-                        _breadcrumbContextLocal.clearRoutes();
+                        _breadcrumbContextLocal.clearRoute();
                     }
                 }
                 _clearRouteProgress = 0;
@@ -1319,14 +1185,6 @@ class BreadcrumbRenderer {
         }
 
         return false;
-    }
-
-    function exclusiveOpRunning(current as Number) as Boolean {
-        // _startCacheTilesProgress - 0
-        // _enableMapProgress - 1
-        // _disableMapProgress - 2
-        // _clearRouteProgress - 3
-        return _clearRouteProgress != 0 && current != 3;
     }
 
     function returnToUser() as Void {
@@ -1597,7 +1455,7 @@ class BreadcrumbRenderer {
 
     function getElevationScale(
         track as BreadcrumbTrack,
-        routes as Array<BreadcrumbTrack>
+        route as BreadcrumbTrack?
     ) as [Float, Float, Float, Float] {
         var maxDistanceScaled = 0f;
         var minElevation = FLOAT_MAX;
@@ -1608,52 +1466,13 @@ class BreadcrumbRenderer {
             maxElevation = maxF(maxElevation, track.elevationMax);
         }
 
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
+        if (route != null) {
             if (route.coordinates.pointSize() > 2) {
                 maxDistanceScaled = maxF(maxDistanceScaled, route.distanceTotal);
                 minElevation = minF(minElevation, route.elevationMin);
                 maxElevation = maxF(maxElevation, route.elevationMax);
             }
         }
-
-        // abs really only needed until we get the first point (then max should always be more than min)
-        var elevationChange = abs(maxElevation - minElevation);
-        var startAt = minElevation + elevationChange / 2;
-        return getElevationScaleRaw(maxDistanceScaled, elevationChange, startAt);
-    }
-
-    function getElevationScaleOrderedRoutes(
-        track as BreadcrumbTrack,
-        routes as Array<BreadcrumbTrack>
-    ) as [Float, Float, Float, Float] {
-        var maxTrackDistanceScaled = 0f;
-        var minElevation = FLOAT_MAX;
-        var maxElevation = FLOAT_MIN;
-        if (track.coordinates.pointSize() > 2) {
-            maxTrackDistanceScaled = maxF(maxTrackDistanceScaled, track.distanceTotal);
-            minElevation = minF(minElevation, track.elevationMin);
-            maxElevation = maxF(maxElevation, track.elevationMax);
-        }
-
-        var allRouteDistanceScaled = 0f;
-        for (var i = 0; i < routes.size(); ++i) {
-            var route = routes[i];
-            if (!settings.routeEnabled(route.storageIndex)) {
-                continue;
-            }
-            if (route.coordinates.pointSize() > 2) {
-                allRouteDistanceScaled += route.distanceTotal;
-                minElevation = minF(minElevation, route.elevationMin);
-                maxElevation = maxF(maxElevation, route.elevationMax);
-            }
-        }
-
-        // track renders ontop of the routes, so we need to get the max distance of the routes or the track
-        var maxDistanceScaled = maxF(allRouteDistanceScaled, maxTrackDistanceScaled);
 
         // abs really only needed until we get the first point (then max should always be more than min)
         var elevationChange = abs(maxElevation - minElevation);

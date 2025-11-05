@@ -1,7 +1,6 @@
 <menu2 id="SettingsMain" title="@Strings.settingsTitle" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <menu-item id="settingsMainMode" label="@Strings.modeTitle"/>
     <menu-item id="settingsMainModeUiMode" label="@Strings.uiModeTitle"/>
-    <menu-item id="settingsMainModeElevationMode" label="@Strings.elevationModeTitle"/>
     <menu-item id="settingsMainRecalculateIntervalS" label="@Strings.recalculateIntervalSTitle"/>
     <menu-item id="settingsMainRenderMode" label="@Strings.renderModeTitle"/>
     <menu-item id="settingsMainCenterUserOffsetY" label="@Strings.centerUserOffsetYTitle"/>

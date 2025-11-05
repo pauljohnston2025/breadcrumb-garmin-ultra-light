@@ -25,7 +25,6 @@
 	<property id="offTrackAlertsDistanceM" type="number">20</property>
 	<property id="offTrackCheckIntervalS" type="number">30</property>
 	<property id="offTrackAlertsMaxReportIntervalS" type="number">60</property>
-	<property id="routeMax" type="number">3</property>
 
 	<property id="returnToUser" type="boolean">false</property>
 	<property id="resetDefaults" type="boolean">false</property>
