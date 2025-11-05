@@ -6,7 +6,6 @@
         <settingConfig type="list">
             <listEntry value="0">@Strings.trackRouteMode</listEntry>
             <listEntry value="1">@Strings.elevationMode</listEntry>
-            <listEntry value="2">@Strings.mapMove</listEntry>
         </settingConfig>
     </setting>
 
@@ -40,10 +39,6 @@
     <setting propertyKey="@Properties.maxTrackPoints" title="@Strings.maxTrackPointsTitle">
         <settingConfig type="numeric" min="1"/>
     </setting>
-
-    <setting propertyKey="@Properties.mapMoveScreenSize" title="@Strings.mapMoveScreenSizeTitle">
-        <settingConfig type="numeric" min="0" max="1"/>
-    </setting>
     
     <!-- <group id="zoomAtPace" title="@Strings.zoomAtPaceTitle"> -->
         <setting propertyKey="@Properties.zoomAtPaceMode" title="@Strings.zoomAtPaceModeTitle">
@@ -64,18 +59,6 @@
             <settingConfig type="numeric" min="0" max="50"/>
         </setting>
     <!-- </group> -->
-
-    <setting propertyKey="@Properties.mapMoveScreenSize" title="@Strings.mapMoveScreenSizeTitle">
-        <settingConfig type="numeric" min="0" max="1"/>
-    </setting>
-
-    <setting propertyKey="@Properties.fixedLatitude" title="@Strings.fixedLatitude" prompt="@Strings.fixedLatitudePrompt">
-        <settingConfig type="numeric" min="-90" max="90"/>
-    </setting>
-
-    <setting propertyKey="@Properties.fixedLongitude" title="@Strings.fixedLongitude" prompt="@Strings.fixedLongitudePrompt">
-        <settingConfig type="numeric" min="-180" max="180"/>
-    </setting>
 
     <!-- <group id="offTrackAlertsGroup" title="@Strings.offTrackAlertsGroupTitle"> -->
         <setting propertyKey="@Properties.offTrackAlertsDistanceM" title="@Strings.offTrackAlertsDistanceMTitle">

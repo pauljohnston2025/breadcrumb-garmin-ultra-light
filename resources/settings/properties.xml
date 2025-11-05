@@ -22,7 +22,6 @@
 	<property id="offTrackWrongDirection" type="boolean">false</property>
 	<property id="drawCheverons" type="boolean">false</property>
 	<property id="centerUserOffsetY" type="float">0.5</property>
-	<property id="mapMoveScreenSize" type="float">0.3</property>
 
 	<property id="maxTrackPoints" type="number">100</property>
 

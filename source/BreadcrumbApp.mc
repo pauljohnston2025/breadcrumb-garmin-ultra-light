@@ -15,7 +15,7 @@ var sourceMustBeNativeColorFormatCounter as Number = 0;
 enum /* Protocol */ {
     // PROTOCOL_ROUTE_DATA = 0, - removed in favour of PROTOCOL_ROUTE_DATA2, users must update companion app
     // PROTOCOL_MAP_TILE = 1, - removed watch has pulled tiles from phone rather than phone pushing for a while
-    PROTOCOL_REQUEST_LOCATION_LOAD = 2,
+    /*PROTOCOL_REQUEST_LOCATION_LOAD = 2,*/
     PROTOCOL_RETURN_TO_USER = 3,
     PROTOCOL_REQUEST_SETTINGS = 4,
     PROTOCOL_SAVE_SETTINGS = 5,
@@ -196,26 +196,6 @@ function onPhone(data as Application.PersistableType) as Void {
                     (rawData.size() % 3)
             );
             mustUpdate();
-            return;
-        } else if (type == PROTOCOL_REQUEST_LOCATION_LOAD) {
-            // logT("parsing req location: " + rawData);
-            if (rawData.size() < 2) {
-                logE("Failed to parse request load tile, bad length: " + rawData.size());
-                return;
-            }
-
-            var lat = rawData[0] as Float;
-            var long = rawData[1] as Float;
-            _breadcrumbContextLocal.settings.setFixedPosition(lat, long);
-
-            if (rawData.size() >= 3) {
-                // also sets the scale, since user has providedd how many meters they want to see
-                // note this ignores the 'restrict to tile layers' functionality
-                var scale = _breadcrumbContextLocal.cachedValues.calcScaleForScreenMeters(
-                    rawData[2] as Float
-                );
-                _breadcrumbContextLocal.cachedValues.setScale(scale);
-            }
             return;
         } else if (type == PROTOCOL_RETURN_TO_USER) {
             logT("got return to user req: " + rawData);

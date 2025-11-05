@@ -12,10 +12,6 @@ const DESIRED_ELEV_SCALE_PIXEL_WIDTH as Float = 50.0f;
 // note sure why this has anything to do with DESIRED_SCALE_PIXEL_WIDTH, should just be whatever tile layer 0 equates to for the screen size
 const MIN_SCALE as Float = DESIRED_SCALE_PIXEL_WIDTH / 1000000000.0f;
 
-const ARROW_SIZE = 20.0f;
-const ARROW_PEN_WIDTH = 2;
-const ARROW_WALL_OFFSET = 6.0f;
-
 const UI_COLOUR = Graphics.COLOR_DK_GRAY;
 
 class BreadcrumbRenderer {
@@ -229,7 +225,7 @@ class BreadcrumbRenderer {
         offTrackPoint as RectangularPoint,
         colour as Number
     ) as Void {
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very confusing seeing the routes disappear when scrolling
             // and it makes sense to want to sroll around the route too
             return;
@@ -277,7 +273,7 @@ class BreadcrumbRenderer {
         offTrackPoint as RectangularPoint,
         colour as Number
     ) as Void {
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very confusing seeing the routes disappear when scrolling
             // and it makes sense to want to sroll around the route too
             return;
@@ -398,7 +394,7 @@ class BreadcrumbRenderer {
         var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
 
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very cofusing seeing the routes disappear when scrolling
             // and it makes sense to want to sroll around the route too
             return;
@@ -499,7 +495,7 @@ class BreadcrumbRenderer {
         var rotateCos = _cachedValues.rotateCos; // local lookup faster
         var rotateSin = _cachedValues.rotateSin; // local lookup faster
 
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very confusing seeing the routes disappear when scrolling
             // and it makes sense to want to scroll around the route too
             return;
@@ -570,7 +566,7 @@ class BreadcrumbRenderer {
         var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
 
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very cofusing seeing the routes disappear when scrolling
             // and it makes sense to want to sroll around the route too
             return;
@@ -647,7 +643,7 @@ class BreadcrumbRenderer {
         var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
 
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             // its very cofusing seeing the routes disappear when scrolling
             // and it makes sense to want to sroll around the route too
             return;
@@ -829,9 +825,6 @@ class BreadcrumbRenderer {
             case MODE_ELEVATION:
                 modeLetter = "E";
                 break;
-            case MODE_MAP_MOVE:
-                modeLetter = "M";
-                break;
         }
 
         dc.drawText(
@@ -860,7 +853,7 @@ class BreadcrumbRenderer {
         var lineFromEdge = 10;
         var scaleFromEdge = 75; // guestimate
 
-        if (_cachedValues.fixedPosition != null || _cachedValues.scale != null) {
+        if (_cachedValues.scale != null) {
             // crosshair
             var centerX = returnToUserX;
             var centerY = returnToUserY;
@@ -885,22 +878,7 @@ class BreadcrumbRenderer {
         }
 
         if (settings.displayLatLong) {
-            var fixedLatitude = settings.fixedLatitude;
-            var fixedLongitude = settings.fixedLongitude;
-            if (
-                _cachedValues.fixedPosition != null &&
-                fixedLatitude != null &&
-                fixedLongitude != null
-            ) {
-                var txt = fixedLatitude.format("%.3f") + ", " + fixedLongitude.format("%.3f");
-                dc.drawText(
-                    xHalfPhysical,
-                    physicalScreenHeight - scaleFromEdge,
-                    Graphics.FONT_XTINY,
-                    txt,
-                    Graphics.TEXT_JUSTIFY_CENTER
-                );
-            } else if (currentScale != 0f) {
+            if (currentScale != 0f) {
                 var latLong = RectangularPoint.xyToLatLon(
                     centerPosition.x / currentScale,
                     centerPosition.y / currentScale
@@ -916,50 +894,6 @@ class BreadcrumbRenderer {
                     );
                 }
             }
-        }
-
-        if (settings.mode == MODE_MAP_MOVE) {
-            dc.setPenWidth(ARROW_PEN_WIDTH);
-            var halfArrowSize = ARROW_SIZE / 2.0f;
-
-            // --- Draw LEFT and RIGHT Arrows ---
-            // Shared Y coordinates for the horizontal arrow chevrons
-            var yTop = yHalfPhysical - halfArrowSize;
-            var yBottom = yHalfPhysical + halfArrowSize;
-
-            // Draw LEFT Arrow (<--) with offset
-            var tipX = ARROW_WALL_OFFSET;
-            var xChevronPoint = tipX + halfArrowSize;
-            dc.drawLine(tipX, yHalfPhysical, xChevronPoint, yTop); // Upper chevron line
-            dc.drawLine(tipX, yHalfPhysical, xChevronPoint, yBottom); // Lower chevron line
-            dc.drawLine(tipX, yHalfPhysical, tipX + ARROW_SIZE, yHalfPhysical); // Shaft
-
-            // Draw RIGHT Arrow (-->) with offset
-            tipX = physicalScreenWidth - ARROW_WALL_OFFSET;
-            xChevronPoint = tipX - halfArrowSize;
-            dc.drawLine(tipX, yHalfPhysical, xChevronPoint, yTop); // Upper chevron line
-            dc.drawLine(tipX, yHalfPhysical, xChevronPoint, yBottom); // Lower chevron line
-            dc.drawLine(tipX, yHalfPhysical, tipX - ARROW_SIZE, yHalfPhysical); // Shaft
-
-            // --- Draw UP and DOWN Arrows ---
-            // Shared X coordinates for the vertical arrow chevrons
-            var xLeft = xHalfPhysical - halfArrowSize;
-            var xRight = xHalfPhysical + halfArrowSize;
-
-            // Draw UP Arrow with offset
-            var tipY = ARROW_WALL_OFFSET;
-            var yChevronPoint = tipY + halfArrowSize;
-            dc.drawLine(xHalfPhysical, tipY, xLeft, yChevronPoint); // Left chevron line
-            dc.drawLine(xHalfPhysical, tipY, xRight, yChevronPoint); // Right chevron line
-            dc.drawLine(xHalfPhysical, tipY, xHalfPhysical, tipY + ARROW_SIZE); // Shaft
-
-            // Draw DOWN Arrow with offset
-            tipY = physicalScreenHeight - ARROW_WALL_OFFSET;
-            yChevronPoint = tipY - halfArrowSize;
-            dc.drawLine(xHalfPhysical, tipY, xLeft, yChevronPoint); // Left chevron line
-            dc.drawLine(xHalfPhysical, tipY, xRight, yChevronPoint); // Right chevron line
-            dc.drawLine(xHalfPhysical, tipY, xHalfPhysical, tipY - ARROW_SIZE); // Shaft
-            return;
         }
 
         // plus at the top of screen
@@ -1143,8 +1077,7 @@ class BreadcrumbRenderer {
 
         if (
             settings.mode != MODE_NORMAL &&
-            settings.mode != MODE_ELEVATION &&
-            settings.mode != MODE_MAP_MOVE
+            settings.mode != MODE_ELEVATION
         ) {
             return false; // debug and map move do not clear routes
         }
@@ -1190,7 +1123,7 @@ class BreadcrumbRenderer {
     }
 
     function returnToUser() as Void {
-        if (settings.mode != MODE_NORMAL && settings.mode != MODE_MAP_MOVE) {
+        if (settings.mode != MODE_NORMAL) {
             return;
         }
         _cachedValues.returnToUser();
@@ -1211,8 +1144,6 @@ class BreadcrumbRenderer {
     var modeSelectY as Float = -1f;
     var returnToUserX as Float = -1f;
     var returnToUserY as Float = -1f;
-    var mapEnabledX as Float = -1f;
-    var mapEnabledY as Float = -1f;
     var hitboxSize as Float = 60f;
     var halfHitboxSize as Float = hitboxSize / 2.0f;
 
@@ -1257,10 +1188,6 @@ class BreadcrumbRenderer {
         // bottom left
         returnToUserX = xHalfPhysical - offsetSize;
         returnToUserY = yHalfPhysical + offsetSize;
-
-        // bottom right
-        mapEnabledX = xHalfPhysical + offsetSize;
-        mapEnabledY = yHalfPhysical + offsetSize;
     }
 
     (:rectangle)
@@ -1279,10 +1206,6 @@ class BreadcrumbRenderer {
         // bottom left
         returnToUserX = halfHitboxSize;
         returnToUserY = physicalScreenHeight - halfHitboxSize;
-
-        // bottom right
-        mapEnabledX = physicalScreenWidth - halfHitboxSize;
-        mapEnabledY = physicalScreenHeight - halfHitboxSize;
     }
 
     function renderElevationChart(

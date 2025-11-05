@@ -10,7 +10,7 @@ import Toybox.PersistedContent;
 enum /*Mode*/ {
     MODE_NORMAL,
     MODE_ELEVATION,
-    MODE_MAP_MOVE,
+    /*MODE_MAP_MOVE,*/
     /* MODE_DEBUG, */ 
     MODE_MAX,
 }
@@ -45,7 +45,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
         ({
             "maxTrackPoints" => Application.Properties.getValue("maxTrackPoints"),
             "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
-            "mapMoveScreenSize" => Application.Properties.getValue("mapMoveScreenSize"),
             "recalculateIntervalS" => Application.Properties.getValue("recalculateIntervalS"),
             "mode" => Application.Properties.getValue("mode"),
             "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
@@ -57,8 +56,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "uiMode" => Application.Properties.getValue("uiMode"),
             "alertType" => Application.Properties.getValue("alertType"),
             "renderMode" => Application.Properties.getValue("renderMode"),
-            "fixedLatitude" => Application.Properties.getValue("fixedLatitude"),
-            "fixedLongitude" => Application.Properties.getValue("fixedLongitude"),
             "routesEnabled" => Application.Properties.getValue("routesEnabled"),
             "enableOffTrackAlerts" => Application.Properties.getValue("enableOffTrackAlerts"),
             "offTrackWrongDirection" => Application.Properties.getValue("offTrackWrongDirection"),
@@ -89,13 +86,10 @@ class Settings {
     // Renders around the users position
     var metersAroundUser as Number = 500; // keep this fairly high by default, too small and the map tiles start to go blurry
     var centerUserOffsetY as Float = 0.5f; // fraction of the screen to move the user down the page 0.5 - user appears in center, 0.75 - user appears 3/4 down the screen. Useful to see more of the route in front of the user.
-    var mapMoveScreenSize as Float = 0.3f; // how far to move the map when the user presses on screen buttons, a fraction of the screen size.
     var zoomAtPaceMode as Number = ZOOM_AT_PACE_MODE_PACE;
     var zoomAtPaceSpeedMPS as Float = 1.0; // meters per second
     var uiMode as Number = UI_MODE_SHOW_ALL;
-    var fixedLatitude as Float? = null;
-    var fixedLongitude as Float? = null;
-
+    
     var routesEnabled as Boolean = true;
     
     // note this only works if a single track is enabled (multiple tracks would always error)
@@ -146,73 +140,6 @@ class Settings {
         updateViewSettings();
     }
 
-    function setFixedPositionRaw(lat as Float, long as Float) as Void {
-        // hack method so that cached values can update the settings without reloading itself
-        // its guaranteed to only be when moving around, and will never go to null
-        fixedLatitude = lat;
-        fixedLongitude = long;
-        Application.Properties.setValue("fixedLatitude", lat);
-        Application.Properties.setValue("fixedLongitude", long);
-    }
-
-    function setFixedPosition(lat as Float?, long as Float?) as Void {
-        // logT("moving to: " + lat + " " + long);
-        // be very careful about putting null into properties, it breaks everything
-        if (lat == null || !(lat instanceof Float)) {
-            lat = 0f;
-        }
-        if (long == null || !(long instanceof Float)) {
-            long = 0f;
-        }
-        fixedLatitude = lat;
-        fixedLongitude = long;
-        setValue("fixedLatitude", lat);
-        setValue("fixedLongitude", long);
-
-        var latIsBasicallyNull = fixedLatitude == null || fixedLatitude == 0;
-        var longIsBasicallyNull = fixedLongitude == null || fixedLongitude == 0;
-        if (latIsBasicallyNull || longIsBasicallyNull) {
-            fixedLatitude = null;
-            fixedLongitude = null;
-            updateCachedValues();
-            return;
-        }
-
-        // we should have a lat and a long at this point
-        // updateCachedValues(); already called by the above sets
-        // var latlong = RectangularPoint.xyToLatLon(fixedPosition.x, fixedPosition.y);
-        // logT("round trip conversion result: " + latlong);
-    }
-
-    function setFixedPositionWithoutUpdate(lat as Float?, long as Float?) as Void {
-        // logT("moving to: " + lat + " " + long);
-        // be very careful about putting null into properties, it breaks everything
-        if (lat == null || !(lat instanceof Float)) {
-            lat = 0f;
-        }
-        if (long == null || !(long instanceof Float)) {
-            long = 0f;
-        }
-        fixedLatitude = lat;
-        fixedLongitude = long;
-        Application.Properties.setValue("fixedLatitude", lat);
-        Application.Properties.setValue("fixedLongitude", long);
-
-        var latIsBasicallyNull = fixedLatitude == null || fixedLatitude == 0;
-        var longIsBasicallyNull = fixedLongitude == null || fixedLongitude == 0;
-        if (latIsBasicallyNull || longIsBasicallyNull) {
-            fixedLatitude = null;
-            fixedLongitude = null;
-            updateCachedValues();
-            return;
-        }
-
-        // we should have a lat and a long at this point
-        // updateCachedValues(); already called by the above sets
-        // var latlong = RectangularPoint.xyToLatLon(fixedPosition.x, fixedPosition.y);
-        // logT("round trip conversion result: " + latlong);
-    }
-
     function setValue(key as String, value as PropertyValueType) as Void {
         Application.Properties.setValue(key, value);
         setValueSideEffect();
@@ -238,16 +165,6 @@ class Settings {
     function setMetersAroundUser(value as Number) as Void {
         metersAroundUser = value;
         setValue("metersAroundUser", metersAroundUser);
-    }
-
-    (:settingsView,:menu2)
-    function setFixedLatitude(value as Float) as Void {
-        setFixedPosition(value, fixedLongitude);
-    }
-
-    (:settingsView,:menu2)
-    function setFixedLongitude(value as Float) as Void {
-        setFixedPosition(fixedLatitude, value);
     }
 
     (:settingsView,:menu2)
@@ -288,12 +205,6 @@ class Settings {
         offTrackCheckIntervalS = value;
         setValue("offTrackCheckIntervalS", offTrackCheckIntervalS);
         updateViewSettings();
-    }
-
-    (:settingsView,:menu2)
-    function setMapMoveScreenSize(value as Float) as Void {
-        mapMoveScreenSize = value;
-        setValue("mapMoveScreenSize", mapMoveScreenSize);
     }
 
     (:settingsView,:menu2)
@@ -589,7 +500,6 @@ class Settings {
         var defaultSettings = new Settings();
         maxTrackPoints = defaultSettings.maxTrackPoints;
         centerUserOffsetY = defaultSettings.centerUserOffsetY;
-        mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
         drawLineToClosestPoint = defaultSettings.drawLineToClosestPoint;
         displayLatLong = defaultSettings.displayLatLong;
         metersAroundUser = defaultSettings.metersAroundUser;
@@ -597,8 +507,6 @@ class Settings {
         zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
         uiMode = defaultSettings.uiMode;
         renderMode = defaultSettings.renderMode;
-        fixedLatitude = defaultSettings.fixedLatitude;
-        fixedLongitude = defaultSettings.fixedLongitude;
         routesEnabled = defaultSettings.routesEnabled;
         enableOffTrackAlerts = defaultSettings.enableOffTrackAlerts;
         offTrackWrongDirection = defaultSettings.offTrackWrongDirection;
@@ -626,7 +534,6 @@ class Settings {
             ({
                 "maxTrackPoints" => maxTrackPoints,
                 "centerUserOffsetY" => centerUserOffsetY,
-                "mapMoveScreenSize" => mapMoveScreenSize,
                 "recalculateIntervalS" => recalculateIntervalS,
                 "mode" => mode,
                 "drawLineToClosestPoint" => drawLineToClosestPoint,
@@ -636,8 +543,6 @@ class Settings {
                 "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
                 "uiMode" => uiMode,
                 "renderMode" => renderMode,
-                "fixedLatitude" => fixedLatitude == null ? 0f : fixedLatitude,
-                "fixedLongitude" => fixedLongitude == null ? 0f : fixedLongitude,
                 "routesEnabled" => routesEnabled,
                 "enableOffTrackAlerts" => enableOffTrackAlerts,
                 "offTrackWrongDirection" => offTrackWrongDirection,
@@ -675,7 +580,6 @@ class Settings {
     function loadSettingsPart1() as Void {
         maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
-        mapMoveScreenSize = parseFloat("mapMoveScreenSize", mapMoveScreenSize);
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
         mode = parseNumber("mode", mode);
@@ -694,9 +598,6 @@ class Settings {
         uiMode = parseNumber("uiMode", uiMode);
         renderMode = parseNumber("renderMode", renderMode);
 
-        fixedLatitude = parseOptionalFloat("fixedLatitude", fixedLatitude);
-        fixedLongitude = parseOptionalFloat("fixedLongitude", fixedLongitude);
-        setFixedPositionWithoutUpdate(fixedLatitude, fixedLongitude);
         offTrackAlertsDistanceM = parseNumber("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
         offTrackAlertsMaxReportIntervalS = parseNumber(
             "offTrackAlertsMaxReportIntervalS",
@@ -735,7 +636,6 @@ class Settings {
         loadSettingsPart2();
 
         // testing coordinates (piper-comanche-wreck)
-        // setFixedPosition(-27.297773, 152.753883);
         // // cachedValues.setScale(0.39); // zoomed out a bit
         // cachedValues.setScale(1.96); // really close
     }

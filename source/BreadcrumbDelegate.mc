@@ -71,36 +71,20 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
         // }
         // todo update these to use inHitbox ?
         else if (y < hitboxSize) {
-            if (settings.mode == MODE_MAP_MOVE) {
-                cachedValues.moveFixedPositionUp();
-                return true;
-            }
             // top of screen
             renderer.incScale();
             return true;
         } else if (y > cachedValues.physicalScreenHeight - hitboxSize) {
             // bottom of screen
-            if (settings.mode == MODE_MAP_MOVE) {
-                cachedValues.moveFixedPositionDown();
-                return true;
-            }
             renderer.decScale();
             return true;
         } else if (x > cachedValues.physicalScreenWidth - hitboxSize) {
             // right of screen
-            if (settings.mode == MODE_MAP_MOVE) {
-                cachedValues.moveFixedPositionRight();
-                return true;
-            }
             // handled by handleStartCacheRoute
             // cachedValues.startCacheCurrentMapArea();
             return true;
         } else if (x < hitboxSize) {
             // left of screen
-            if (settings.mode == MODE_MAP_MOVE) {
-                cachedValues.moveFixedPositionLeft();
-                return true;
-            }
             settings.nextZoomAtPaceMode();
             return true;
         }

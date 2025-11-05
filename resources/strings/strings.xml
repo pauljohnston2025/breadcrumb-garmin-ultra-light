@@ -30,7 +30,6 @@
     <string id="zoomAtPaceSpeedMPS">Zoom Speed (m/s)</string>
     <string id="zoomAtPaceSpeedMPSPrompt">1.0</string>
     <string id="centerUserOffsetYTitle">Center User Offset Y (ratio)</string>
-    <string id="mapMoveScreenSizeTitle">Map Move Screen Size (ratio)</string>
     <string id="renderModeTitle">Render Mode</string>
     <string id="renderModeUnbufferedRotating">Unbuffered Rotations - low memory</string>
     <string id="renderModeNoBufferedNoRotating">No Buffer No Rotations - low memory</string>
@@ -38,10 +37,6 @@
     <string id="uiModeShowAll">Show On Top</string>
     <string id="uiModeHidden">Hidden</string>
     <string id="uiModeNone">Disabled</string>
-    <string id="fixedLatitude">Fixed Longitude</string>
-    <string id="fixedLatitudePrompt">0 - disabled, -90 to 90</string>
-    <string id="fixedLongitude">Fixed Latitude</string>
-    <string id="fixedLongitudePrompt">0 - disabled, -180 to 180</string>
     <string id="recalculateIntervalSTitle">Compute Interval (s)</string>
 
 
@@ -49,7 +44,6 @@
 
     <string id="routesTitle">Routes</string>
     <string id="routesEnabled">Enable Routes</string>
-    <string id="mapMove">Map Move</string>
     <string id="clearRoutes">Clear All Routes</string>
 
     <string id="maxTrackPointsTitle">Max Track Points</string>
