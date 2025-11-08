@@ -267,8 +267,13 @@ class BreadcrumbRenderer {
         var userPosUnrotatedX = usersLastLocation.x - centerPosition.x;
         var userPosUnrotatedY = usersLastLocation.y - centerPosition.y;
 
-        var userPosRotatedX = rotateAroundScreenXOffsetFactoredIn + userPosUnrotatedX;
-        var userPosRotatedY = rotateAroundScreenYOffsetFactoredIn - userPosUnrotatedY;
+        var userPosRotatedX =
+            rotateAroundScreenXOffsetFactoredIn +
+            rotateCos * userPosUnrotatedX -
+            rotateSin * userPosUnrotatedY;
+        var userPosRotatedY =
+            rotateAroundScreenYOffsetFactoredIn -
+            (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
 
         var triangleSizeY = 10;
         var triangleSizeX = 4;

@@ -77,7 +77,7 @@ class CachedValues {
             outerBoundingBox[3] = trackBoundingBox[3] / scaleDivisor;
         }
 
-        if(route != null) {
+        if (route != null) {
             // tmp vars so we can inline the function and remove it
             var outerBoundingBox0Tmp = outerBoundingBox[0] as Float;
             var outerBoundingBox1Tmp = outerBoundingBox[1] as Float;
@@ -132,7 +132,7 @@ class CachedValues {
                 null
             );
             calcCenterPointForBoundingBox(boundingBox);
-            return calcScaleForScreenMeters(renderDistanceM.toFloat());
+            return getNewScaleFromBoundingBox(boundingBox);
         }
 
         var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
@@ -200,12 +200,11 @@ class CachedValues {
         // if we are moving at some pace check the mode we are in to determine if we
         // zoom in or out
         // or we are not at speed, so invert logic (this allows us to zoom in when
-        // stopped, and zoom out when running) mostly useful for cheking close route
+        // stopped, and zoom out when running) mostly useful for checking close route
         // whilst stopped but also allows quick zoom in before setting manual zoom
         // (rather than having to manually zoom in from the outer level) once zoomed
         // in we lock onto the user position anyway
         var weShouldZoomAroundUser =
-            (_settings.zoomAtPaceMode != ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK) ||
             (currentSpeed > _settings.zoomAtPaceSpeedMPS &&
                 _settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_PACE) ||
             (currentSpeed <= _settings.zoomAtPaceSpeedMPS &&
@@ -309,7 +308,7 @@ class CachedValues {
         }
 
         var route = _breadcrumbContextLocal.route;
-        if(route != null) {
+        if (route != null) {
             route.rescale(scaleFactor); // rescale all routes, even if they are not enabled
         }
         _breadcrumbContextLocal.track.rescale(scaleFactor);
