@@ -191,17 +191,6 @@ function onPhone(data as Application.PersistableType) as Void {
             );
             mustUpdate();
             return;
-        } else if (type == PROTOCOL_SAVE_SETTINGS) {
-            logT("got save settings req: " + rawData);
-            if (rawData.size() < 1) {
-                logE("Failed to parse save settings request, bad length: " + rawData.size());
-                return;
-            }
-            _breadcrumbContextLocal.settings.saveSettings(
-                rawData[0] as Dictionary<String, PropertyValueType>
-            );
-            _breadcrumbContextLocal.settings.onSettingsChanged(); // reload anything that has changed
-            return;
         }
 
         logE("Unknown message type: " + type);
@@ -251,13 +240,6 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
         }
 
         while (mail != null) {
-            if (handlePhoneMessage(mail as Array?)) {
-                Communications.emptyMailbox();
-                return;
-            } else {
-                addWithLimit(oldData as Array, mail as Array);
-            }
-
             // todo limit this while loop to only run for the first mail items
             // the background process will get killed if we run for too long, so not a huge concern
             mail = mailIter.next();
@@ -284,43 +266,9 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
         }
     }
 
-    // returns true if handled false if the data should be added to the background data buffer to be handled on the main process
-    // if its handled we will call the background exit function at some point, the caller should not call it
-    private function handlePhoneMessage(data as Array?) as Boolean {
-        try {
-            if (data == null || !(data instanceof Array) || data.size() < 1) {
-                logB("Bad message: " + data);
-                Background.exit(null);
-                return true;
-            }
-
-            var type = data[0] as Number;
-            /*var rawData = data.slice(1, null);*/
-
-            if (type == PROTOCOL_REQUEST_SETTINGS) {
-                logB("got send settings req: ");
-                Communications.transmit(
-                    [PROTOCOL_SEND_SETTINGS, settingsAsDict()],
-                    {},
-                    new SettingsSent()
-                );
-                return true;
-            }
-        } catch (e) {
-            logB("Error background: " + e.getErrorMessage());
-            return false;
-        }
-        return false;
-    }
-
     function onPhoneAppMessage(msg as Communications.PhoneAppMessage) as Void {
         logB("Background Service: Received phone message.");
         var data = msg.data as Array?;
-
-        if (handlePhoneMessage(data)) {
-            logB("Background Service: handled message.");
-            return;
-        }
 
         var oldData = Background.getBackgroundData();
         if (!(oldData instanceof Array)) {

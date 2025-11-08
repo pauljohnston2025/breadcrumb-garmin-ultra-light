@@ -23,31 +23,6 @@ enum /*UiMode*/ {
     UI_MODE_MAX,
 }
 
-(:background)
-function settingsAsDict() as Dictionary<String, PropertyValueType> {
-    return (
-        ({
-            "maxTrackPoints" => Application.Properties.getValue("maxTrackPoints"),
-            "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
-            "recalculateIntervalS" => Application.Properties.getValue("recalculateIntervalS"),
-            "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
-            "displayLatLong" => Application.Properties.getValue("displayLatLong"),
-            "metersAroundUser" => Application.Properties.getValue("metersAroundUser"),
-            "zoomAtPaceMode" => Application.Properties.getValue("zoomAtPaceMode"),
-            "zoomAtPaceSpeedMPS" => Application.Properties.getValue("zoomAtPaceSpeedMPS"),
-            "uiMode" => Application.Properties.getValue("uiMode"),
-            "routesEnabled" => Application.Properties.getValue("routesEnabled"),
-            "enableOffTrackAlerts" => Application.Properties.getValue("enableOffTrackAlerts"),
-            "offTrackWrongDirection" => Application.Properties.getValue("offTrackWrongDirection"),
-            "offTrackAlertsDistanceM" => Application.Properties.getValue("offTrackAlertsDistanceM"),
-            "offTrackAlertsMaxReportIntervalS" => Application.Properties.getValue(
-                "offTrackAlertsMaxReportIntervalS"
-            ),
-            "offTrackCheckIntervalS" => Application.Properties.getValue("offTrackCheckIntervalS"),
-        }) as Dictionary<String, PropertyValueType>
-    );
-}
-
 // we are getting dangerously close to the app settings limit
 // was getting "Unable to serialize app data" in the sim, but after a restart worked fine
 // see
@@ -395,51 +370,6 @@ class Settings {
             logE("Error parsing string: " + key + " " + value);
         }
         return defaultValue;
-    }
-
-    function parseOptionalFloat(key as String, defaultValue as Float?) as Float? {
-        try {
-            return parseOptionalFloatRaw(key, Application.Properties.getValue(key), defaultValue);
-        } catch (e) {
-            logE("Error parsing optional float: " + key);
-        }
-        return defaultValue;
-    }
-
-    function parseOptionalFloatRaw(
-        key as String,
-        value as PropertyValueType,
-        defaultValue as Float?
-    ) as Float? {
-        try {
-            if (value == null) {
-                return null;
-            }
-
-            // as Float is a bit of a hack, it can be null, but we just want allow us to use our helper
-            // (duck typing means at runtime the null passes through fine)
-            return parseFloatRaw(key, value, defaultValue as Float);
-        } catch (e) {
-            logE("Error parsing optional float: " + key);
-        }
-        return defaultValue;
-    }
-
-    function saveSettings(settings as Dictionary<String, PropertyValueType>) as Void {
-        // should we sanitize this as its untrusted? makes it significantly more annoying to do
-        var keys = settings.keys();
-        for (var i = 0; i < keys.size(); ++i) {
-            var key = keys[i] as Application.PropertyKeyType;
-            var value = settings[key];
-            // for now just blindly trust the users
-            // we do reload which sanitizes, but they could break garmins settings page with unexpected types
-            try {
-                Application.Properties.setValue(key, value as PropertyValueType);
-            } catch (e) {
-                logE("failed property save: " + e.getErrorMessage() + " " + key + ":" + value);
-                ++$.globalExceptionCounter;
-            }
-        }
     }
 
     function setup() as Void {
