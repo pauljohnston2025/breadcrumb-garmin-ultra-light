@@ -64,7 +64,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // logD("onLayout");
         _cachedValues.setScreenSize(dc.getWidth(), dc.getHeight());
         var textDim = dc.getTextDimensions("1234", Graphics.FONT_XTINY);
-        _breadcrumbContext.breadcrumbRenderer.setElevationAndUiData(textDim[0] * 1.0f);
     }
 
     function onWorkoutStarted() as Void {
@@ -269,16 +268,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // logD("onUpdate");
         var renderer = _breadcrumbContext.breadcrumbRenderer;
 
-        // mode should be stored here, but is needed for rendering the ui
-        // should structure this way better, but oh well (renderer per mode etc.)
-        if (settings.mode == MODE_ELEVATION) {
-            renderElevationStacked(dc);
-            if (_breadcrumbContext.settings.uiMode == UI_MODE_SHOW_ALL) {
-                renderer.renderUi(dc);
-            }
-            return;
-        }
-
         renderUnbufferedRotating(dc);
 
         // move based on the last scale we drew
@@ -328,60 +317,5 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 );
             }
         }
-    }
-
-    function renderElevationStacked(dc as Dc) as Void {
-        var route = _breadcrumbContext.route;
-        var track = _breadcrumbContext.track;
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-
-        var elevationScale = renderer.getElevationScale(track, route);
-        var hScale = elevationScale[0];
-        var vScale = elevationScale[1];
-        var startAt = elevationScale[2];
-        var hScalePPM = elevationScale[3];
-
-        var lastPoint = track.lastPoint();
-        var elevationText = "";
-
-        if (lastPoint == null) {
-            elevationText = "";
-        } else {
-            if (settings.elevationImperialUnits) {
-                var elevationFt = lastPoint.altitude * 3.28084;
-                elevationText = elevationFt.format("%.0f") + "ft";
-            } else {
-                elevationText = lastPoint.altitude.format("%.0f") + "m";
-            }
-        }
-
-        renderer.renderElevationChart(
-            dc,
-            hScalePPM,
-            vScale,
-            startAt,
-            track.distanceTotal,
-            elevationText
-        );
-        if (route != null) {
-            renderer.renderTrackElevation(
-                dc,
-                renderer._xElevationStart,
-                route,
-                Graphics.COLOR_BLUE,
-                hScale,
-                vScale,
-                startAt
-            );
-        }
-        renderer.renderTrackElevation(
-            dc,
-            renderer._xElevationStart,
-            track,
-            Graphics.COLOR_GREEN,
-            hScale,
-            vScale,
-            startAt
-        );
     }
 }

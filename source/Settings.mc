@@ -7,14 +7,6 @@ import Toybox.Communications;
 import Toybox.WatchUi;
 import Toybox.PersistedContent;
 
-enum /*Mode*/ {
-    MODE_NORMAL,
-    MODE_ELEVATION,
-    /*MODE_MAP_MOVE,*/
-    /* MODE_DEBUG, */ 
-    MODE_MAX,
-}
-
 enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_PACE,
     ZOOM_AT_PACE_MODE_STOPPED,
@@ -38,7 +30,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "maxTrackPoints" => Application.Properties.getValue("maxTrackPoints"),
             "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
             "recalculateIntervalS" => Application.Properties.getValue("recalculateIntervalS"),
-            "mode" => Application.Properties.getValue("mode"),
             "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
             "showPoints" => Application.Properties.getValue("showPoints"),
             "displayLatLong" => Application.Properties.getValue("displayLatLong"),
@@ -71,8 +62,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
 // * Reset sim app data and remove apps
 // * Works fine
 class Settings {
-    var mode as Number = MODE_NORMAL;
-
     // Renders around the users position
     var metersAroundUser as Number = 500; // keep this fairly high by default, too small and the map tiles start to go blurry
     var centerUserOffsetY as Float = 0.5f; // fraction of the screen to move the user down the page 0.5 - user appears in center, 0.75 - user appears 3/4 down the screen. Useful to see more of the route in front of the user.
@@ -101,16 +90,6 @@ class Settings {
     // https://www.youtube.com/watch?v=LasrD6SZkZk&ab_channel=JaylaB
     var distanceImperialUnits as Boolean =
         System.getDeviceSettings().distanceUnits == System.UNIT_STATUTE;
-    var elevationImperialUnits as Boolean =
-        System.getDeviceSettings().elevationUnits == System.UNIT_STATUTE;
-
-    function setMode(_mode as Number) as Void {
-        mode = _mode;
-        // directly set mode, its only for what is displayed, which takes effect ont he next onUpdate
-        // we do not want to call view.onSettingsChanged because it clears timestamps when going to the debug page.
-        // The setValue method on this class calls the view changed method, so do not call it.
-        Application.Properties.setValue("mode", mode);
-    }
 
     (:settingsView,:menu2)
     function setUiMode(_uiMode as Number) as Void {
@@ -242,22 +221,7 @@ class Settings {
         setValue("routesEnabled", routesEnabled);
     }
 
-    function nextMode() as Void {
-        // logT("mode cycled");
-        // could just add one and check if over MODE_MAX?
-        mode++;
-        if (mode >= MODE_MAX) {
-            mode = MODE_NORMAL;
-        }
-
-        setMode(mode);
-    }
-
     function nextZoomAtPaceMode() as Void {
-        if (mode != MODE_NORMAL) {
-            return;
-        }
-
         // could also do this? not sure what better for perf (probably the modulo 1 less instruction), below is more readable
         // zoomAtPaceMode = (zoomAtPaceMode + 1) % ZOOM_AT_PACE_MODE_MAX;
         zoomAtPaceMode++;
@@ -506,7 +470,6 @@ class Settings {
                 "maxTrackPoints" => maxTrackPoints,
                 "centerUserOffsetY" => centerUserOffsetY,
                 "recalculateIntervalS" => recalculateIntervalS,
-                "mode" => mode,
                 "drawLineToClosestPoint" => drawLineToClosestPoint,
                 "displayLatLong" => displayLatLong,
                 "metersAroundUser" => metersAroundUser,
@@ -551,7 +514,6 @@ class Settings {
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
-        mode = parseNumber("mode", mode);
         drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
         displayLatLong = parseBool("displayLatLong", displayLatLong);
         enableOffTrackAlerts = parseBool("enableOffTrackAlerts", enableOffTrackAlerts);

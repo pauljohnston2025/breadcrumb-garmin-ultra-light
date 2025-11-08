@@ -257,28 +257,6 @@ class BreadcrumbTrack {
         return coordinates.firstPoint();
     }
 
-    function addLatLongRaw(lat as Float, lon as Float, altitude as Float) as Void {
-        var newPoint = RectangularPoint.latLon2xy(lat, lon, altitude);
-        if (newPoint == null) {
-            return;
-        }
-        var lastPoint = lastPoint();
-        if (lastPoint == null) {
-            addPointRaw(newPoint, 0f);
-            setInitialLastClosePoint();
-            return;
-        }
-
-        var distance = lastPoint.distanceTo(newPoint);
-
-        if (distance < minDistanceMScaled) {
-            // no need to add points closer than this
-            return;
-        }
-
-        addPointRaw(newPoint, distance);
-    }
-
     // new point should be in scale already
     function addPointRaw(newPoint as RectangularPoint, distance as Float) as Boolean {
         distanceTotal += distance;

@@ -2,9 +2,6 @@
     <string id="AppName">ULBreadcrumbDataField</string>
     <string id="settingsTitle">Ultra Light Breadcrumb Data Field</string>
 
-    <string id="modeTitle">Display Mode</string>
-    <string id="elevationMode">Elevation</string>
-    <string id="trackRouteMode">Track/Route</string>
     <string id="offTrackAlertsDistanceMTitle">Off Track Alert Distance (m)</string>
     <string id="offTrackAlertsMaxReportIntervalSTitle">Max Alert Report Interval (s)</string>
     <string id="offTrackCheckIntervalSTitle">Max Alert Check Interval (s)</string>

@@ -133,19 +133,6 @@ class SettingsMain extends Rez.Menus.SettingsMain {
             return;
         }
         var settings = _breadcrumbContextLocal.settings;
-        var modeString = "";
-        switch (settings.mode) {
-            case MODE_NORMAL:
-                modeString = Rez.Strings.trackRouteMode;
-                break;
-            case MODE_ELEVATION:
-                modeString = Rez.Strings.elevationMode;
-                break;
-            case MODE_MAP_MOVE:
-                modeString = Rez.Strings.mapMove;
-                break;
-        }
-        safeSetSubLabel(me, :settingsMainMode, modeString);
         var uiModeString = "";
         switch (settings.uiMode) {
             case UI_MODE_SHOW_ALL:
@@ -164,16 +151,6 @@ class SettingsMain extends Rez.Menus.SettingsMain {
             :settingsMainRecalculateIntervalS,
             settings.recalculateIntervalS.toString()
         );
-        var renderModeString = "";
-        switch (settings.renderMode) {
-            case RENDER_MODE_UNBUFFERED_ROTATING:
-                renderModeString = Rez.Strings.renderModeUnbufferedRotating;
-                break;
-            case RENDER_MODE_UNBUFFERED_NO_ROTATION:
-                renderModeString = Rez.Strings.renderModeNoBufferedNoRotating;
-                break;
-        }
-        safeSetSubLabel(me, :settingsMainRenderMode, renderModeString);
         safeSetSubLabel(
             me,
             :settingsMainCenterUserOffsetY,

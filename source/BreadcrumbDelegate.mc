@@ -23,38 +23,12 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
         var settings = _breadcrumbContext.settings;
 
         var hitboxSize = renderer.hitboxSize;
-        var halfHitboxSize = hitboxSize / 2.0f;
 
         if (settings.uiMode == UI_MODE_NONE) {
             return false;
         }
 
-        // perhaps put this into new class to handle touch events, and have a
-        // renderer for that ui would allow us to switch out ui and handle touched
-        // differently also will alow setting the scren height
-        if (inHitbox(x, y, renderer.modeSelectX, renderer.modeSelectY, halfHitboxSize)) {
-            // top right
-            settings.nextMode();
-            return true;
-        }
-
-        //  else if (
-        //     y > renderer.mapEnabledY - halfHitboxSize &&
-        //     y < renderer.mapEnabledY + halfHitboxSize &&
-        //     x > renderer.mapEnabledX - halfHitboxSize &&
-        //     x < renderer.mapEnabledX + halfHitboxSize
-        // ) {
-        //     // botom right
-        //     // map enable/disable now handled above
-        //     // if (settings.mode == MODE_NORMAL) {
-        //     //     settings.toggleMapEnabled();
-        //     //     return true;
-        //     // }
-
-        //     return false;
-        // }
-        // todo update these to use inHitbox ?
-        else if (x < hitboxSize) {
+        if (x < hitboxSize) {
             // left of screen
             settings.nextZoomAtPaceMode();
             return true;

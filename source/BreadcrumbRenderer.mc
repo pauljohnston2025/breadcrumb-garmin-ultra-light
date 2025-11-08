@@ -8,7 +8,6 @@ import Toybox.Graphics;
 
 const NO_SMOKING_RADIUS = 10.0f;
 const DESIRED_SCALE_PIXEL_WIDTH as Float = 100.0f;
-const DESIRED_ELEV_SCALE_PIXEL_WIDTH as Float = 50.0f;
 // note sure why this has anything to do with DESIRED_SCALE_PIXEL_WIDTH, should just be whatever tile layer 0 equates to for the screen size
 const MIN_SCALE as Float = DESIRED_SCALE_PIXEL_WIDTH / 1000000000.0f;
 
@@ -78,53 +77,6 @@ class BreadcrumbRenderer {
         "1000mi",
     ];
 
-    // elevation scales are in mm
-    const ELEVATION_SCALE_KEYS as Array<Number> = [
-        1, 2, 5, 10, 25, 50, 100, 250, 500, 1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000,
-        250000, 500000,
-    ];
-    const ELEVATION_SCALE_VALUES as Array<String> = [
-        "1mm",
-        "2mm",
-        "5mm",
-        "1cm",
-        "2.5cm",
-        "5cm",
-        "10cm",
-        "25cm",
-        "50cm",
-        "1m",
-        "5m",
-        "10m",
-        "20m",
-        "30m",
-        "40m",
-        "50m",
-        "100m",
-        "250m",
-        "500m",
-    ];
-
-    // key is in mm
-    const ELEVATION_SCALE_KEYS_IMPERIAL as Array<Number> = [
-        25, 51, 127, 254, 305, 1524, 3048, 6096, 15240, 30480, 76200, 152400, 304800,
-    ];
-    const ELEVATION_SCALE_VALUES_IMPERIAL as Array<String> = [
-        "1in",
-        "2in",
-        "5in",
-        "10in",
-        "1ft",
-        "5ft",
-        "10ft",
-        "20ft",
-        "50ft",
-        "100ft",
-        "250ft",
-        "500ft",
-        "1000ft",
-    ];
-
     // benchmark same track loaded (just render track no activity running) using
     // average time over 1min of benchmark
     // (just route means we always have a heap of points, and a small track does not bring the average down)
@@ -139,9 +91,7 @@ class BreadcrumbRenderer {
 
         if (
             SCALE_KEYS.size() != SCALE_VALUES.size() ||
-            SCALE_KEYS_IMPERIAL.size() != SCALE_VALUES_IMPERIAL.size() ||
-            ELEVATION_SCALE_KEYS.size() != ELEVATION_SCALE_VALUES.size() ||
-            ELEVATION_SCALE_KEYS_IMPERIAL.size() != ELEVATION_SCALE_VALUES_IMPERIAL.size()
+            SCALE_KEYS_IMPERIAL.size() != SCALE_VALUES_IMPERIAL.size()
         ) {
             throw new Exception();
         }
@@ -214,12 +164,6 @@ class BreadcrumbRenderer {
         offTrackPoint as RectangularPoint,
         colour as Number
     ) as Void {
-        if (settings.mode != MODE_NORMAL) {
-            // its very confusing seeing the routes disappear when scrolling
-            // and it makes sense to want to sroll around the route too
-            return;
-        }
-
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
         var rotateCos = _cachedValues.rotateCos; // local lookup faster
         var rotateSin = _cachedValues.rotateSin; // local lookup faster
@@ -286,9 +230,6 @@ class BreadcrumbRenderer {
         var triangleRightX = triangleTopX + triangleSizeX;
         var triangleRightY = triangleLeftY;
 
-        var triangleCenterX = userPosRotatedX;
-        var triangleCenterY = userPosRotatedY;
-
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
         dc.setPenWidth(6);
         dc.drawLine(triangleTopX, triangleTopY, triangleRightX, triangleRightY);
@@ -307,12 +248,6 @@ class BreadcrumbRenderer {
         var rotateSin = _cachedValues.rotateSin; // local lookup faster
         var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
-
-        if (settings.mode != MODE_NORMAL) {
-            // its very cofusing seeing the routes disappear when scrolling
-            // and it makes sense to want to sroll around the route too
-            return;
-        }
 
         dc.setColor(colour, Graphics.COLOR_BLACK);
         dc.setPenWidth(4);
@@ -397,29 +332,6 @@ class BreadcrumbRenderer {
         dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
 
-        // current mode displayed
-        var modeLetter = "T";
-        switch (settings.mode) {
-            case MODE_NORMAL:
-                modeLetter = "T";
-                break;
-            case MODE_ELEVATION:
-                modeLetter = "E";
-                break;
-        }
-
-        dc.drawText(
-            modeSelectX,
-            modeSelectY,
-            Graphics.FONT_XTINY,
-            modeLetter,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-
-        if (settings.mode == MODE_ELEVATION) {
-            return;
-        }
-
         // make this a const
         var scaleFromEdge = 75; // guestimate
 
@@ -472,351 +384,6 @@ class BreadcrumbRenderer {
         );
     }
 
-    // todo move most of these into a ui class
-    // and all the elevation ones into elevation class, or cached values if they are
-    // things set to -1 are set by setScreenSize()
-    var _xElevationStart as Float = -1f; // think this needs to depend on dpi?
-    var _xElevationEnd as Float = -1f;
-    var _yElevationHeight as Float = -1f;
-    var _halfYElevationHeight as Float = -1f;
-    var yElevationTop as Float = -1f;
-    var yElevationBottom as Float = -1f;
-    var modeSelectX as Float = -1f;
-    var modeSelectY as Float = -1f;
-    var returnToUserX as Float = -1f;
-    var returnToUserY as Float = -1f;
     var hitboxSize as Float = 60f;
     var halfHitboxSize as Float = hitboxSize / 2.0f;
-
-    function setElevationAndUiData(xElevationStart as Float) as Void {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-        var physicalScreenWidth = _cachedValues.physicalScreenWidth; // local lookup faster
-
-        _xElevationStart = xElevationStart;
-        _xElevationEnd = physicalScreenWidth - _xElevationStart;
-        var xElevationFromCenter = xHalfPhysical - _xElevationStart;
-        _yElevationHeight =
-            Math.sqrt(
-                xHalfPhysical * xHalfPhysical - xElevationFromCenter * xElevationFromCenter
-            ).toFloat() *
-                2 -
-            40;
-        _halfYElevationHeight = _yElevationHeight / 2.0f;
-        yElevationTop = yHalfPhysical - _halfYElevationHeight;
-        yElevationBottom = yHalfPhysical + _halfYElevationHeight;
-
-        setCornerPositions();
-    }
-
-    (:round)
-    function setCornerPositions() as Void {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-
-        var offsetSize = Math.sqrt(
-            ((yHalfPhysical - halfHitboxSize) * (yHalfPhysical - halfHitboxSize)) / 2
-        ).toFloat();
-
-        // top right
-        modeSelectX = xHalfPhysical + offsetSize;
-        modeSelectY = yHalfPhysical - offsetSize;
-
-        // bottom left
-        returnToUserX = xHalfPhysical - offsetSize;
-        returnToUserY = yHalfPhysical + offsetSize;
-    }
-
-    (:rectangle)
-    function setCornerPositions() as Void {
-        var physicalScreenWidth = _cachedValues.physicalScreenWidth; // local lookup faster
-        var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
-
-        // top right
-        modeSelectX = physicalScreenWidth - halfHitboxSize;
-        modeSelectY = halfHitboxSize;
-
-        // bottom left
-        returnToUserX = halfHitboxSize;
-        returnToUserY = physicalScreenHeight - halfHitboxSize;
-    }
-
-    function renderElevationChart(
-        dc as Dc,
-        hScalePPM as Float,
-        vScale as Float,
-        startAt as Float,
-        distancePixels as Float,
-        elevationText as String
-    ) as Void {
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-        var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
-
-        var hScaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
-        var hScaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
-        var vScaleKeys = settings.elevationImperialUnits
-            ? ELEVATION_SCALE_KEYS_IMPERIAL
-            : ELEVATION_SCALE_KEYS;
-        var vScaleValues = settings.elevationImperialUnits
-            ? ELEVATION_SCALE_VALUES_IMPERIAL
-            : ELEVATION_SCALE_VALUES;
-
-        var hScaleData = getScaleSizeGeneric(
-            hScalePPM,
-            DESIRED_SCALE_PIXEL_WIDTH,
-            hScaleKeys as Array<Number>,
-            hScaleValues as Array<String>
-        );
-        var hPixelWidth = hScaleData[0];
-        var vScaleData = getScaleSizeGeneric(
-            vScale,
-            DESIRED_ELEV_SCALE_PIXEL_WIDTH,
-            vScaleKeys as Array<Number>,
-            vScaleValues as Array<String>
-        );
-        var vPixelWidth = vScaleData[0];
-
-        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(1);
-
-        // vertical and horizontal lines for extreems
-        dc.drawLine(_xElevationStart, yElevationTop, _xElevationStart, yElevationBottom);
-        dc.drawLine(_xElevationStart, yHalfPhysical, _xElevationEnd, yHalfPhysical);
-        // border (does not look great)
-        // dc.drawRectangle(_xElevationStart, yHalfPhysical - _halfYElevationHeight, screenWidth - _xElevationStart * 2, _yElevationHeight);
-
-        // horizontal lines vertical scale
-        if (vPixelWidth != 0) {
-            // do not want infinite for loop
-            for (var i = 0; i < _halfYElevationHeight; i += vPixelWidth) {
-                var yTop = yHalfPhysical - i;
-                var yBottom = yHalfPhysical + i;
-                dc.drawLine(_xElevationStart, yTop, _xElevationEnd, yTop);
-                dc.drawLine(_xElevationStart, yBottom, _xElevationEnd, yBottom);
-            }
-        }
-
-        // vertical lines horizontal scale
-        if (hPixelWidth != 0) {
-            // do not want infinite for loop
-            for (var i = _xElevationStart; i < _xElevationEnd; i += hPixelWidth) {
-                dc.drawLine(i, yElevationTop, i, yElevationBottom);
-            }
-        }
-
-        var mToFt = 3.28084f;
-        var elevationUnit = "m";
-        var startAtDisplay = startAt;
-        if (settings.elevationImperialUnits) {
-            elevationUnit = "ft";
-            startAtDisplay = startAt * mToFt;
-        }
-
-        dc.drawText(
-            0,
-            yHalfPhysical,
-            Graphics.FONT_XTINY,
-            startAtDisplay.format("%.0f"),
-            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-        if (vScale != 0) {
-            // prevent division by 0
-            var topScaleM = startAt + _halfYElevationHeight / vScale;
-            var topScaleDisplay = topScaleM;
-            if (settings.elevationImperialUnits) {
-                topScaleDisplay = topScaleM * mToFt;
-            }
-            var topText = topScaleDisplay.format("%.0f") + elevationUnit;
-            var textDim = dc.getTextDimensions(topText, Graphics.FONT_XTINY);
-            dc.drawText(
-                _xElevationStart,
-                yHalfPhysical - _halfYElevationHeight - textDim[1],
-                Graphics.FONT_XTINY,
-                topText,
-                Graphics.TEXT_JUSTIFY_LEFT
-            );
-            var bottomScaleM = startAt - _halfYElevationHeight / vScale;
-            var bottomScaleDisplay = bottomScaleM;
-            if (settings.elevationImperialUnits) {
-                bottomScaleDisplay = bottomScaleM * mToFt;
-            }
-            dc.drawText(
-                _xElevationStart,
-                yHalfPhysical + _halfYElevationHeight,
-                Graphics.FONT_XTINY,
-                bottomScaleDisplay.format("%.0f") + elevationUnit,
-                Graphics.TEXT_JUSTIFY_LEFT
-            );
-        }
-
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(3);
-
-        if (hPixelWidth != 0) {
-            var hFoundName = hScaleData[2];
-            var y = physicalScreenHeight - 20;
-            dc.drawLine(
-                xHalfPhysical - hPixelWidth / 2.0f,
-                y,
-                xHalfPhysical + hPixelWidth / 2.0f,
-                y
-            );
-            dc.drawText(
-                xHalfPhysical,
-                y - 30,
-                Graphics.FONT_XTINY,
-                hFoundName,
-                Graphics.TEXT_JUSTIFY_CENTER
-            );
-        }
-
-        if (vPixelWidth != 0) {
-            var vFoundName = vScaleData[2];
-            var x = xHalfPhysical + DESIRED_SCALE_PIXEL_WIDTH / 2.0f;
-            var y = physicalScreenHeight - 20 - 5 - vPixelWidth / 2.0f;
-            dc.drawLine(x, y - vPixelWidth / 2.0f, x, y + vPixelWidth / 2.0f);
-            dc.drawText(x + 5, y - 15, Graphics.FONT_XTINY, vFoundName, Graphics.TEXT_JUSTIFY_LEFT);
-            // var vectorFont = Graphics.getVectorFont(
-            //   {
-            //     // font face from https://developer.garmin.com/connect-iq/reference-guides/devices-reference/
-            //     :face=>["VeraSans"],
-            //     :size=>16,
-            //     // :font=>Graphics.FONT_XTINY,
-            //     // :scale=>1.0f
-            //   }
-            // );
-            // dc.drawAngledText(0, yHalfPhysical, vectorFont, vFoundName, Graphics.TEXT_JUSTIFY_LEFT, 90);
-            // dc.drawRadialText(0, yHalfPhysical, vectorFont, vFoundName, Graphics.TEXT_JUSTIFY_LEFT, 90, 0, Graphics.RADIAL_TEXT_DIRECTION_COUNTER_CLOCKWISE);
-            // drawAngledText and drawRadialText not available :(
-        }
-
-        var distanceM = _cachedValues.elapsedDistanceM;
-        var distText;
-        if (settings.elevationImperialUnits) {
-            var distanceMi = distanceM * 0.000621371f;
-            var distanceFt = distanceM * 3.28084f;
-            distText =
-                distanceMi >= 0.1
-                    ? distanceMi.format("%.1f") + "mi"
-                    : distanceFt.toNumber().toString() + "ft";
-        } else {
-            var distanceKM = distanceM / 1000f;
-            distText =
-                distanceKM > 1
-                    ? distanceKM.format("%.1f") + "km"
-                    : distanceM.toNumber().toString() + "m";
-        }
-        var text = "dist: " + distText + "\n" + "elev: " + elevationText;
-        dc.drawText(xHalfPhysical, 20, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function getElevationScale(
-        track as BreadcrumbTrack,
-        route as BreadcrumbTrack?
-    ) as [Float, Float, Float, Float] {
-        var maxDistanceScaled = 0f;
-        var minElevation = FLOAT_MAX;
-        var maxElevation = FLOAT_MIN;
-        if (track.coordinates.pointSize() > 2) {
-            maxDistanceScaled = maxF(maxDistanceScaled, track.distanceTotal);
-            minElevation = minF(minElevation, track.elevationMin);
-            maxElevation = maxF(maxElevation, track.elevationMax);
-        }
-
-        if (route != null) {
-            if (route.coordinates.pointSize() > 2) {
-                maxDistanceScaled = maxF(maxDistanceScaled, route.distanceTotal);
-                minElevation = minF(minElevation, route.elevationMin);
-                maxElevation = maxF(maxElevation, route.elevationMax);
-            }
-        }
-
-        // abs really only needed until we get the first point (then max should always be more than min)
-        var elevationChange = abs(maxElevation - minElevation);
-        var startAt = minElevation + elevationChange / 2;
-        return getElevationScaleRaw(maxDistanceScaled, elevationChange, startAt);
-    }
-
-    function getElevationScaleRaw(
-        distanceScaled as Float,
-        elevationChange as Float,
-        startAt as Float
-    ) as [Float, Float, Float, Float] {
-        var distanceM = distanceScaled;
-        var distanceScale = _cachedValues.currentScale;
-        if (distanceScale != 0f) {
-            distanceM = distanceScaled / distanceScale;
-        }
-
-        // clip to a a square (since we cannot see the edges of the circle)
-        var totalXDistance = _cachedValues.physicalScreenWidth - 2 * _xElevationStart;
-        var totalYDistance = _yElevationHeight;
-
-        if (distanceScaled == 0 && elevationChange == 0) {
-            return [0f, 0f, startAt, 0f]; // do not divide by 0
-        }
-
-        if (distanceScaled == 0) {
-            return [0f, totalYDistance / elevationChange, startAt, 0f]; // do not divide by 0
-        }
-
-        if (elevationChange == 0) {
-            return [totalXDistance / distanceScaled, 0f, startAt, totalXDistance / distanceM]; // do not divide by 0
-        }
-
-        var hScalePPM = totalXDistance / distanceM; // pixels per meter
-        var hScale = totalXDistance / distanceScaled; // pixels per pixel - make track renderring faster (single multiply)
-        var vScale = totalYDistance / elevationChange;
-
-        return [hScale, vScale, startAt, hScalePPM];
-    }
-
-    function renderTrackElevation(
-        dc as Dc,
-        xElevationStart as Float,
-        track as BreadcrumbTrack,
-        colour as Graphics.ColorType,
-        hScale as Float,
-        vScale as Float,
-        startAt as Float
-    ) as Float {
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-
-        var sizeRaw = track.coordinates.size();
-        if (sizeRaw < ARRAY_POINT_SIZE * 2) {
-            return xElevationStart; // not enough points for iteration
-        }
-
-        dc.setColor(colour, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(1);
-
-        var coordinatesRaw = track.coordinates._internalArrayBuffer;
-        var prevPointX = coordinatesRaw[0];
-        var prevPointY = coordinatesRaw[1];
-        var prevPointAlt = coordinatesRaw[2];
-        var prevChartX = xElevationStart;
-        var prevChartY = yHalfPhysical + (startAt - prevPointAlt) * vScale;
-        for (var i = ARRAY_POINT_SIZE; i < sizeRaw; i += ARRAY_POINT_SIZE) {
-            var currPointX = coordinatesRaw[i];
-            var currPointY = coordinatesRaw[i + 1];
-            var currPointAlt = coordinatesRaw[i + 2];
-
-            var xDistance = distance(prevPointX, prevPointY, currPointX, currPointY);
-            var yDistance = prevPointAlt - currPointAlt;
-
-            var currChartX = prevChartX + xDistance * hScale;
-            var currChartY = prevChartY + yDistance * vScale;
-
-            dc.drawLine(prevChartX, prevChartY, currChartX, currChartY);
-
-            prevPointX = currPointX;
-            prevPointY = currPointY;
-            prevPointAlt = currPointAlt;
-            prevChartX = currChartX;
-            prevChartY = currChartY;
-        }
-
-        return prevChartX;
-    }
 }
