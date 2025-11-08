@@ -1,7 +1,7 @@
 <settings>
     <!-- https://developer.garmin.com/connect-iq/core-topics/properties-and-app-settings/ -->
     <!-- todo add prompt to some of these -->
-    <setting propertyKey="@Properties.uiMode" title="@Strings.uiModeTitle">
+    <setting propertyKey="@Properties.a" title="@Strings.uiModeTitle">
         <settingConfig type="list">
             <listEntry value="0">@Strings.uiModeShowAll</listEntry>
             <listEntry value="1">@Strings.uiModeHidden</listEntry>
@@ -9,24 +9,24 @@
         </settingConfig>
     </setting>
 
-    <setting propertyKey="@Properties.recalculateIntervalS" title="@Strings.recalculateIntervalSTitle">
+    <setting propertyKey="@Properties.c" title="@Strings.recalculateIntervalSTitle">
         <settingConfig type="numeric" min="1"/>
     </setting>
 
-    <setting propertyKey="@Properties.centerUserOffsetY" title="@Strings.centerUserOffsetYTitle">
+    <setting propertyKey="@Properties.j" title="@Strings.centerUserOffsetYTitle">
         <settingConfig type="numeric" min="0" max="1"/>
     </setting>
 
-    <setting propertyKey="@Properties.displayLatLong" title="@Strings.displayLatLongTitle">
+    <setting propertyKey="@Properties.o" title="@Strings.displayLatLongTitle">
         <settingConfig type="boolean"/>
     </setting>
 
-    <setting propertyKey="@Properties.maxTrackPoints" title="@Strings.maxTrackPointsTitle">
+    <setting propertyKey="@Properties.k" title="@Strings.maxTrackPointsTitle">
         <settingConfig type="numeric" min="1"/>
     </setting>
     
     <!-- <group id="zoomAtPace" title="@Strings.zoomAtPaceTitle"> -->
-        <setting propertyKey="@Properties.zoomAtPaceMode" title="@Strings.zoomAtPaceModeTitle">
+        <setting propertyKey="@Properties.b" title="@Strings.zoomAtPaceModeTitle">
             <settingConfig type="list">
                 <listEntry value="0">@Strings.zoomAtPaceModePace</listEntry>
                 <listEntry value="1">@Strings.zoomAtPaceModeStopped</listEntry>
@@ -36,38 +36,38 @@
             </settingConfig>
         </setting>
 
-        <setting propertyKey="@Properties.metersAroundUser" title="@Strings.metersAroundUser" prompt="@Strings.metersAroundUserPrompt">
+        <setting propertyKey="@Properties.d" title="@Strings.metersAroundUser" prompt="@Strings.metersAroundUserPrompt">
             <settingConfig type="numeric" min="0" max="100000"/>
         </setting>
         
-        <setting propertyKey="@Properties.zoomAtPaceSpeedMPS" title="@Strings.zoomAtPaceSpeedMPS" prompt="@Strings.zoomAtPaceSpeedMPSPrompt">
+        <setting propertyKey="@Properties.e" title="@Strings.zoomAtPaceSpeedMPS" prompt="@Strings.zoomAtPaceSpeedMPSPrompt">
             <settingConfig type="numeric" min="0" max="50"/>
         </setting>
     <!-- </group> -->
 
     <!-- <group id="offTrackAlertsGroup" title="@Strings.offTrackAlertsGroupTitle"> -->
-        <setting propertyKey="@Properties.offTrackAlertsDistanceM" title="@Strings.offTrackAlertsDistanceMTitle">
+        <setting propertyKey="@Properties.f" title="@Strings.offTrackAlertsDistanceMTitle">
             <settingConfig type="numeric" min="0"/>
         </setting>
-        <setting propertyKey="@Properties.offTrackCheckIntervalS" title="@Strings.offTrackCheckIntervalSTitle">
+        <setting propertyKey="@Properties.g" title="@Strings.offTrackCheckIntervalSTitle">
             <settingConfig type="numeric" min="0"/>
         </setting>
-        <setting propertyKey="@Properties.drawLineToClosestPoint" title="@Strings.drawLineToClosestPointTitle">
+        <setting propertyKey="@Properties.m" title="@Strings.drawLineToClosestPointTitle">
             <settingConfig type="boolean"/>
         </setting>
-        <setting propertyKey="@Properties.offTrackWrongDirection" title="@Strings.offTrackWrongDirectionTitle">
+        <setting propertyKey="@Properties.i" title="@Strings.offTrackWrongDirectionTitle">
             <settingConfig type="boolean"/>
         </setting>
-        <setting propertyKey="@Properties.enableOffTrackAlerts" title="@Strings.enableOffTrackAlertsTitle">
+        <setting propertyKey="@Properties.l" title="@Strings.enableOffTrackAlertsTitle">
             <settingConfig type="boolean"/>
         </setting>
-        <setting propertyKey="@Properties.offTrackAlertsMaxReportIntervalS" title="@Strings.offTrackAlertsMaxReportIntervalSTitle">
+        <setting propertyKey="@Properties.h" title="@Strings.offTrackAlertsMaxReportIntervalSTitle">
             <settingConfig type="numeric" min="0"/>
         </setting>
     <!-- </group> -->
 
     <!-- <group id="routesdesc" title="@Strings.routesTitle"> -->
-        <setting propertyKey="@Properties.routesEnabled" title="@Strings.routesEnabled">
+        <setting propertyKey="@Properties.n" title="@Strings.routesEnabled">
             <settingConfig type="boolean"/>
         </setting>
         

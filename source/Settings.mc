@@ -66,7 +66,7 @@ class Settings {
     (:settingsView,:menu2)
     function setUiMode(_uiMode as Number) as Void {
         uiMode = _uiMode;
-        setValue("uiMode", uiMode);
+        setValue("a", uiMode);
     }
 
     function setValue(key as String, value as PropertyValueType) as Void {
@@ -81,19 +81,19 @@ class Settings {
 
     function setZoomAtPaceMode(_zoomAtPaceMode as Number) as Void {
         zoomAtPaceMode = _zoomAtPaceMode;
-        setValue("zoomAtPaceMode", zoomAtPaceMode);
+        setValue("b", zoomAtPaceMode);
     }
 
     (:settingsView,:menu2)
     function setZoomAtPaceSpeedMPS(mps as Float) as Void {
         zoomAtPaceSpeedMPS = mps;
-        setValue("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
+        setValue("e", zoomAtPaceSpeedMPS);
     }
 
     (:settingsView,:menu2)
     function setMetersAroundUser(value as Number) as Void {
         metersAroundUser = value;
-        setValue("metersAroundUser", metersAroundUser);
+        setValue("d", metersAroundUser);
     }
 
     (:settingsView,:menu2)
@@ -103,7 +103,7 @@ class Settings {
         if (oldmaxTrackPoints != maxTrackPoints) {
             maxTrackPointsChanged();
         }
-        setValue("maxTrackPoints", maxTrackPoints);
+        setValue("k", maxTrackPoints);
     }
 
     function maxTrackPointsChanged() as Void {
@@ -118,79 +118,79 @@ class Settings {
     (:settingsView,:menu2)
     function setOffTrackAlertsDistanceM(value as Number) as Void {
         offTrackAlertsDistanceM = value;
-        setValue("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
+        setValue("f", offTrackAlertsDistanceM);
         updateViewSettings();
     }
 
     (:settingsView,:menu2)
     function setOffTrackAlertsMaxReportIntervalS(value as Number) as Void {
         offTrackAlertsMaxReportIntervalS = value;
-        setValue("offTrackAlertsMaxReportIntervalS", offTrackAlertsMaxReportIntervalS);
+        setValue("h", offTrackAlertsMaxReportIntervalS);
         updateViewSettings();
     }
 
     (:settingsView,:menu2)
     function setOffTrackCheckIntervalS(value as Number) as Void {
         offTrackCheckIntervalS = value;
-        setValue("offTrackCheckIntervalS", offTrackCheckIntervalS);
+        setValue("g", offTrackCheckIntervalS);
         updateViewSettings();
     }
 
     (:settingsView,:menu2)
     function setCenterUserOffsetY(value as Float) as Void {
         centerUserOffsetY = value;
-        setValue("centerUserOffsetY", centerUserOffsetY);
+        setValue("j", centerUserOffsetY);
     }
 
     (:settingsView,:menu2)
     function setRecalculateIntervalS(value as Number) as Void {
         recalculateIntervalS = value;
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
-        setValue("recalculateIntervalS", recalculateIntervalS);
+        setValue("c", recalculateIntervalS);
     }
 
     (:settingsView,:menu2)
     function setDrawLineToClosestPoint(value as Boolean) as Void {
         drawLineToClosestPoint = value;
-        setValue("drawLineToClosestPoint", drawLineToClosestPoint);
+        setValue("m", drawLineToClosestPoint);
         updateViewSettings();
     }
 
     (:settingsView,:menu2)
     function setDisplayLatLong(value as Boolean) as Void {
         displayLatLong = value;
-        setValue("displayLatLong", displayLatLong);
+        setValue("o", displayLatLong);
     }
     
     function setRoutesEnabled(_routesEnabled as Boolean) as Void {
         routesEnabled = _routesEnabled;
-        setValue("routesEnabled", routesEnabled);
+        setValue("n", routesEnabled);
     }
 
     (:settingsView,:menu2)
     function toggleDrawLineToClosestPoint() as Void {
         drawLineToClosestPoint = !drawLineToClosestPoint;
-        setValue("drawLineToClosestPoint", drawLineToClosestPoint);
+        setValue("m", drawLineToClosestPoint);
     }
     (:settingsView,:menu2)
     function toggleDisplayLatLong() as Void {
         displayLatLong = !displayLatLong;
-        setValue("displayLatLong", displayLatLong);
+        setValue("o", displayLatLong);
     }
     (:settingsView,:menu2)
     function toggleEnableOffTrackAlerts() as Void {
         enableOffTrackAlerts = !enableOffTrackAlerts;
-        setValue("enableOffTrackAlerts", enableOffTrackAlerts);
+        setValue("l", enableOffTrackAlerts);
     }
     (:settingsView,:menu2)
     function toggleOffTrackWrongDirection() as Void {
         offTrackWrongDirection = !offTrackWrongDirection;
-        setValue("offTrackWrongDirection", offTrackWrongDirection);
+        setValue("i", offTrackWrongDirection);
     }
     (:settingsView,:menu2)
     function toggleRoutesEnabled() as Void {
         routesEnabled = !routesEnabled;
-        setValue("routesEnabled", routesEnabled);
+        setValue("n", routesEnabled);
     }
 
     function nextZoomAtPaceMode() as Void {
@@ -380,26 +380,26 @@ class Settings {
     // Load the values initially from storage
     function loadSettings() as Void {
         logT("loadSettings: Loading all settings");
-        maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
-        centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
-        recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
+        maxTrackPoints = parseNumber("k", maxTrackPoints);
+        centerUserOffsetY = parseFloat("j", centerUserOffsetY);
+        recalculateIntervalS = parseNumber("c", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
-        drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
-        displayLatLong = parseBool("displayLatLong", displayLatLong);
-        enableOffTrackAlerts = parseBool("enableOffTrackAlerts", enableOffTrackAlerts);
-        offTrackWrongDirection = parseBool("offTrackWrongDirection", offTrackWrongDirection);
-        routesEnabled = parseBool("routesEnabled", routesEnabled);
-        metersAroundUser = parseNumber("metersAroundUser", metersAroundUser);
-        zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
-        zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
-        uiMode = parseNumber("uiMode", uiMode);
+        drawLineToClosestPoint = parseBool("m", drawLineToClosestPoint);
+        displayLatLong = parseBool("o", displayLatLong);
+        enableOffTrackAlerts = parseBool("l", enableOffTrackAlerts);
+        offTrackWrongDirection = parseBool("i", offTrackWrongDirection);
+        routesEnabled = parseBool("n", routesEnabled);
+        metersAroundUser = parseNumber("d", metersAroundUser);
+        zoomAtPaceMode = parseNumber("b", zoomAtPaceMode);
+        zoomAtPaceSpeedMPS = parseFloat("e", zoomAtPaceSpeedMPS);
+        uiMode = parseNumber("a", uiMode);
 
-        offTrackAlertsDistanceM = parseNumber("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
+        offTrackAlertsDistanceM = parseNumber("f", offTrackAlertsDistanceM);
         offTrackAlertsMaxReportIntervalS = parseNumber(
-            "offTrackAlertsMaxReportIntervalS",
+            "h",
             offTrackAlertsMaxReportIntervalS
         );
-        offTrackCheckIntervalS = parseNumber("offTrackCheckIntervalS", offTrackCheckIntervalS);
+        offTrackCheckIntervalS = parseNumber("g", offTrackCheckIntervalS);
     }
 
     function onSettingsChanged() as Void {

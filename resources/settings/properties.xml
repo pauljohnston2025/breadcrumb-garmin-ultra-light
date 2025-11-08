@@ -1,27 +1,27 @@
 <properties>
     <!-- https://developer.garmin.com/connect-iq/core-topics/properties-and-app-settings/ -->
-	<property id="uiMode" type="number">0</property>
+	<property id="a" type="number">0</property>
 
-	<property id="zoomAtPaceMode" type="number">0</property>
-	<property id="recalculateIntervalS" type="number">5</property>
-	<property id="metersAroundUser" type="number">500</property>
-	<property id="zoomAtPaceSpeedMPS" type="float">1.0</property>
+	<property id="b" type="number">0</property>
+	<property id="c" type="number">5</property>
+	<property id="d" type="number">500</property>
+	<property id="e" type="float">1.0</property>
 	
-	<property id="offTrackAlertsDistanceM" type="number">20</property>
-	<property id="offTrackCheckIntervalS" type="number">30</property>
-	<property id="offTrackAlertsMaxReportIntervalS" type="number">60</property>
+	<property id="f" type="number">20</property>
+	<property id="g" type="number">30</property>
+	<property id="h" type="number">60</property>
 
-	<property id="offTrackWrongDirection" type="boolean">false</property>
-	<property id="centerUserOffsetY" type="float">0.5</property>
+	<property id="i" type="boolean">false</property>
+	<property id="j" type="float">0.5</property>
 
-	<property id="maxTrackPoints" type="number">100</property>
+	<property id="k" type="number">100</property>
 
 
     <!-- https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator -->
 	<!-- any setting that defaults to true seems to be stuck that way, so defaulting these all to false -->
-	<property id="enableOffTrackAlerts" type="boolean">false</property>
-	<property id="drawLineToClosestPoint" type="boolean">false</property>
-	<property id="routesEnabled" type="boolean">false</property>
-	<property id="displayLatLong" type="boolean">false</property>
+	<property id="l" type="boolean">false</property>
+	<property id="m" type="boolean">false</property>
+	<property id="n" type="boolean">false</property>
+	<property id="o" type="boolean">false</property>
 
 </properties>
