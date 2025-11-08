@@ -297,36 +297,6 @@ class Settings {
         return defaultValue;
     }
 
-    function parseString(key as String, defaultValue as String) as String {
-        try {
-            return parseStringRaw(key, Application.Properties.getValue(key), defaultValue);
-        } catch (e) {
-            logE("Error parsing string: " + key);
-        }
-        return defaultValue;
-    }
-
-    function parseStringRaw(
-        key as String,
-        value as PropertyValueType,
-        defaultValue as String
-    ) as String {
-        try {
-            if (value == null) {
-                return defaultValue;
-            }
-
-            if (value instanceof String) {
-                return value;
-            }
-
-            return defaultValue;
-        } catch (e) {
-            logE("Error parsing string: " + key + " " + value);
-        }
-        return defaultValue;
-    }
-
     function setup() as Void {
         // assert the map choice when we load the settings, as it may have been changed when the app was not running and onSettingsChanged might not be called
         loadSettings();

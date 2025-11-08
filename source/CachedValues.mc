@@ -26,7 +26,6 @@ class CachedValues {
     var rotateCos as Float = Math.cos(rotationRad).toFloat() as Float;
     var rotateSin as Float = Math.sin(rotationRad).toFloat() as Float;
     var currentSpeed as Float = -1f;
-    var elapsedDistanceM as Float = 0f;
     var currentlyZoomingAroundUser as Boolean = false;
 
     // updated whenever onlayout changes (audit usages, these should not need to be floats, but sometimes are used to do float math)
@@ -189,11 +188,6 @@ class CachedValues {
         var _currentSpeed = activityInfo.currentSpeed;
         if (_currentSpeed != null) {
             currentSpeed = _currentSpeed;
-        }
-
-        var _elapsedDistance = activityInfo.elapsedDistance;
-        if (_elapsedDistance != null) {
-            elapsedDistanceM = _elapsedDistance;
         }
 
         // we are either in 2 cases
