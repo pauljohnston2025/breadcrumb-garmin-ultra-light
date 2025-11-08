@@ -1,7 +1,5 @@
 <properties>
     <!-- https://developer.garmin.com/connect-iq/core-topics/properties-and-app-settings/ -->
-	<property id="a" type="number">0</property>
-
 	<property id="b" type="number">0</property>
 	<property id="c" type="number">5</property>
 	<property id="d" type="number">500</property>

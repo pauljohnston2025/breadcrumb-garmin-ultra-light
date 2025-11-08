@@ -16,13 +16,6 @@ enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_MAX,
 }
 
-enum /*UiMode*/ {
-    UI_MODE_SHOW_ALL, // show a heap of ui elements on screen always
-    UI_MODE_HIDDEN, // ui still active, but is hidden
-    UI_MODE_NONE, // no accessible ui (touch events disabled)
-    UI_MODE_MAX,
-}
-
 // we are getting dangerously close to the app settings limit
 // was getting "Unable to serialize app data" in the sim, but after a restart worked fine
 // see
@@ -39,7 +32,6 @@ class Settings {
     var centerUserOffsetY as Float = 0.5f; // fraction of the screen to move the user down the page 0.5 - user appears in center, 0.75 - user appears 3/4 down the screen. Useful to see more of the route in front of the user.
     var zoomAtPaceMode as Number = ZOOM_AT_PACE_MODE_PACE;
     var zoomAtPaceSpeedMPS as Float = 1.0; // meters per second
-    var uiMode as Number = UI_MODE_SHOW_ALL;
     
     var routesEnabled as Boolean = true;
     
@@ -62,12 +54,6 @@ class Settings {
     // https://www.youtube.com/watch?v=LasrD6SZkZk&ab_channel=JaylaB
     var distanceImperialUnits as Boolean =
         System.getDeviceSettings().distanceUnits == System.UNIT_STATUTE;
-
-    (:settingsView,:menu2)
-    function setUiMode(_uiMode as Number) as Void {
-        uiMode = _uiMode;
-        setValue("a", uiMode);
-    }
 
     function setValue(key as String, value as PropertyValueType) as Void {
         Application.Properties.setValue(key, value);
@@ -222,41 +208,10 @@ class Settings {
 
     function parseNumber(key as String, defaultValue as Number) as Number {
         try {
-            return parseNumberRaw(key, Application.Properties.getValue(key), defaultValue);
+            var resF = parseFloatRaw(key, Application.Properties.getValue(key), defaultValue.toFloat());
+            return resF.toNumber();
         } catch (e) {
             logE("Error parsing float: " + key);
-        }
-        return defaultValue;
-    }
-
-    static function parseNumberRaw(
-        key as String,
-        value as PropertyValueType,
-        defaultValue as Number
-    ) as Number {
-        try {
-            if (value == null) {
-                return defaultValue;
-            }
-
-            if (
-                value instanceof String ||
-                value instanceof Float ||
-                value instanceof Number ||
-                value instanceof Double
-            ) {
-                // empty or invalid strings convert to null
-                var ret = value.toNumber();
-                if (ret == null) {
-                    return defaultValue;
-                }
-
-                return ret;
-            }
-
-            return defaultValue;
-        } catch (e) {
-            logE("Error parsing number: " + key + " " + value);
         }
         return defaultValue;
     }
@@ -377,9 +332,7 @@ class Settings {
         loadSettings();
     }
 
-    // Load the values initially from storage
-    function loadSettings() as Void {
-        logT("loadSettings: Loading all settings");
+    function loadSettings1() as Void {
         maxTrackPoints = parseNumber("k", maxTrackPoints);
         centerUserOffsetY = parseFloat("j", centerUserOffsetY);
         recalculateIntervalS = parseNumber("c", recalculateIntervalS);
@@ -390,9 +343,11 @@ class Settings {
         offTrackWrongDirection = parseBool("i", offTrackWrongDirection);
         routesEnabled = parseBool("n", routesEnabled);
         metersAroundUser = parseNumber("d", metersAroundUser);
+    }
+    
+    function loadSettings2() as Void {
         zoomAtPaceMode = parseNumber("b", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("e", zoomAtPaceSpeedMPS);
-        uiMode = parseNumber("a", uiMode);
 
         offTrackAlertsDistanceM = parseNumber("f", offTrackAlertsDistanceM);
         offTrackAlertsMaxReportIntervalS = parseNumber(
@@ -400,6 +355,13 @@ class Settings {
             offTrackAlertsMaxReportIntervalS
         );
         offTrackCheckIntervalS = parseNumber("g", offTrackCheckIntervalS);
+    }
+
+    // Load the values initially from storage
+    function loadSettings() as Void {
+        logT("loadSettings: Loading all settings");
+        loadSettings1();
+        loadSettings2();
     }
 
     function onSettingsChanged() as Void {

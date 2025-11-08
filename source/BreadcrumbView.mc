@@ -269,11 +269,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
         renderUnbufferedRotating(dc);
 
-        // move based on the last scale we drew
-        if (_breadcrumbContext.settings.uiMode == UI_MODE_SHOW_ALL) {
-            renderer.renderUi(dc);
-        }
-
         renderer.renderCurrentScale(dc);
 
         var lastPoint = _breadcrumbContext.track.lastPoint();

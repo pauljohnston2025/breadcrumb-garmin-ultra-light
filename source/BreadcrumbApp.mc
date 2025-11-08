@@ -118,10 +118,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
         // to open settings to test the simulator has it in an obvious place
         // Settings -> Trigger App Settings (right down the bottom - almost off the screen)
         // then to go back you need to Settings -> Time Out App Settings
-        return [
-            $._view as BreadcrumbDataFieldView,
-            new BreadcrumbDataFieldDelegate($._breadcrumbContext as BreadcrumbContext),
-        ];
+        return [$._view as BreadcrumbDataFieldView];
     }
 
     (:typecheck(disableBackgroundCheck))
@@ -138,7 +135,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
     (:settingsView,:menu2,:typecheck(disableBackgroundCheck))
     function getSettingsView() as [Views] or [Views, InputDelegates] or Null {
         var settings = new $.SettingsMain();
-        return [settings, new $.SettingsMainDelegate(settings)];
+        return [settings];
     }
 }
 

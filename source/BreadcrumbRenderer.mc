@@ -97,12 +97,10 @@ class BreadcrumbRenderer {
         }
     }
 
-    function getScaleSizeGeneric(
-        scale as Float,
-        desiredWidth as Float,
-        scaleKeys as Array<Number>,
-        scaleValues as Array<String>
-    ) as [Float, Number, String] {
+    function getScaleSize() as [Float, String] {
+        var scaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
+        var scaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
+
         // get the closest without going over
         // The keys array is already sorted, so we get the first element as the default
         var foundDistanceKey = scaleKeys[0];
@@ -111,8 +109,8 @@ class BreadcrumbRenderer {
 
         for (var i = 0; i < scaleKeys.size(); ++i) {
             var distanceKey = scaleKeys[i];
-            var testPixelWidth = (distanceKey.toFloat() / 1000) * scale;
-            if (testPixelWidth > desiredWidth) {
+            var testPixelWidth = (distanceKey.toFloat() / 1000) * _cachedValues.currentScale;
+            if (testPixelWidth > DESIRED_SCALE_PIXEL_WIDTH) {
                 break;
             }
 
@@ -121,20 +119,14 @@ class BreadcrumbRenderer {
             foundName = scaleValues[i];
         }
 
-        return [foundPixelWidth, foundDistanceKey, foundName];
+        return [foundPixelWidth, foundName];
     }
 
     function renderCurrentScale(dc as Dc) as Void {
-        var scaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
-        var scaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
-        var scaleData = getScaleSizeGeneric(
-            _cachedValues.currentScale,
-            DESIRED_SCALE_PIXEL_WIDTH,
-            scaleKeys as Array<Number>,
-            scaleValues as Array<String>
-        );
+        
+        var scaleData = getScaleSize();
         var pixelWidth = scaleData[0];
-        var foundName = scaleData[2];
+        var foundName = scaleData[1];
 
         if (pixelWidth == 0f) {
             return;
@@ -321,69 +313,4 @@ class BreadcrumbRenderer {
             dc.fillRectangle(lastX - squareHalf, lastY - squareHalf, squareSize, squareSize);
         }
     }
-
-    function renderUi(dc as Dc) as Void {
-        var currentScale = _cachedValues.currentScale; // local lookup faster
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var physicalScreenHeight = _cachedValues.physicalScreenHeight; // local lookup faster
-        var xHalfPhysical = _cachedValues.xHalfPhysical; // local lookup faster
-        var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
-
-        dc.setColor(UI_COLOUR, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(1);
-
-        // make this a const
-        var scaleFromEdge = 75; // guestimate
-
-        if (settings.displayLatLong) {
-            if (currentScale != 0f) {
-                var latLong = RectangularPoint.xyToLatLon(
-                    centerPosition.x / currentScale,
-                    centerPosition.y / currentScale
-                );
-                if (latLong != null) {
-                    var txt = latLong[0].format("%.3f") + ", " + latLong[1].format("%.3f");
-                    dc.drawText(
-                        xHalfPhysical,
-                        physicalScreenHeight - scaleFromEdge,
-                        Graphics.FONT_XTINY,
-                        txt,
-                        Graphics.TEXT_JUSTIFY_CENTER
-                    );
-                }
-            }
-        }
-
-        // M - default, moving is zoomed view, stopped if full view
-        // S - stopped is zoomed view, moving is entire view
-        var fvText = "M";
-        // dirty hack, should pass the bool in another way
-        // ui should be its own class, as should states
-        if (settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_STOPPED) {
-            // zoom view
-            fvText = "S";
-        }
-        if (settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_NEVER_ZOOM) {
-            // zoom view
-            fvText = "N";
-        }
-        if (settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_ALWAYS_ZOOM) {
-            // zoom view
-            fvText = "A";
-        }
-        if (settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK) {
-            // zoom view
-            fvText = "R";
-        }
-        dc.drawText(
-            halfHitboxSize,
-            yHalfPhysical,
-            Graphics.FONT_XTINY,
-            fvText,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-    }
-
-    var hitboxSize as Float = 60f;
-    var halfHitboxSize as Float = hitboxSize / 2.0f;
 }
