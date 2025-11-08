@@ -31,13 +31,11 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "centerUserOffsetY" => Application.Properties.getValue("centerUserOffsetY"),
             "recalculateIntervalS" => Application.Properties.getValue("recalculateIntervalS"),
             "drawLineToClosestPoint" => Application.Properties.getValue("drawLineToClosestPoint"),
-            "showPoints" => Application.Properties.getValue("showPoints"),
             "displayLatLong" => Application.Properties.getValue("displayLatLong"),
             "metersAroundUser" => Application.Properties.getValue("metersAroundUser"),
             "zoomAtPaceMode" => Application.Properties.getValue("zoomAtPaceMode"),
             "zoomAtPaceSpeedMPS" => Application.Properties.getValue("zoomAtPaceSpeedMPS"),
             "uiMode" => Application.Properties.getValue("uiMode"),
-            "alertType" => Application.Properties.getValue("alertType"),
             "routesEnabled" => Application.Properties.getValue("routesEnabled"),
             "enableOffTrackAlerts" => Application.Properties.getValue("enableOffTrackAlerts"),
             "offTrackWrongDirection" => Application.Properties.getValue("offTrackWrongDirection"),
@@ -46,7 +44,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
                 "offTrackAlertsMaxReportIntervalS"
             ),
             "offTrackCheckIntervalS" => Application.Properties.getValue("offTrackCheckIntervalS"),
-            "resetDefaults" => Application.Properties.getValue("resetDefaults"),
         }) as Dictionary<String, PropertyValueType>
     );
 }
@@ -428,65 +425,6 @@ class Settings {
         return defaultValue;
     }
 
-    function resetDefaults() as Void {
-        logT("Resetting settings to default values");
-        // clear the flag first thing in case of crash we do not want to try clearing over and over
-        setValue("resetDefaults", false);
-
-        // note: this pulls the defaults from whatever we have at the top of the file these may differ from the defaults in properties.xml
-        var defaultSettings = new Settings();
-        maxTrackPoints = defaultSettings.maxTrackPoints;
-        centerUserOffsetY = defaultSettings.centerUserOffsetY;
-        drawLineToClosestPoint = defaultSettings.drawLineToClosestPoint;
-        displayLatLong = defaultSettings.displayLatLong;
-        metersAroundUser = defaultSettings.metersAroundUser;
-        zoomAtPaceMode = defaultSettings.zoomAtPaceMode;
-        zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
-        uiMode = defaultSettings.uiMode;
-        routesEnabled = defaultSettings.routesEnabled;
-        enableOffTrackAlerts = defaultSettings.enableOffTrackAlerts;
-        offTrackWrongDirection = defaultSettings.offTrackWrongDirection;
-        offTrackAlertsDistanceM = defaultSettings.offTrackAlertsDistanceM;
-        offTrackAlertsMaxReportIntervalS = defaultSettings.offTrackAlertsMaxReportIntervalS;
-        offTrackCheckIntervalS = defaultSettings.offTrackCheckIntervalS;
-
-        // raw write the settings to disk
-        var dict = asDict();
-        saveSettings(dict);
-
-        // purge storage, all routes and caches
-        Application.Storage.clearValues();
-        updateCachedValues();
-        updateViewSettings();
-    }
-
-    function asDict() as Dictionary<String, PropertyValueType> {
-        // all these return values should be identical to the storage value
-        // eg. nulls are exposed as 0
-        // colours are strings
-
-        return (
-            ({
-                "maxTrackPoints" => maxTrackPoints,
-                "centerUserOffsetY" => centerUserOffsetY,
-                "recalculateIntervalS" => recalculateIntervalS,
-                "drawLineToClosestPoint" => drawLineToClosestPoint,
-                "displayLatLong" => displayLatLong,
-                "metersAroundUser" => metersAroundUser,
-                "zoomAtPaceMode" => zoomAtPaceMode,
-                "zoomAtPaceSpeedMPS" => zoomAtPaceSpeedMPS,
-                "uiMode" => uiMode,
-                "routesEnabled" => routesEnabled,
-                "enableOffTrackAlerts" => enableOffTrackAlerts,
-                "offTrackWrongDirection" => offTrackWrongDirection,
-                "offTrackAlertsDistanceM" => offTrackAlertsDistanceM,
-                "offTrackAlertsMaxReportIntervalS" => offTrackAlertsMaxReportIntervalS,
-                "offTrackCheckIntervalS" => offTrackCheckIntervalS,
-                "resetDefaults" => false,
-            }) as Dictionary<String, PropertyValueType>
-        );
-    }
-
     function saveSettings(settings as Dictionary<String, PropertyValueType>) as Void {
         // should we sanitize this as its untrusted? makes it significantly more annoying to do
         var keys = settings.keys();
@@ -509,7 +447,9 @@ class Settings {
         loadSettings();
     }
 
-    function loadSettingsPart1() as Void {
+    // Load the values initially from storage
+    function loadSettings() as Void {
+        logT("loadSettings: Loading all settings");
         maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
@@ -519,9 +459,6 @@ class Settings {
         enableOffTrackAlerts = parseBool("enableOffTrackAlerts", enableOffTrackAlerts);
         offTrackWrongDirection = parseBool("offTrackWrongDirection", offTrackWrongDirection);
         routesEnabled = parseBool("routesEnabled", routesEnabled);
-    }
-
-    function loadSettingsPart2() as Void {
         metersAroundUser = parseNumber("metersAroundUser", metersAroundUser);
         zoomAtPaceMode = parseNumber("zoomAtPaceMode", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
@@ -533,31 +470,6 @@ class Settings {
             offTrackAlertsMaxReportIntervalS
         );
         offTrackCheckIntervalS = parseNumber("offTrackCheckIntervalS", offTrackCheckIntervalS);
-    }
-
-    // Load the values initially from storage
-    function loadSettings() as Void {
-        // fix for a garmin bug where bool settings are not changable if they default to true
-        // https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator
-        var haveDoneFirstLoadSetup = Application.Properties.getValue("haveDoneFirstLoadSetup");
-        if (haveDoneFirstLoadSetup instanceof Boolean && !haveDoneFirstLoadSetup) {
-            setValue("haveDoneFirstLoadSetup", true);
-            resetDefaults(); // pulls from our defaults
-        }
-
-        var resetDefaults = Application.Properties.getValue("resetDefaults") as Boolean;
-        if (resetDefaults) {
-            resetDefaults();
-            return;
-        }
-
-        logT("loadSettings: Loading all settings");
-        loadSettingsPart1();
-        loadSettingsPart2();
-
-        // testing coordinates (piper-comanche-wreck)
-        // // cachedValues.setScale(0.39); // zoomed out a bit
-        // cachedValues.setScale(1.96); // really close
     }
 
     function onSettingsChanged() as Void {

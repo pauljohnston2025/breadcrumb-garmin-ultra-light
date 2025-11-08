@@ -72,8 +72,4 @@
             <settingConfig type="boolean"/>
         </setting>
     <!-- </group> -->
-    
-    <setting propertyKey="@Properties.resetDefaults" title="@Strings.resetDefaults">
-        <settingConfig type="boolean"/>
-    </setting>
 </settings>

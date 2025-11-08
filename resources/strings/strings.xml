@@ -1,6 +1,5 @@
 <strings>
     <string id="AppName">ULBreadcrumbDataField</string>
-    <string id="settingsTitle">Ultra Light Breadcrumb Data Field</string>
 
     <string id="offTrackAlertsDistanceMTitle">Off Track Alert Distance (m)</string>
     <string id="offTrackAlertsMaxReportIntervalSTitle">Max Alert Report Interval (s)</string>
@@ -9,9 +8,6 @@
     <string id="enableOffTrackAlertsTitle">Off Track Alerts</string>
     <string id="offTrackWrongDirectionTitle">Wrong Direction Alerts</string>
     <string id="drawLineToClosestPointTitle">Draw Line To Closest Point</string>
-    <string id="clearStorage">Clear Storage</string>
-    <string id="resetDefaults">Restore Defaults</string>
-    <string id="maxPendingWebRequests">Max Pending Web Requests</string>
     <string id="metersAroundUser">Meters Around User</string>
     <string id="metersAroundUserPrompt">100</string>
     <string id="zoomAtPaceTitle">Zoom At Pace</string>

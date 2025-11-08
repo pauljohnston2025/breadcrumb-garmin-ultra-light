@@ -11,8 +11,6 @@
 	<property id="offTrackCheckIntervalS" type="number">30</property>
 	<property id="offTrackAlertsMaxReportIntervalS" type="number">60</property>
 
-	<property id="resetDefaults" type="boolean">false</property>
-
 	<property id="offTrackWrongDirection" type="boolean">false</property>
 	<property id="centerUserOffsetY" type="float">0.5</property>
 
@@ -20,11 +18,10 @@
 
 
     <!-- https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator -->
-	<!-- any setting that defaults to true seems to be stuck that way, so defaulting these all to false and adding a hidden property that i will set for 'first app load' -->
+	<!-- any setting that defaults to true seems to be stuck that way, so defaulting these all to false -->
 	<property id="enableOffTrackAlerts" type="boolean">false</property>
 	<property id="drawLineToClosestPoint" type="boolean">false</property>
 	<property id="routesEnabled" type="boolean">false</property>
-	<property id="haveDoneFirstLoadSetup" type="boolean">false</property>
 	<property id="displayLatLong" type="boolean">false</property>
 
 </properties>
