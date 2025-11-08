@@ -18,7 +18,7 @@ class BreadcrumbDataFieldDelegate extends WatchUi.InputDelegate {
 
         var coords = evt.getCoordinates();
         var x = coords[0];
-        var y = coords[1];
+        /*var y = coords[1];*/
         var renderer = _breadcrumbContext.breadcrumbRenderer;
         var settings = _breadcrumbContext.settings;
 

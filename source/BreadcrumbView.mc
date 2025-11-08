@@ -63,7 +63,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
     function actualOnLayout(dc as Dc) as Void {
         // logD("onLayout");
         _cachedValues.setScreenSize(dc.getWidth(), dc.getHeight());
-        var textDim = dc.getTextDimensions("1234", Graphics.FONT_XTINY);
     }
 
     function onWorkoutStarted() as Void {

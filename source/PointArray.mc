@@ -6,7 +6,7 @@ import Toybox.Application;
 import Toybox.System;
 import Toybox.Time;
 
-const ARRAY_POINT_SIZE = 3;
+const ARRAY_POINT_SIZE = 2;
 
 // cached values
 // we should probably do this per latitude to get an estimate and just use a lookup table
@@ -17,12 +17,10 @@ const _pi180 as Float = Math.PI / 180.0f;
 class RectangularPoint {
     var x as Float;
     var y as Float;
-    var altitude as Float;
 
-    function initialize(_x as Float, _y as Float, _altitude as Float) {
+    function initialize(_x as Float, _y as Float) {
         x = _x;
         y = _y;
-        altitude = _altitude;
     }
 
     function distanceTo(point as RectangularPoint) as Float {
@@ -30,20 +28,16 @@ class RectangularPoint {
     }
 
     function valid() as Boolean {
-        return !isnan(x) && !isnan(y) && !isnan(altitude);
-    }
-
-    function toString() as String {
-        return "RectangularPoint(" + x + " " + y + " " + altitude + ")";
+        return !isnan(x) && !isnan(y);
     }
 
     function clone() as RectangularPoint {
-        return new RectangularPoint(x, y, altitude);
+        return new RectangularPoint(x, y);
     }
 
     function rescale(scaleFactor as Float) as RectangularPoint {
         // unsafe to call with nulls or 0, checks should be made in parent
-        return new RectangularPoint(x * scaleFactor, y * scaleFactor, altitude);
+        return new RectangularPoint(x * scaleFactor, y * scaleFactor);
     }
 
     function rescaleInPlace(scaleFactor as Float) as Void {
@@ -55,11 +49,11 @@ class RectangularPoint {
     // inverse of https://gis.stackexchange.com/a/387677
     // Converting lat, lon (epsg:4326) into EPSG:3857
     // this function needs to exactly match Point.convert2XY on the companion app
-    static function latLon2xy(lat as Float, lon as Float, altitude as Float) as RectangularPoint? {
+    static function latLon2xy(lat as Float, lon as Float) as RectangularPoint? {
         var latRect = (Math.ln(Math.tan((90 + lat) * _pi360)) / _pi180) * _lonConversion;
         var lonRect = lon * _lonConversion;
 
-        var point = new RectangularPoint(lonRect.toFloat(), latRect.toFloat(), altitude);
+        var point = new RectangularPoint(lonRect.toFloat(), latRect.toFloat());
         if (!point.valid()) {
             return null;
         }
@@ -171,7 +165,6 @@ class PointArray {
     function add(point as RectangularPoint) as Void {
         _add(point.x);
         _add(point.y);
-        _add(point.altitude);
     }
 
     function removeLastCountPoints(count as Number) as Void {
@@ -198,8 +191,7 @@ class PointArray {
         var offset = i * ARRAY_POINT_SIZE;
         return new RectangularPoint(
             _internalArrayBuffer[offset],
-            _internalArrayBuffer[offset + 1],
-            _internalArrayBuffer[offset + 2]
+            _internalArrayBuffer[offset + 1]
         );
     }
 
@@ -236,7 +228,6 @@ class PointArray {
         for (var i = 0; i < sizeWithoutLastPoint; i += ARRAY_POINT_SIZE * 2) {
             _internalArrayBuffer[j] = _internalArrayBuffer[i];
             _internalArrayBuffer[j + 1] = _internalArrayBuffer[i + 1];
-            _internalArrayBuffer[j + 2] = _internalArrayBuffer[i + 2];
             j += ARRAY_POINT_SIZE;
         }
 

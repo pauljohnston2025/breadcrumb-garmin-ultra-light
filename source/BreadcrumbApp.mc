@@ -20,8 +20,9 @@ enum /* Protocol */ {
     PROTOCOL_REQUEST_SETTINGS = 4,
     PROTOCOL_SAVE_SETTINGS = 5,
     /* PROTOCOL_COMPANION_APP_TILE_SERVER_CHANGED = 6, // generally because a new url has been selected on the companion app  */
-    PROTOCOL_ROUTE_DATA2 = 7, // an optimised form of PROTOCOL_ROUTE_DATA, so we do not trip the watchdog
+    /* PROTOCOL_ROUTE_DATA2 = 7, // an optimised form of PROTOCOL_ROUTE_DATA, so we do not trip the watchdog */
     /* PROTOCOL_CACHE_CURRENT_AREA = 8, */
+    PROTOCOL_ROUTE_DATA_UL = 9
 }
 
 (:background)
@@ -158,31 +159,24 @@ function onPhone(data as Application.PersistableType) as Void {
             return;
         }
 
-        if (type == PROTOCOL_ROUTE_DATA2) {
+        if (type == PROTOCOL_ROUTE_DATA_UL) {
             logT("Parsing route data 2");
             // protocol:
-            //  name
-            //  [x, y, z]...  // latitude <float> and longitude <float> in rectangular coordinates, altitude <float> - pre calculated by the app
-            //  [x, y, angle, index] // direction data - pre calculated all floats
-            if (rawData.size() < 2) {
-                logT("Failed to parse route 2 data, bad length: " + rawData.size());
+            //  [x, y]...  // latitude <float> and longitude <float> in rectangular coordinates - pre calculated by the app
+            if (rawData.size() < 1) {
+                logT("Failed to parse route ul data, bad length: " + rawData.size());
                 mustUpdate();
                 return;
             }
 
-            /* var name = rawData[0] as String;*/
-            var routeData = rawData[1] as Array<Float>;
-            /*var directions = [] as Array<Number>; // back compat empty array
-            if (rawData.size() > 2) {
-                directions = rawData[2] as Array<Number>;
-            }*/
+            var routeData = rawData[0] as Array<Float>; // special UL payload that only has x/y coordinates
             if (routeData.size() % ARRAY_POINT_SIZE == 0) {
                 var route = _breadcrumbContextLocal.newRoute();
                 var routeWrote = route.handleRouteV2(
                     routeData,
                     _breadcrumbContextLocal.cachedValues
                 );
-                logT("Parsing route data 2 complete, wrote to storage: " + routeWrote);
+                logT("Parsing route data ul complete, wrote to storage: " + routeWrote);
                 if (!routeWrote) {
                     _breadcrumbContextLocal.clearRoute();
                 }
@@ -190,7 +184,7 @@ function onPhone(data as Application.PersistableType) as Void {
             }
 
             logE(
-                "Failed to parse route2 data, bad length: " +
+                "Failed to parse route ul data, bad length: " +
                     rawData.size() +
                     " remainder: " +
                     (rawData.size() % 3)

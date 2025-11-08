@@ -18,7 +18,7 @@ class CachedValues {
     // things set to -1 are updated on the first layout/calculate call
 
     // updated whenever we change zoom level (speed changes, zoom at pace mode etc.)
-    var centerPosition as RectangularPoint = new RectangularPoint(0f, 0f, 0f); // scaled to pixels
+    var centerPosition as RectangularPoint = new RectangularPoint(0f, 0f); // scaled to pixels
     var currentScale as Float = 0.0; // pixels per meter so <pixel count> / _currentScale = meters  or  meters * _currentScale = pixels
 
     // updated whenever we get new activity data with a new heading
@@ -331,8 +331,7 @@ class CachedValues {
     function calcCenterPointForBoundingBox(boundingBox as [Float, Float, Float, Float]) as Void {
         centerPosition = new RectangularPoint(
             boundingBox[0] + (boundingBox[2] - boundingBox[0]) / 2.0,
-            boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2.0,
-            0.0f
+            boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2.0
         );
 
         if (currentScale != 0f) {

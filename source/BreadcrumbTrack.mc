@@ -30,7 +30,7 @@ function BOUNDING_BOX_DEFAULT() as [Float, Float, Float, Float] {
     return [FLOAT_MAX, FLOAT_MAX, FLOAT_MIN, FLOAT_MIN];
 }
 function BOUNDING_BOX_CENTER_DEFAULT() as RectangularPoint {
-    return new RectangularPoint(0.0f, 0.0f, 0.0f);
+    return new RectangularPoint(0.0f, 0.0f);
 }
 
 class OffTrackInfo {
@@ -74,9 +74,9 @@ class BreadcrumbTrack {
     // outweigh the chances users will run into this edge case. To solve it we have to process the whole route every time,
     // though we already do this in a multi route setup, we might parse off track alerts for all the other routes then get to the one we are on.
     // single route use case is more common though, so we will optimise for that. in multi route we could store 'last route we were on'
-    var lastClosePoint as RectangularPoint? = null; // SCALED (note: altitude is currently unscaled)
+    var lastClosePoint as RectangularPoint? = null; // SCALED
     var createdAt as Number = 0;
-    var coordinates as PointArray = new PointArray(0); // SCALED (note: altitude is currently unscaled)
+    var coordinates as PointArray = new PointArray(0); // SCALED
     var seenStartupPoints as Number = 0;
     var possibleBadPointsAdded as Number = 0;
     var inRestartMode as Boolean = true;
@@ -86,8 +86,6 @@ class BreadcrumbTrack {
     var boundingBox as [Float, Float, Float, Float] = BOUNDING_BOX_DEFAULT(); // SCALED -- since the points are used to generate it on failure
     var boundingBoxCenter as RectangularPoint = BOUNDING_BOX_CENTER_DEFAULT(); // SCALED -- since the points are used to generate it on failure
     var distanceTotal as Float = 0f; // SCALED -- since the points are used to generate it on failure
-    var elevationMin as Float = FLOAT_MAX; // UNSCALED
-    var elevationMax as Float = FLOAT_MIN; // UNSCALED
     var _neverStarted as Boolean;
 
     function initialize(initalPointCount as Number) {
@@ -131,7 +129,7 @@ class BreadcrumbTrack {
         // trust the app completely
         coordinates._internalArrayBuffer = routeData;
         coordinates._size = routeData.size();
-        // we could optimise this further if the app provides us with binding box, center max/min elevation
+        // we could optimise this further if the app provides us with binding box, center
         // but it makes it really hard to add any more cached data to the route, that the companion app then has to send
         // by making these rectangular coordinates, we skip a huge amount of math converting them from lat/long
         updatePointDataFromAllPoints();
@@ -151,7 +149,6 @@ class BreadcrumbTrack {
             Storage.setValue(key + "bbc", [
                 boundingBoxCenter.x,
                 boundingBoxCenter.y,
-                boundingBoxCenter.altitude,
             ]);
             Storage.setValue(
                 key + "coords",
@@ -159,8 +156,6 @@ class BreadcrumbTrack {
             );
             Storage.setValue(key + "coordsSize", coordinates._size);
             Storage.setValue(key + "distanceTotal", distanceTotal);
-            Storage.setValue(key + "elevationMin", elevationMin);
-            Storage.setValue(key + "elevationMax", elevationMax);
             Storage.setValue(key + "createdAt", createdAt);
         } catch (e) {
             // it will still be in memory, just not persisted, this is bad as the user will think it worked, so return false to indicate error
@@ -178,8 +173,6 @@ class BreadcrumbTrack {
         Storage.deleteValue(key + "coords");
         Storage.deleteValue(key + "coordsSize");
         Storage.deleteValue(key + "distanceTotal");
-        Storage.deleteValue(key + "elevationMin");
-        Storage.deleteValue(key + "elevationMax");
         Storage.deleteValue(key + "createdAt");
     }
 
@@ -208,16 +201,6 @@ class BreadcrumbTrack {
                 return null;
             }
 
-            var elevationMin = Storage.getValue(key + "elevationMin");
-            if (elevationMin == null) {
-                return null;
-            }
-
-            var elevationMax = Storage.getValue(key + "elevationMax");
-            if (elevationMax == null) {
-                return null;
-            }
-
             var createdAt = Storage.getValue(key + "createdAt");
             if (createdAt == null) {
                 return null;
@@ -230,14 +213,11 @@ class BreadcrumbTrack {
             }
             track.boundingBoxCenter = new RectangularPoint(
                 bbc[0] as Float,
-                bbc[1] as Float,
-                bbc[2] as Float
+                bbc[1] as Float
             );
             track.coordinates._internalArrayBuffer = coords as Array<Float>;
             track.coordinates._size = coordsSize as Number;
             track.distanceTotal = distanceTotal as Float;
-            track.elevationMin = elevationMin as Float;
-            track.elevationMax = elevationMax as Float;
             track.createdAt = createdAt as Number;
             if (track.coordinates.size() % ARRAY_POINT_SIZE != 0) {
                 return null;
@@ -280,8 +260,6 @@ class BreadcrumbTrack {
     function updatePointDataFromAllPoints() as Void {
         boundingBox = BOUNDING_BOX_DEFAULT();
         boundingBoxCenter = BOUNDING_BOX_CENTER_DEFAULT();
-        elevationMin = FLOAT_MAX;
-        elevationMax = FLOAT_MIN;
         distanceTotal = 0f;
         var pointSize = coordinates.pointSize();
         var prevPoint = coordinates.firstPoint();
@@ -319,13 +297,9 @@ class BreadcrumbTrack {
         boundingBox[2] = boundingBox2Tmp;
         boundingBox[3] = boundingBox3Tmp;
 
-        elevationMin = minF(elevationMin, point.altitude);
-        elevationMax = maxF(elevationMax, point.altitude);
-
         boundingBoxCenter = new RectangularPoint(
             boundingBox[0] + (boundingBox[2] - boundingBox[0]) / 2.0,
-            boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2.0,
-            0.0f
+            boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2.0
         );
     }
 
@@ -339,8 +313,6 @@ class BreadcrumbTrack {
         boundingBox = BOUNDING_BOX_DEFAULT();
         boundingBoxCenter = BOUNDING_BOX_CENTER_DEFAULT();
         distanceTotal = 0f;
-        elevationMin = FLOAT_MAX;
-        elevationMax = FLOAT_MIN;
         _neverStarted = false;
         onStartResume();
     }
@@ -404,16 +376,11 @@ class BreadcrumbTrack {
             return null;
         }
 
-        var altitude = activityInfo.altitude;
-        if (altitude == null) {
-            return null;
-        }
-
         var asDeg = loc.toDegrees();
         var lat = asDeg[0].toFloat();
         var lon = asDeg[1].toFloat();
 
-        return RectangularPoint.latLon2xy(lat, lon, altitude);
+        return RectangularPoint.latLon2xy(lat, lon);
     }
 
     function setInitialLastClosePoint() as Void {
@@ -524,8 +491,7 @@ class BreadcrumbTrack {
         lastClosePointIndex = newIndex;
         lastClosePoint = new RectangularPoint(
             distToSegmentAndSegPoint[1],
-            distToSegmentAndSegPoint[2],
-            0f
+            distToSegmentAndSegPoint[2]
         );
 
         return new OffTrackInfo(true, lastClosePoint, wrongDirection);
@@ -546,7 +512,7 @@ class BreadcrumbTrack {
         }
 
         var endSecondScanAtRaw = sizeRaw;
-        var coordinatesRaw = coordinates._internalArrayBuffer; // raw dog access means we can do the calcs much faster (and do not need to create a point with altitude)
+        var coordinatesRaw = coordinates._internalArrayBuffer; // raw dog access means we can do the calcs much faster (and do not need to create a point)
         if (lastClosePointIndex != null) {
             var lastClosePointRawStart = lastClosePointIndex * ARRAY_POINT_SIZE;
             // note: this algorithm will likely fail if the user is doing the track in the opposite direction
@@ -714,7 +680,7 @@ class BreadcrumbTrack {
             lastPointY = nextY;
         }
 
-        lastClosePoint = new RectangularPoint(lastClosestX, lastClosestY, 0f);
+        lastClosePoint = new RectangularPoint(lastClosestX, lastClosestY);
         return new OffTrackInfo(false, lastClosePoint, false); // we are not on track, therefore cannot be traveling in reverse
     }
 
