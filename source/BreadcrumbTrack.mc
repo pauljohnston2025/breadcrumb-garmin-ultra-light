@@ -1,4 +1,5 @@
 import Toybox.Position;
+import Toybox.System;
 import Toybox.Lang;
 import Toybox.StringUtil;
 import Toybox.Activity;
@@ -183,7 +184,7 @@ class BreadcrumbTrack {
                 return null;
             }
             var bbc = Storage.getValue(key + "bbc");
-            if (bbc == null || !(bbc instanceof Array) || bbc.size() != 3) {
+            if (bbc == null || !(bbc instanceof Array) || bbc.size() != 2) {
                 return null;
             }
             var coords = Storage.getValue(key + "coords");

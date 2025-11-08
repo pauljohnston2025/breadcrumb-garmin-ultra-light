@@ -132,7 +132,7 @@ class BreadcrumbRenderer {
             return;
         }
 
-        var y = _cachedValues.physicalScreenHeight - 25;
+        var y = dc.getHeight() - 25;
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
         dc.drawLine(

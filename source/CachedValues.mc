@@ -22,36 +22,21 @@ class CachedValues {
     var currentScale as Float = 0.0; // pixels per meter so <pixel count> / _currentScale = meters  or  meters * _currentScale = pixels
 
     // updated whenever we get new activity data with a new heading
-    var rotationRad as Float = 0.0f; // heading in radians
-    var rotateCos as Float = Math.cos(rotationRad).toFloat() as Float;
-    var rotateSin as Float = Math.sin(rotationRad).toFloat() as Float;
+    var rotateCos as Float = Math.cos(0f).toFloat() as Float;
+    var rotateSin as Float = Math.sin(0f).toFloat() as Float;
     var currentSpeed as Float = -1f;
     var currentlyZoomingAroundUser as Boolean = false;
 
     // updated whenever onlayout changes (audit usages, these should not need to be floats, but sometimes are used to do float math)
     // default to full screen guess
-    var physicalScreenWidth as Float = System.getDeviceSettings().screenWidth.toFloat() as Float;
-    var physicalScreenHeight as Float = System.getDeviceSettings().screenHeight.toFloat() as Float;
-    var minPhysicalScreenDim as Float = -1f;
-    var maxPhysicalScreenDim as Float = -1f;
-    var xHalfPhysical as Float = physicalScreenWidth / 2f;
-    var yHalfPhysical as Float = physicalScreenHeight / 2f;
-    var virtualScreenWidth as Float = System.getDeviceSettings().screenWidth.toFloat() as Float;
-    var virtualScreenHeight as Float = System.getDeviceSettings().screenHeight.toFloat() as Float;
-    var minVirtualScreenDim as Float = -1f;
-    var maxVirtualScreenDim as Float = -1f;
-    var rotateAroundScreenXOffsetFactoredIn as Float = physicalScreenWidth / 2f;
-    var rotateAroundScreenYOffsetFactoredIn as Float = physicalScreenHeight / 2f;
-    var rotateAroundMinScreenDim as Float = -1f;
+    var xHalfPhysical as Float = System.getDeviceSettings().screenWidth as Float / 2f;
+    var yHalfPhysical as Float = System.getDeviceSettings().screenHeight as Float / 2f;
+
+    var rotateAroundScreenXOffsetFactoredIn as Float = xHalfPhysical;
+    var rotateAroundScreenYOffsetFactoredIn as Float = yHalfPhysical;
 
     function initialize(settings as Settings) {
         self._settings = settings;
-        // initialised in constructor so they can be inlined
-        minPhysicalScreenDim = minF(physicalScreenWidth, physicalScreenHeight);
-        maxPhysicalScreenDim = maxF(physicalScreenWidth, physicalScreenHeight);
-        minVirtualScreenDim = minF(virtualScreenWidth, virtualScreenHeight);
-        maxVirtualScreenDim = maxF(virtualScreenWidth, virtualScreenHeight);
-        rotateAroundMinScreenDim = minPhysicalScreenDim;
     }
 
     function setup() as Void {
@@ -126,12 +111,6 @@ class CachedValues {
             }
             // we are zooming around the user, but we do not have a last track point
             // resort to using bounding box
-            var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
-                _breadcrumbContextLocal.route,
-                null
-            );
-            calcCenterPointForBoundingBox(boundingBox);
-            return getNewScaleFromBoundingBox(boundingBox);
         }
 
         var boundingBox = calcOuterBoundingBoxFromTrackAndRoute(
@@ -181,9 +160,8 @@ class CachedValues {
         }
 
         if (currentHeading != null) {
-            rotationRad = currentHeading;
-            rotateCos = Math.cos(rotationRad).toFloat();
-            rotateSin = Math.sin(rotationRad).toFloat();
+            rotateCos = Math.cos(currentHeading).toFloat();
+            rotateSin = Math.sin(currentHeading).toFloat();
         }
         var _currentSpeed = activityInfo.currentSpeed;
         if (_currentSpeed != null) {
@@ -206,7 +184,7 @@ class CachedValues {
             _settings.zoomAtPaceMode == ZOOM_AT_PACE_MODE_ALWAYS_ZOOM;
         if (currentlyZoomingAroundUser != weShouldZoomAroundUser) {
             currentlyZoomingAroundUser = weShouldZoomAroundUser;
-            updateUserRotationElements(_settings.centerUserOffsetY);
+            updateVirtualScreenSize();
             var ret = updateScaleCenter();
             return ret;
         }
@@ -215,52 +193,28 @@ class CachedValues {
     }
 
     function setScreenSize(width as Number, height as Number) as Void {
-        physicalScreenWidth = width.toFloat();
-        physicalScreenHeight = height.toFloat();
-        minPhysicalScreenDim = minF(physicalScreenWidth, physicalScreenHeight);
-        maxPhysicalScreenDim = maxF(physicalScreenWidth, physicalScreenHeight);
-        xHalfPhysical = physicalScreenWidth / 2f;
-        yHalfPhysical = physicalScreenHeight / 2f;
+        xHalfPhysical = width.toFloat()/2f;
+        yHalfPhysical = height.toFloat() /2f;
 
         updateVirtualScreenSize();
         updateScaleCenter();
     }
 
     function updateVirtualScreenSize() as Void {
-        var centerUserOffsetY = _settings.centerUserOffsetY;
-
-        virtualScreenWidth = physicalScreenWidth; // always the same, just using naming for consistency
-        if (centerUserOffsetY >= 0.5) {
-            virtualScreenHeight = physicalScreenHeight * centerUserOffsetY * 2;
-        } else {
-            virtualScreenHeight =
-                (physicalScreenHeight - physicalScreenHeight * centerUserOffsetY) * 2;
-        }
-
-        minVirtualScreenDim = minF(virtualScreenWidth, virtualScreenHeight);
-        maxVirtualScreenDim = maxF(virtualScreenWidth, virtualScreenHeight);
-
-        updateUserRotationElements(centerUserOffsetY);
-    }
-
-    function updateUserRotationElements(centerUserOffsetY as Float) as Void {
+        rotateAroundScreenXOffsetFactoredIn = xHalfPhysical;
         if (currentlyZoomingAroundUser) {
-            rotateAroundScreenXOffsetFactoredIn = virtualScreenWidth / 2f;
-            rotateAroundScreenYOffsetFactoredIn = physicalScreenHeight * centerUserOffsetY;
-            rotateAroundMinScreenDim = minVirtualScreenDim;
+            rotateAroundScreenYOffsetFactoredIn = yHalfPhysical * 2 * _settings.centerUserOffsetY;
         } else {
-            rotateAroundScreenXOffsetFactoredIn = xHalfPhysical;
             rotateAroundScreenYOffsetFactoredIn = yHalfPhysical;
-            rotateAroundMinScreenDim = minPhysicalScreenDim;
         }
     }
 
     function calcScaleForScreenMeters(maxDistanceM as Float) as Float {
         // we want the whole map to be show on the screen, we have 360 pixels on the
         // venu 2s
-        // but this would only work for squares, so 0.75 fudge factor for circle
+        // but this would only work for squares, so 0.75 (* 2 since we are using half measures) fudge factor for circle
         // watch face
-        return (rotateAroundMinScreenDim / maxDistanceM) * 0.75;
+        return (minF(xHalfPhysical, yHalfPhysical) * 1.5 / maxDistanceM) ;
     }
 
     /** returns the new scale */
@@ -271,7 +225,7 @@ class CachedValues {
         var maxDistanceM = maxF(xDistanceM, yDistanceM);
 
         if (maxDistanceM == 0f) {
-            // show 1m of space to avaoid division by 0
+            // show 1m of space to avoid division by 0
             maxDistanceM = 1f;
         }
 
