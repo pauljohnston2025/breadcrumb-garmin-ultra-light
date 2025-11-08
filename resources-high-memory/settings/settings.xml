@@ -37,27 +37,6 @@
         </setting>
     <!-- </group> -->
 
-    <!-- <group id="offTrackAlertsGroup" title="@Strings.offTrackAlertsGroupTitle"> -->
-        <setting propertyKey="@Properties.f" title="@Strings.offTrackAlertsDistanceMTitle">
-            <settingConfig type="numeric" min="0"/>
-        </setting>
-        <setting propertyKey="@Properties.g" title="@Strings.offTrackCheckIntervalSTitle">
-            <settingConfig type="numeric" min="0"/>
-        </setting>
-        <setting propertyKey="@Properties.m" title="@Strings.drawLineToClosestPointTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-        <setting propertyKey="@Properties.i" title="@Strings.offTrackWrongDirectionTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-        <setting propertyKey="@Properties.l" title="@Strings.enableOffTrackAlertsTitle">
-            <settingConfig type="boolean"/>
-        </setting>
-        <setting propertyKey="@Properties.h" title="@Strings.offTrackAlertsMaxReportIntervalSTitle">
-            <settingConfig type="numeric" min="0"/>
-        </setting>
-    <!-- </group> -->
-
     <!-- <group id="routesdesc" title="@Strings.routesTitle"> -->
         <setting propertyKey="@Properties.n" title="@Strings.routesEnabled">
             <settingConfig type="boolean"/>

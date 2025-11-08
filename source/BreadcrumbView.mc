@@ -17,12 +17,9 @@ import Toybox.System;
 // note: this only allows taps, cannot handle swipes/holds etc. (need to test on
 // real device)
 class BreadcrumbDataFieldView extends WatchUi.DataField {
-    var offTrackInfo as OffTrackInfo = new OffTrackInfo(true, null, false);
     var _breadcrumbContext as BreadcrumbContext;
     var settings as Settings;
     var _cachedValues as CachedValues;
-    var lastOffTrackAlertNotified as Number = 0;
-    var lastOffTrackAlertChecked as Number = 0;
     var _computeCounter as Number = 0;
 
     // Set the label of the data field here.
@@ -31,13 +28,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         DataField.initialize();
         settings = _breadcrumbContext.settings;
         _cachedValues = _breadcrumbContext.cachedValues;
-    }
-
-    function rescale(scaleFactor as Float) as Void {
-        var pointWeLeftTrack = offTrackInfo.pointWeLeftTrack;
-        if (pointWeLeftTrack != null) {
-            pointWeLeftTrack.rescaleInPlace(scaleFactor);
-        }
     }
 
     // see onUpdate explanation for when each is called
@@ -82,35 +72,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         }
     }
 
-    function showMyAlert(alert as String) as Void {
-        try {
-            if (Attention has :backlight) {
-                // turn the screen on so we can see the alert, it does not respond to us gesturing to see the alert (think gesture controls are suppressed during vibration)
-                Attention.backlight(true);
-            }
-
-            if (Attention has :vibrate) {
-                var vibeData = [
-                    new Attention.VibeProfile(100, 500),
-                    new Attention.VibeProfile(0, 150),
-                    new Attention.VibeProfile(100, 500),
-                    new Attention.VibeProfile(0, 150),
-                    new Attention.VibeProfile(100, 500),
-                ];
-                Attention.vibrate(vibeData);
-            }
-
-            WatchUi.showToast(alert, {});
-        } catch (e) {
-            logE("failed to show alert: " + e.getErrorMessage());
-        }
-    }
-
-    function showMyTrackAlert(epoch as Number, alert as String) as Void {
-        lastOffTrackAlertNotified = epoch; // if showAlert fails, we will still have vibrated and turned the screen on
-        showMyAlert(alert);
-    }
-
     // see onUpdate explanation for when each is called
     function actualCompute(info as Activity.Info) as Void {
         _computeCounter++;
@@ -145,7 +106,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
         _computeCounter = 0;
 
-        var settings = _breadcrumbContext.settings;
         var newPoint = _breadcrumbContext.track.pointFromActivityInfo(info);
         if (newPoint != null) {
             if (_cachedValues.currentScale != 0f) {
@@ -155,88 +115,9 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             var pointAdded = trackAddRes[0];
             var complexOperationHappened = trackAddRes[1];
             if (pointAdded && !complexOperationHappened) {
-                // todo: PERF only update this if the new point added changed the bounding box
-                // its pretty good atm though, only recalculates once every few seconds, and only
-                // if a point is added
                 _cachedValues.updateScaleCenter();
-                var epoch = Time.now().value();
-                if (epoch - settings.offTrackCheckIntervalS < lastOffTrackAlertChecked) {
-                    return;
-                }
-
-                // Do not check again for this long, prevents the expensive off track calculation running constantly whilst we are on track.
-                lastOffTrackAlertChecked = epoch;
-
-                var lastPoint = _breadcrumbContext.track.lastPoint();
-                if (lastPoint != null) {
-                    if (
-                        settings.enableOffTrackAlerts ||
-                        settings.drawLineToClosestPoint ||
-                        settings.offTrackWrongDirection
-                    ) {
-                        handleOffTrackAlerts(epoch, lastPoint);
-                    }
-                }
             }
         }
-    }
-
-    // new point is already pre scaled
-    function handleOffTrackAlerts(epoch as Number, newPoint as RectangularPoint) as Void {
-        var atLeastOneEnabled = false;
-        var route = _breadcrumbContext.route;
-        if (route != null) {
-            atLeastOneEnabled = true;
-            var routeOffTrackInfo = route.checkOffTrack(
-                newPoint,
-                settings.offTrackAlertsDistanceM * _cachedValues.currentScale
-            );
-
-            if (routeOffTrackInfo.onTrack) {
-                offTrackInfo = routeOffTrackInfo.clone(); // never store the point we got or rescales could occur twice on the same object
-                if (settings.offTrackWrongDirection && offTrackInfo.wrongDirection) {
-                    showMyTrackAlert(epoch, "WRONG DIRECTION");
-                }
-
-                return;
-            }
-
-            var pointWeLeftTrack = offTrackInfo.pointWeLeftTrack;
-            var routePointWeLeftTrack = routeOffTrackInfo.pointWeLeftTrack;
-            if (
-                routePointWeLeftTrack != null &&
-                (pointWeLeftTrack == null ||
-                    pointWeLeftTrack.distanceTo(newPoint) >
-                        routePointWeLeftTrack.distanceTo(newPoint))
-            ) {
-                offTrackInfo = routeOffTrackInfo.clone(); // never store the point we got or rescales could occur twice on the same object
-            }
-        }
-
-        if (!atLeastOneEnabled) {
-            // no routes are enabled - pretend we are ontrack
-            offTrackInfo.onTrack = true;
-            return;
-        }
-
-        offTrackInfo.onTrack = false; // use the last pointWeLeftTrack from when we were on track
-
-        // do not trigger alerts often
-        if (epoch - settings.offTrackAlertsMaxReportIntervalS < lastOffTrackAlertNotified) {
-            return;
-        }
-
-        if (settings.enableOffTrackAlerts) {
-            showMyTrackAlert(epoch, "OFF TRACK");
-        }
-    }
-
-    function onSettingsChanged() as Void {
-        // they could have turned off off track alerts, changed the distance of anything, so let it all recalculate
-        // or modified routes
-        lastOffTrackAlertNotified = 0;
-        lastOffTrackAlertChecked = 0;
-        offTrackInfo = new OffTrackInfo(true, null, false);
     }
 
     // did some testing on real device
@@ -288,28 +169,5 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             renderer.renderTrack(dc, route, Graphics.COLOR_BLUE, true);
         }
         renderer.renderTrack(dc, track, Graphics.COLOR_GREEN, false);
-        renderOffTrackPoint(dc);
-    }
-
-    function renderOffTrackPoint(dc as Dc) as Void {
-        var lastPoint = _breadcrumbContext.track.lastPoint();
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-        var pointWeLeftTrack = offTrackInfo.pointWeLeftTrack;
-        if (lastPoint != null) {
-            // only ever not null if feature enabled
-            if (
-                !offTrackInfo.onTrack &&
-                pointWeLeftTrack != null &&
-                settings.drawLineToClosestPoint
-            ) {
-                // points need to be scaled and rotated :(
-                renderer.renderLineFromLastPointToRoute(
-                    dc,
-                    lastPoint,
-                    pointWeLeftTrack,
-                    Graphics.COLOR_RED
-                );
-            }
-        }
     }
 }

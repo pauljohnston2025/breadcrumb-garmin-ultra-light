@@ -260,10 +260,6 @@ class CachedValues {
             route.rescale(scaleFactor); // rescale all routes, even if they are not enabled
         }
         _breadcrumbContextLocal.track.rescale(scaleFactor);
-        var _viewLocal = $._view;
-        if (_viewLocal != null) {
-            _viewLocal.rescale(scaleFactor);
-        }
         centerPosition.rescaleInPlace(scaleFactor);
 
         currentScale = newScale;

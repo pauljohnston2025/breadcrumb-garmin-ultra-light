@@ -123,7 +123,6 @@ class BreadcrumbRenderer {
     }
 
     function renderCurrentScale(dc as Dc) as Void {
-        
         var scaleData = getScaleSize();
         var pixelWidth = scaleData[0];
         var foundName = scaleData[1];
@@ -148,48 +147,32 @@ class BreadcrumbRenderer {
             foundName,
             Graphics.TEXT_JUSTIFY_CENTER
         );
-    }
 
-    function renderLineFromLastPointToRoute(
-        dc as Dc,
-        lastPoint as RectangularPoint,
-        offTrackPoint as RectangularPoint,
-        colour as Number
-    ) as Void {
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateCos = _cachedValues.rotateCos; // local lookup faster
-        var rotateSin = _cachedValues.rotateSin; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
+        // make this a const
+        var scaleFromEdge = 75; // guestimate
 
-        var lastPointUnrotatedX = lastPoint.x - centerPosition.x;
-        var lastPointUnrotatedY = lastPoint.y - centerPosition.y;
-        var lastPointRotatedX =
-            rotateAroundScreenXOffsetFactoredIn +
-            rotateCos * lastPointUnrotatedX -
-            rotateSin * lastPointUnrotatedY;
-        var lastPointRotatedY =
-            rotateAroundScreenYOffsetFactoredIn -
-            (rotateSin * lastPointUnrotatedX + rotateCos * lastPointUnrotatedY);
+        var currentScale = _cachedValues.currentScale;
+        var centerPosition = _cachedValues.centerPosition;
 
-        var offTrackPointUnrotatedX = offTrackPoint.x - centerPosition.x;
-        var offTrackPointUnrotatedY = offTrackPoint.y - centerPosition.y;
-        var offTrackPointRotatedX =
-            rotateAroundScreenXOffsetFactoredIn +
-            rotateCos * offTrackPointUnrotatedX -
-            rotateSin * offTrackPointUnrotatedY;
-        var offTrackPointRotatedY =
-            rotateAroundScreenYOffsetFactoredIn -
-            (rotateSin * offTrackPointUnrotatedX + rotateCos * offTrackPointUnrotatedY);
-
-        dc.setPenWidth(4);
-        dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.drawLine(
-            lastPointRotatedX,
-            lastPointRotatedY,
-            offTrackPointRotatedX,
-            offTrackPointRotatedY
-        );
+        if (settings.displayLatLong) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            if (currentScale != 0f) {
+                var latLong = RectangularPoint.xyToLatLon(
+                    centerPosition.x / currentScale,
+                    centerPosition.y / currentScale
+                );
+                if (latLong != null) {
+                    var txt = latLong[0].format("%.3f") + ", " + latLong[1].format("%.3f");
+                    dc.drawText(
+                        _cachedValues.xHalfPhysical,
+                        dc.getHeight() - scaleFromEdge,
+                        Graphics.FONT_XTINY,
+                        txt,
+                        Graphics.TEXT_JUSTIFY_CENTER
+                    );
+                }
+            }
+        }
     }
 
     // last location should already be scaled
