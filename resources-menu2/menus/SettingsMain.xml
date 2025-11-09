@@ -1,12 +1,8 @@
-<menu2 id="SettingsMain" title="@Strings.settingsTitle" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <menu-item id="settingsMainModeUiMode" label="@Strings.uiModeTitle"/>
+<menu2 id="SettingsMain" title="@Strings.AppName" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <menu-item id="settingsMainRecalculateIntervalS" label="@Strings.recalculateIntervalSTitle"/>
     <menu-item id="settingsMainCenterUserOffsetY" label="@Strings.centerUserOffsetYTitle"/>
     <toggle-menu-item id="settingsMainDisplayLatLong" label="@Strings.displayLatLongTitle"/>
     <menu-item id="settingsMainMaxTrackPoints" label="@Strings.maxTrackPointsTitle"/>
     <menu-item id="settingsMainZoomAtPace" label="@Strings.zoomAtPaceTitle"/>
     <menu-item id="settingsMainRoutes" label="@Strings.routesTitle"/>
-    <menu-item id="settingsMainAlerts" label="@Strings.offTrackAlertsGroupTitle"/>
-    <menu-item id="settingsMainClearStorage" label="@Strings.clearStorage"/>
-    <menu-item id="settingsMainResetDefaults" label="@Strings.resetDefaults"/>
 </menu2>

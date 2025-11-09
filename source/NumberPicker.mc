@@ -249,7 +249,7 @@ class SettingsNumberPicker extends NumberPicker {
 
     
     protected function onReading(value as String) as Void {
-        callback.invoke(Settings.parseNumberRaw("key", value, defaultVal));
+        callback.invoke(Settings.parseFloatRaw("key", value, defaultVal.toFloat()).toNumber());
         parent.rerender();
     }
 }
