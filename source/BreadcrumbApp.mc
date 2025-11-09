@@ -248,7 +248,7 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
             }
 
             var type = data[0] as Number;
-            /*var rawData = data.slice(1, null);*/
+            /* var rawData = data.slice(1, null); */
 
             if (type == PROTOCOL_REQUEST_SETTINGS) {
                 logB("got send settings req: ");

@@ -10,15 +10,15 @@ Companion app can be found at [Companion App](https://github.com/pauljohnston202
 
 There are several different apps/datafields on the connect-iq store all with similar breadcrumb functionality 
 
-Each one has its own repository mirror (git push --mirror https://github.com/pauljohnston2025/XXX.git)
-I could use monkey barrels to share common code, but barrels have a memory overhead, and I only expect 1 of these apps/datafields to be installed at a time.
-I also expect the merge conflicts will be easier to deal with rather than a whole heap of (:excludeAnnotations)
-Doing it this way also means each repo has 0 dependents and s fully stand-alone. 
-There are multiple Datafield app types, so that users can install 2 alongside eachother if they want. eg. have both the BreadcrumbDataField and LWBreadcrumbDataField enabled at the same time so that if BreadcrumbDataField crashes from OOm or some high usage map task we can still navigate the planned route using LWBreadcrumbDataField.  If a user has 2 installed it would be good practice to disable alerts on one of the datafields, or you will get 2 independent alert for each 'off track' etc.
+Each one has its own repository mirror (git push --mirror https://github.com/pauljohnston2025/XXX.git).  
+I could use monkey barrels to share common code, but barrels have a memory overhead, and I only expect 1 of these apps/datafields to be installed at a time.  
+I also expect the merge conflicts will be easier to deal with rather than a whole heap of (:excludeAnnotations)  
+Doing it this way also means each repo has 0 dependents and is fully stand-alone.   
+There are multiple Datafield app types, so that users can install 2 alongside eachother if they want. eg. have both the BreadcrumbDataField and LWBreadcrumbDataField enabled at the same time so that if BreadcrumbDataField crashes from OOM or some high usage map task we can still navigate the planned route using LWBreadcrumbDataField.  If a user has 2 installed it would be good practice to disable alerts on one of the datafields, or you will get 2 independent alert for each 'off track' etc.  
 
 The original project is https://github.com/pauljohnston2025/breadcrumb-garmin it contains the main datafield with all features on supported watches.
 
-note: some older devices will not support all opf the features (eg. routes/ device settings) This is a garmin limitation as those devices (<3.2.0 api) do not support phone app messages for datafields.
+note: Some older devices will not support all of the features (eg. routes/ device settings) This is a garmin limitation as those devices (<3.2.0 api) do not support phone app messages for datafields.
 
 The current mirrors are: 
 
@@ -26,7 +26,7 @@ The current mirrors are:
   * Type - DataField
   * Full breadcrumb trail with map tile support
 * [BreadcrumbApp](https://github.com/pauljohnston2025/breadcrumb-garmin-app)
-  * Upstream mirror - https://github.com/pauljohnston2025/breadcrumb-garmin
+  * [Upstream mirror - BreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin)
   * Type - App
   * An app instead of a datafield
   * Full breadcrumb trail with map tile support
@@ -35,31 +35,25 @@ The current mirrors are:
     * Touch screens can drag the map around to pan
   * Supports more features on more devices (the app has larger memory limits than a datafield)
 * [LWBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-light-weight)
-  * [Upstream mirror](https://github.com/pauljohnston2025/breadcrumb-garmin)
+  * [Upstream mirror - BreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin)
   * Type - DataField
   * Full breadcrumb trail (no map tile support)
 * [ULBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-ultra-light)
-  * [Upstream mirror](https://github.com/pauljohnston2025/breadcrumb-garmin-light-weight)
+  * [Upstream mirror - LWBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-light-weight)
   * Type - DataField
-  * Limited breadcrumb trail (no map support)
+  * Limited breadcrumb trail (no map support, no alerts)
   * This is the lightest weight datafield and is supported on more devices, it is restricted to 1 route and 1 track and alot of customisation is missing
 
-The companion app supports all of the watch apps, but the watch app must be selected in the companion app settings
+The companion app supports all of the watch apps, but the watch app must be selected in the companion app settings.
 
 To ensure versions do not overlap the Versioning scheme is: 
 
-0.X -> BreadcrumbDataField (0-9.X reserved)
-10.X -> BreadcrumbApp (10-19.X reserved)
-20.X -> LWBreadcrumbDataField (20-29.X reserved)
-30.X -> ULBreadcrumbDataField (30-39.X reserved)
+0.X -> BreadcrumbDataField (0-9.X reserved)  
+10.X -> BreadcrumbApp (10-19.X reserved)  
+20.X -> LWBreadcrumbDataField (20-29.X reserved)  
+30.X -> ULBreadcrumbDataField (30-39.X reserved)  
 
 
-To merge in the upstream do
-
-cd path/to/mirrored/repo  eg. breadcrumb-garmin-light-weight
-git remote add old-repo https://github.com/pauljohnston2025/breadcrumb-garmin.git
-git fetch old-repo
-git merge old-repo/master
 ---
 
 # Bug Reports
@@ -89,6 +83,15 @@ Must port forward both adb and the tile server for the simulator to be able to f
 
 * adb forward tcp:8080 tcp:8080
 * adb forward tcp:7381 tcp:7381
+
+To merge in the upstream do
+
+```
+cd path/to/mirrored/repo  eg. breadcrumb-garmin-light-weight
+git remote add old-repo https://github.com/pauljohnston2025/breadcrumb-garmin.git
+git fetch old-repo
+git merge old-repo/master
+```
 
 ---
 
