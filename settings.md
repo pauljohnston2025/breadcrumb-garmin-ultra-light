@@ -43,19 +43,6 @@ Please note: The nested garmin settings have a strange behaviour of the app is n
 
 ---
 
-### Display Mode
-
-Configure which screen is displayed for the datafield.
-
-Track/Route - Current track, and any loaded routes, will be shown  
-![](images/track-full.png)  
-Elevation - An elevation chart showing current distance traveled, current elevation and the route/track profile.  
-![](images/elevation.png)  
-Map Move - Allows panning around the map at a set zoom.  
-![](images/settings/mapmove.png)  
-Debug - A debug screen that may be removed in future releases. Shows the current state of the app.  
-![](images/settings/debug.png)
-
 ### Display Lat/Long
 
 Determines if the current latitude and longitude are displayed on the watch screen.
@@ -64,74 +51,9 @@ Determines if the current latitude and longitude are displayed on the watch scre
 
 The maximum number of coordinates to store for the current track the user is moving along. Each coordinate point contains a latitude, longitude and altitude. A smaller number should be used to conserve memory and cpu. Larger numbers results in a smoother track line drawn on screen.   
 
-### Map Move Screen Size
-
-How far to move across the screen when panning the map using the on screen ui. Relative to screen size, eg. 0.3 moves a third of the screen, 0.5 moves half the screen.   
-
----
-
-### UI Mode
-
-There is an on screen ui that can be used to control different parts of the watch app, this ui can be hidden or entirely disabled.  
-Note: There is a limitation on garmin that datafields can only receive tap events see [input-handling](https://developer.garmin.com/connect-iq/core-topics/input-handling/), this also means I cannot handle any physical button presses. All of the settings should be configurable from the companion app without using the onscreen ui.  
-
-Show On Top - Show the ui and the current state of everything its controlling  
-Hidden - Still responds to touch but does not display the current state  
-Disabled - No touch handling, no display of state
-
-The ui appears on most screens, but is limited to what that screen can do.
-
-The Track/Route page allows you to do the most with the onscreen ui.  
-![](images/settings/uimodetrackfullsize.png)
-
-Clear Route - Will prompt you if you are sure, and let you clear all routes on the device  
-Zoom at Pace Mode - See [Zoom At Pace Mode](#zoom-at-pace-mode)
-
-- M - zoom when moving
-- S - zoom when stopped
-- N - Never zoom
-- A - Always zoom
-- R - Routes Without Track
-
-Return To User - Allows you to return to the users location, and resume using Zoom at Pace Mode to determine the scale and zoom level. It is only shown when the map has been panned or zoomed away from the users location.  
-Display Mode - See [Display Mode](#display-mode)
-
-- T - Track/Route
-- E - Elevation
-- M - Map Move
-- D - Debug
-
-`+` Button (top of screen) allows zooming into the current location  
-`-` Button (bottom of screen) allows zooming out of the current location  
-
-Other Screens:  
-Map move allows you to pan around the map, clear routes and toggle the display mode. see [Map Move Screen Size](#map-move-screen-size) for configuring how far to move.
-Elevation allows you to clear routes and toggle display mode.  
-The debug screen only allows you to toggle the display mode.
-
----
-
-### Elevation Mode
-
-Stacked - Draw all routes and the current track ontop of each other, the first point of each route will be on the left of the screen  
-Route 1 - Blue, Route 2 - Red, Current Track - Green  
-![](images/settings/elevationstacked.png)  
-OrderedRoutes - Draw all routes one after the other, and overlay the track ontop. Generally best when each route is a different part of an overall route, eg. triathlons. Ensure you load the routes in the correct order on the device, an incorrect order will lead to elevation data being in the wrong spot.  
-Route 1 - Blue, Route 2 - Red, Current Track - Green  
-![](images/settings/elevationorderedroutes.png)
-
----
-
 ### Compute Interval
 
 The number of seconds that need to elapse before we try and add or next track point. Higher values should result in better battery performance (less calculations), but will also mean you need to wait longer for the map and track to update. This setting is also used to control how often to refresh the buffer if using a buffered render mode. A lower number should be used for high speed activities such as cycling.
-
----
-
-### Render Mode
-
-Unbuffered Rotations - Renders the breadcrumb trail by rotating the map in the users direction of travel.  
-No Buffer No Rotations - The breadcrumb trail is always north facing, and will not rotate when the user turns.
 
 ### Center User Offset Y
 
@@ -163,150 +85,11 @@ How fast, in m/s, the user needs to be moving in order to trigger zoom changes.
 
 ---
 
-# Alerts
-
-Calculating off track alerts (either Draw Line To Closest Point, or Off Track Alerts) is a computationally heavy task. This means if there are multiple large routes the watch can error out with a watchdog error if our code executes too long. I have tested with up to 3 large routes on my venu2s, and it seems to handle it. Only enabled routes are taken into consideration. For multiple enabled routes, you are considered on-track if you are on at least one of the tracks. See the [Routes](#routes) section for use cases of multiple routes, eg. triathlons.
-
-### Off Track Distance
-
-The number of meters you need to be off track for an alert to be triggered or a line to be drawn back to the track.
-
-### Off Track Check Interval
-
-How often, in seconds, to run the calculation of off track alerts (since its expensive). Once you rejoin the track, a line will continue to be draw to the closest point on the closest enabled route until we recalculate. eg. an interval of 60 will mean the line will still be drawn for up to 1minute after we rejoin the track. This number should be set to multiple of [Off Track Alerts Max Report Interval](#off-track-alerts-max-report-interval) for best results, as an alert will only fire when we check if we are off track. eg. Set this to check once every 30 seconds, but set [Off Track Alerts Max Report Interval](#off-track-alerts-max-report-interval) to 60 so that we only get notified every minute when we are trying to rejoin the track. If this is set higher than [Off Track Alerts Max Report Interval](#off-track-alerts-max-report-interval) the alert interval effectively becomes the check interval. Note: alerts are only checked if the last track point changes, if you stand in the same spot after leaving the track, no further alerts will be triggered.
-
-### Draw Line To Closest Point
-
-Draw a line to the closests point on the closest enabled route.
-
-### Draw Cheverons
-
-Draw arrows in the direction of travel. Uses off track calculation to know where we are up to on the track, and draws arrows for the next few points on the trail.  
-
-### Off Track Alerts
-
-Trigger an alert when you leave a route by `Off Track Distance`.
-
-### Wrong Direction Alerts
-
-Trigger an alert when you navigate the track in the wrong direction.
-
-### Turn Alert Time (s)
-
-Enabled turn-by-turn navigation (requires directions to be sent from the companion app).  
-The number correlates to the time away from the turn the alert will fire (based on current speed). Ie. if set to 20 an alert will fire 20s before we reach the turn, based on the current speed of travel, if we are moving at 2m/s the alert will fire 40m before the turn.  
-Set to -1 to disable turn alerts.  
-See [Min Turn Alert Distance (m)](#min-turn-alert-distance-m) for configuring the minimum distance.  
-
-Note: If your are off track the direction shown in the turn alert may be incorrect, this is because the direction is precomputed assuming you are on track, this is for performance reasons to avoid tripping the watchdog.
-
-Ensure to enable [Turn Point Limit](https://github.com/pauljohnston2025/breadcrumb-mobile/blob/master/manual.md#routes) in the companion app in order to send the directions to the watch to enable turn-by-turn navigation.
-
-Note: The turn-by-turn angle given by the alert is only an indication of the angle to turn only, I hope to improve on the algorithm I use to determine the angle in future releases. It should not be relied upon for perfect accuracy, and you should glance down at the watch to get an accurate indication on which direction to follow on the route.
-
-I strongly suggest enabling off track alerts when using this feature, to ensure better detection of upcoming turns, it will also assist if you happen to take the wrong turn at an intersection. The turn-by-turn is just to make you aware that you should be turning off the current heading soon, to avoid accidentally continuing straight on the path.
-
-### Min Turn Alert Distance (m)
-
-Configures the minimum distance for turn alerts, useful for when moving at slow speeds ensures that we do not have to be directly on the corner (when the time based alert reaches 1m or something very small).  
-Set to -1 to disable the minimum distance check.
-
-If you want a distance only based turn alert. eg. Always trigger the alert 10m from the corner. Set `Min Turn Alert Distance (m) = 10` and `Turn Alert Time (s) = -1`.  
-For time based only Set `Min Turn Alert Distance (m) = -1` and `Turn Alert Time (s) = <desired time>`.
-
-### Off Track Alerts Max Report Interval
-
-How often, in seconds, an alert should fire. Alerts will continue firing until you return to the planned route (or reach a section of another enabled route). Also controls the max alert speed for [Wrong Direction Alerts](#wrong-direction-alerts)
-
----
-
-### Colours
-
-Should be set to a valid hex code RRGGBB not all are required eg. FF00 will render as green
-
-Track Colour - The colour of the in progress track  
-Default Route Colour - The default colour of newly loaded routes
-Elevation Colour - The colour of the scale/numbers on the elevation page  
-User Colour - The colour of the user triangle (current user position)  
-Normal Mode Colour - The colour of scale/numbers on the track/routes page  
-UI Colour - The colour of the on screen ui  
-Debug Colour - The colour of the debug page
-
----
-
-### Routes
-
-Garmin has an issue with array settings where they cannot be modified by the connect iq app. It appears to be a known issue, but unlikely to be solved. Per route settings should be edited from the watch or android app only.
-
 ### Enable Routes
 
 Global route enable/disable flag. If disabled turns off all routes, or if enabled allows routes that are enabled to render.
 
-### Display Route Names
-
-enabled:
-![](images/settings/routenamesenabled.png)
-disabled:
-![](images/settings/routenamesdisabled.png)
-
-### Max Routes
-
-The maximum number of routes to store on the device, set to 1 if you want each new route loaded on the device to be the only one shown. Multiple routes are handy to add different parts of a course, or for multisport activities such as triathlons, each part of the course can be a separate colour. On some low memory devices this is hard coded to 1 and the setting cannot be changed.  
-
-### Per Route settings
-
-Id - The id of the route - read only  
-Name - Defaults to the route name that was added, but can be modified to anything you desire.  
-Enabled - If this route appears on any of the device screens, routes can be disabled so that multiple routes can be pre loaded and enabled when needed. eg. Day 1, Day 2.  
-Route Colour - The colour of the route.  
-Reversed - To reverse the direction of the route.
-
----
-
-# Debug Settings
-
-The watch app has a bunch of debug data to aid in development and help with bug reporting. Most users will not need to touch these settings, but some users may find it useful or like the look of the additional detail it provides. The debug settings and exactly what they control (and how they are displayed) can change at any time, some of them may be moved into other settings sections once they are stable.
-
-Note: Not all debug settings will work on all release builds, a message will be displayed if it has been compiled out and it is enabled.
-
-### Show Points
-
-Shows points at each latitude/longitude on the routes and track.
-
-![](images/settings/debug-points.png)
-![](images/settings/debug-points-zoomed.png)
-
-### Draw Line To Closest Point On Track
-
-Similar to the off track alerts line, but draws the line to the closest point on the track. This is not always the current location, as
-
-### Include Debug Page In On Screen Ui
-
-Include the debug page when navigating between pages in the on screen ui.
-
-### Draw Hit Boxes
-
-Show the hit-boxes for onscreen ui touches.
-
-### Show Turn Points
-
-Draws a circle around all of the turns that are in a route. The circle corresponds to [Turn Alert Time (s)](#turn-alert-time-s).
-
-### Show Turn Point Text Under Index
-
-Display information about the turns on the route (angle of turn, index of tun in coordinates), only for the first 'Show Turn Point Text Under Index' turns on the route.   
-
-
----
-
-### Return To User
-
-Return to the users location, and automatic scaling. Use this after you have manually zoomed, or set the displayed latitude/longitude. Users with the on screen ui can also touch the crosshairs to return to the users location.  
-
-
-### Restore Defaults
-
-Clear all storage and reset settings to their default values.
+Note: the Ultra Light version only supports a single route at a time.
 
 ---
 
