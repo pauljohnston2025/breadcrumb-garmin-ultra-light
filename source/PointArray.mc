@@ -200,6 +200,11 @@ class PointArray {
         restrictPoints(maxPoints);
         // memory may double when doing this, but its only on setting change
         _internalArrayBuffer = _internalArrayBuffer.slice(0, maxPoints * ARRAY_POINT_SIZE);
+        if (_size > maxPoints) {
+            logE("size was incorrect? how did this happen");
+            // this is never meant to happen, but we will push on by resetting the points array if it does
+            _size = 0;
+        }
     }
 
     function restrictPoints(maxPoints as Number) as Boolean {
@@ -208,16 +213,26 @@ class PointArray {
         // this means near the end of the track, we will have lots of close points
         // the start of the track will start getting more and more granular every
         // time we cull points
-        if (_size / ARRAY_POINT_SIZE < maxPoints) {
+        var currentPoints = _size / ARRAY_POINT_SIZE;
+
+        if (currentPoints < maxPoints) {
             return false;
         }
 
-        if (_size / ARRAY_POINT_SIZE <= 1) {
+        if (currentPoints <= 1) {
             return false; // we don't have any points, user must have set maxPoints really low (0 or negative)
         }
 
         // Always preserve the last point
         var lastPoint = lastPoint();
+
+        var decimationFactor = currentPoints / maxPoints;
+
+        if (decimationFactor < 2) {
+            decimationFactor = 2;
+        }
+
+        var stepSize = decimationFactor * ARRAY_POINT_SIZE;
 
         // we need to do this without creating a new array, since we do not want to
         // double the memory size temporarily
@@ -225,7 +240,7 @@ class PointArray {
         var j = 0;
         // Iterate and cull every second point, but exclude the original last point from the loop
         var sizeWithoutLastPoint = _size - ARRAY_POINT_SIZE;
-        for (var i = 0; i < sizeWithoutLastPoint; i += ARRAY_POINT_SIZE * 2) {
+        for (var i = 0; i < sizeWithoutLastPoint; i += stepSize) {
             _internalArrayBuffer[j] = _internalArrayBuffer[i];
             _internalArrayBuffer[j + 1] = _internalArrayBuffer[i + 1];
             j += ARRAY_POINT_SIZE;

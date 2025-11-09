@@ -46,6 +46,54 @@ function latLon2xyRoundTrip(logger as Logger) as Boolean {
 }
 
 (:test,:debug)
+function restrictPointsToMaxMemoryLessThanHalf(logger as Logger) as Boolean {
+    // 1. Create a PointArray and populate it with 10 points.
+    var points = new PointArray(10);
+    points.add(new RectangularPoint(1f,2f,3f));
+    points.add(new RectangularPoint(4f,5f,6f));
+    points.add(new RectangularPoint(7f,8f,9f));
+    points.add(new RectangularPoint(10f,11f,12f));
+    points.add(new RectangularPoint(13f,14f,15f));
+    points.add(new RectangularPoint(16f,17f,18f));
+
+    
+    Test.assertEqual(points.pointSize(), 6);
+    Test.assertEqual(points.size(), 18);
+
+    var wasRestricted = points.restrictPoints(2);
+    Test.assert(wasRestricted);
+
+    var lastPoint = points.lastPoint(); // this use to throw because we only cut the points in half but then set the array size smaller than the internal tracking  _size
+
+    var newSize = points.pointSize();
+    logger.debug("New point size after restriction: " + newSize);
+    Test.assertEqual(newSize, 3); // it also keeps the last point
+
+    Test.assertEqual(points.size(), 9);
+
+    Test.assertEqual(points._internalArrayBuffer[0], 1f);
+    Test.assertEqual(points._internalArrayBuffer[1], 2f);
+    Test.assertEqual(points._internalArrayBuffer[2], 3f);
+    Test.assertEqual(points._internalArrayBuffer[3], 10f);
+    Test.assertEqual(points._internalArrayBuffer[4], 11f);
+    Test.assertEqual(points._internalArrayBuffer[5], 12f);
+    Test.assertEqual(points._internalArrayBuffer[6], 16f);
+    Test.assertEqual(points._internalArrayBuffer[7], 17f);
+    Test.assertEqual(points._internalArrayBuffer[8], 18f);
+
+
+    Test.assert(lastPoint != null);
+    if (lastPoint == null) {
+        return false;
+    }
+    Test.assertEqual(lastPoint.x, 16f);
+    Test.assertEqual(lastPoint.y, 17f);
+    Test.assertEqual(lastPoint.altitude, 18f);
+
+    return true;
+}
+
+(:test,:debug)
 function restrictPointsOddNumberKeepsLastPointTest(logger as Logger) as Boolean {
     // 1. Create a PointArray and populate it with 10 points.
     var points = new PointArray(10);
@@ -60,7 +108,7 @@ function restrictPointsOddNumberKeepsLastPointTest(logger as Logger) as Boolean 
     Test.assertEqual(points.pointSize(), 6);
     Test.assertEqual(points.size(), 18);
 
-    var wasRestricted = points.restrictPoints(3); // does not matter whats here, the algorithm always halves the points and keeps last
+    var wasRestricted = points.restrictPoints(3);
     Test.assert(wasRestricted);
 
     var newSize = points.pointSize();
@@ -98,7 +146,7 @@ function restrictPointsOddNumberKeepsLastPointEvenIfOddTest(logger as Logger) as
     Test.assertEqual(points.pointSize(), 5);
     Test.assertEqual(points.size(), 15);
 
-    var wasRestricted = points.restrictPoints(3); // does not matter whats here, the algorithm always halves the points and keeps last
+    var wasRestricted = points.restrictPoints(3);
     Test.assert(wasRestricted);
 
     var newSize = points.pointSize();
@@ -135,7 +183,7 @@ function restrictPointsEvenNumberKeepsLastPointTest(logger as Logger) as Boolean
     Test.assertEqual(points.pointSize(), 6);
     Test.assertEqual(points.size(), 18);
 
-    var wasRestricted = points.restrictPoints(2); // does not matter whats here, the algorithm always halves the points and keeps last
+    var wasRestricted = points.restrictPoints(4);
     Test.assert(wasRestricted);
 
     var newSize = points.pointSize();
@@ -174,7 +222,7 @@ function restrictPointsEvenNumberKeepsLastPointEvenIfOddTest(logger as Logger) a
     Test.assertEqual(points.pointSize(), 5);
     Test.assertEqual(points.size(), 15);
 
-    var wasRestricted = points.restrictPoints(2); // does not matter whats here, the algorithm always halves the points and keeps last
+    var wasRestricted = points.restrictPoints(2);
     Test.assert(wasRestricted);
 
     var newSize = points.pointSize();

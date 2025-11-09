@@ -259,7 +259,7 @@ class Settings {
         // should we sanitize this as its untrusted? makes it significantly more annoying to do
         var keys = settings.keys();
         for (var i = 0; i < keys.size(); ++i) {
-            var key = keys[i] as Application.PropertyKeyType;
+            var key = keys[i] as String;
             var value = settings[key];
             // for now just blindly trust the users
             // we do reload which sanitizes, but they could break garmins settings page with unexpected types
