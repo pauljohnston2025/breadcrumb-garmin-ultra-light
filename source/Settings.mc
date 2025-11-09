@@ -16,6 +16,22 @@ enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_MAX,
 }
 
+(:background)
+function settingsAsDict() as Dictionary<String, PropertyValueType> {
+    return (
+        ({
+            "k" => Application.Properties.getValue("k"),
+            "k" => Application.Properties.getValue("k"),
+            "c" => Application.Properties.getValue("c"),
+            "o" => Application.Properties.getValue("o"),
+            "d" => Application.Properties.getValue("d"),
+            "b" => Application.Properties.getValue("b"),
+            "e" => Application.Properties.getValue("e"),
+            "n" => Application.Properties.getValue("n"),
+        }) as Dictionary<String, PropertyValueType>
+    );
+}
+
 // we are getting dangerously close to the app settings limit
 // was getting "Unable to serialize app data" in the sim, but after a restart worked fine
 // see
@@ -237,6 +253,23 @@ class Settings {
             logE("Error parsing float: " + key + " " + value);
         }
         return defaultValue;
+    }
+
+    function saveSettings(settings as Dictionary<String, PropertyValueType>) as Void {
+        // should we sanitize this as its untrusted? makes it significantly more annoying to do
+        var keys = settings.keys();
+        for (var i = 0; i < keys.size(); ++i) {
+            var key = keys[i] as Application.PropertyKeyType;
+            var value = settings[key];
+            // for now just blindly trust the users
+            // we do reload which sanitizes, but they could break garmins settings page with unexpected types
+            try {
+                Application.Properties.setValue(key, value as PropertyValueType);
+            } catch (e) {
+                logE("failed property save: " + e.getErrorMessage() + " " + key + ":" + value);
+                ++$.globalExceptionCounter;
+            }
+        }
     }
 
     function setup() as Void {
