@@ -103,7 +103,6 @@ class BreadcrumbRenderer {
 
         // get the closest without going over
         // The keys array is already sorted, so we get the first element as the default
-        var foundDistanceKey = scaleKeys[0];
         var foundName = scaleValues[0];
         var foundPixelWidth = 0f;
 
@@ -115,7 +114,6 @@ class BreadcrumbRenderer {
             }
 
             foundPixelWidth = testPixelWidth;
-            foundDistanceKey = distanceKey;
             foundName = scaleValues[i];
         }
 

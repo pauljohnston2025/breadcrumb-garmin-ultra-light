@@ -29,8 +29,8 @@ class CachedValues {
 
     // updated whenever onlayout changes (audit usages, these should not need to be floats, but sometimes are used to do float math)
     // default to full screen guess
-    var xHalfPhysical as Float = System.getDeviceSettings().screenWidth as Float / 2f;
-    var yHalfPhysical as Float = System.getDeviceSettings().screenHeight as Float / 2f;
+    var xHalfPhysical as Float = System.getDeviceSettings().screenWidth as Number / 2f;
+    var yHalfPhysical as Float = System.getDeviceSettings().screenHeight as Number / 2f;
 
     var rotateAroundScreenXOffsetFactoredIn as Float = xHalfPhysical;
     var rotateAroundScreenYOffsetFactoredIn as Float = yHalfPhysical;

@@ -297,14 +297,6 @@ class SettingsRoutesDelegate extends WatchUi.Menu2InputDelegate {
         me.settings = settings;
     }
 
-    function setRouteMax(value as Number) as Void {
-        settings.setRouteMax(value);
-        // reload our ui, so any route changes are cleared
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE); // remove the number picker view
-        reloadView();
-        WatchUi.pushView(new DummyView(), null, WatchUi.SLIDE_IMMEDIATE); // push dummy view for the number picker to remove
-    }
-
     function reloadView() as Void {
         WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         var view = new $.SettingsRoutes(settings);
