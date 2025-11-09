@@ -61,7 +61,7 @@ class CachedValues {
             outerBoundingBox[3] = trackBoundingBox[3] / scaleDivisor;
         }
 
-        if (route != null) {
+        if (route != null && _settings.routesEnabled) {
             // tmp vars so we can inline the function and remove it
             var outerBoundingBox0Tmp = outerBoundingBox[0] as Float;
             var outerBoundingBox1Tmp = outerBoundingBox[1] as Float;

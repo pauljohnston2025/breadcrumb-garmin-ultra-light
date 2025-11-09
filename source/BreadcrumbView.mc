@@ -165,7 +165,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         var renderer = _breadcrumbContext.breadcrumbRenderer;
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        if (route != null) {
+        if (route != null && settings.routesEnabled) {
             renderer.renderTrack(dc, route, Graphics.COLOR_BLUE, true);
         }
         renderer.renderTrack(dc, track, Graphics.COLOR_GREEN, false);
