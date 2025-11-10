@@ -247,10 +247,6 @@ oregon7xx.excludeAnnotations = $(oregon7xx.excludeAnnotations);rectangle;noscale
 oregon7xx.resourcePath = $(oregon7xx.resourcePath);resources-high-memory;resources-menu2
 rino7xx.excludeAnnotations = $(rino7xx.excludeAnnotations);rectangle;noscaledbitmap;$(highMemExcludes);menu2
 rino7xx.resourcePath = $(rino7xx.resourcePath);resources-high-memory
-edgeexplore.excludeAnnotations = $(edgeexplore.excludeAnnotations);rectangle;noscaledbitmap;$(highMemExcludes)
-edgeexplore.resourcePath = $(edgeexplore.resourcePath);resources-high-memory;resources-menu2
-marqdriver.excludeAnnotations = $(marqdriver.excludeAnnotations);rectangle;noscaledbitmap;$(highMemExcludes)
-marqdriver.resourcePath = $(marqdriver.resourcePath);resources-high-memory;resources-menu2
 
 # 32768 devices
 approachs60.excludeAnnotations = $(approachs60.excludeAnnotations);rectangle;noscaledbitmap;$(lowMemExcludes)
@@ -333,3 +329,4 @@ vivoactive4s.excludeAnnotations = $(vivoactive4s.excludeAnnotations);rectangle;n
 vivoactive4s.resourcePath = $(vivoactive4s.resourcePath);resources-low-memory
 vivoactive_hr.excludeAnnotations = $(vivoactive_hr.excludeAnnotations);rectangle;noscaledbitmap;$(lowMemExcludes)
 vivoactive_hr.resourcePath = $(vivoactive_hr.resourcePath);resources-low-memory
+
