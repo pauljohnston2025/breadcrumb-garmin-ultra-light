@@ -28,10 +28,8 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "b" => Application.Properties.getValue("b"),
             "e" => Application.Properties.getValue("e"),
             "n" => Application.Properties.getValue("n"),
-            "useTrackAsHeadingSpeedMPS" => Application.Properties.getValue(
-                "useTrackAsHeadingSpeedMPS"
-            ),
-            "minTrackPointDistanceM" => Application.Properties.getValue("minTrackPointDistanceM"),
+            "p" => Application.Properties.getValue("p"),
+            "q" => Application.Properties.getValue("q"),
         }) as Dictionary<String, PropertyValueType>
     );
 }
@@ -90,7 +88,7 @@ class Settings {
     (:settingsView,:menu2)
     function setUseTrackAsHeadingSpeedMPS(mps as Float) as Void {
         useTrackAsHeadingSpeedMPS = mps;
-        setValue("useTrackAsHeadingSpeedMPS", useTrackAsHeadingSpeedMPS);
+        setValue("p", useTrackAsHeadingSpeedMPS);
     }
 
     (:settingsView,:menu2)
@@ -102,7 +100,7 @@ class Settings {
     (:settingsView,:menu2)
     function setMinTrackPointDistanceM(value as Number) as Void {
         minTrackPointDistanceM = value;
-        setValue("minTrackPointDistanceM", minTrackPointDistanceM);
+        setValue("q", minTrackPointDistanceM);
         setMinTrackPointDistanceMSideEffect();
     }
 
@@ -326,11 +324,8 @@ class Settings {
         metersAroundUser = parseNumber("d", metersAroundUser);
         zoomAtPaceMode = parseNumber("b", zoomAtPaceMode);
         zoomAtPaceSpeedMPS = parseFloat("e", zoomAtPaceSpeedMPS);
-        useTrackAsHeadingSpeedMPS = parseFloat(
-            "useTrackAsHeadingSpeedMPS",
-            useTrackAsHeadingSpeedMPS
-        );
-        minTrackPointDistanceM = parseNumber("minTrackPointDistanceM", minTrackPointDistanceM);
+        useTrackAsHeadingSpeedMPS = parseFloat("p", useTrackAsHeadingSpeedMPS);
+        minTrackPointDistanceM = parseNumber("q", minTrackPointDistanceM);
     }
 
     function onSettingsChanged() as Void {

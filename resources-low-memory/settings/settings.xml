@@ -18,11 +18,11 @@
         <settingConfig type="numeric" min="1"/>
     </setting>
 
-    <setting propertyKey="@Properties.minTrackPointDistanceM" title="@Strings.minTrackPointDistanceMTitle">
+    <setting propertyKey="@Properties.q" title="@Strings.minTrackPointDistanceMTitle">
         <settingConfig type="numeric" min="0"/>
     </setting>
     
-    <setting propertyKey="@Properties.useTrackAsHeadingSpeedMPS" title="@Strings.useTrackAsHeadingSpeedMPSTitle">
+    <setting propertyKey="@Properties.p" title="@Strings.useTrackAsHeadingSpeedMPSTitle">
         <settingConfig type="numeric" min="0"/>
     </setting>
 

@@ -9,8 +9,8 @@
 
 	<property id="k" type="number">100</property>
 
-	<property id="useTrackAsHeadingSpeedMPS" type="float">1000.0</property>
-	<property id="minTrackPointDistanceM" type="number">5</property>
+	<property id="p" type="float">1000.0</property>
+	<property id="q" type="number">5</property>
 
 
     <!-- https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator -->
