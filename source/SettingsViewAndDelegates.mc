@@ -107,55 +107,6 @@ class SettingsMain extends Rez.Menus.SettingsMain {
             :settingsMainMinTrackPointDistanceM,
             settings.minTrackPointDistanceM.toString()
         );
-        var trackPointReductionMethodString = "";
-        switch (settings.trackPointReductionMethod) {
-            case TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE:
-                trackPointReductionMethodString = Rez.Strings.trackPointReductionMethodDownsample;
-                break;
-            case TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM:
-                trackPointReductionMethodString =
-                    Rez.Strings.trackPointReductionMethodReumannWitkam;
-                break;
-        }
-        safeSetSubLabel(
-            me,
-            :settingsMainTrackPointReductionMethod,
-            trackPointReductionMethodString
-        );
-    }
-}
-
-(:settingsView,:menu2)
-function getDataTypeString(type as Number) as ResourceId {
-    switch (type) {
-        case DATA_TYPE_NONE:
-            return Rez.Strings.dataTypeNone;
-        case DATA_TYPE_SCALE:
-            return Rez.Strings.dataTypeScale;
-        case DATA_TYPE_ALTITUDE:
-            return Rez.Strings.dataTypeAltitude;
-        case DATA_TYPE_AVERAGE_HEART_RATE:
-            return Rez.Strings.dataTypeAvgHR;
-        case DATA_TYPE_AVERAGE_SPEED:
-            return Rez.Strings.dataTypeAvgSpeed;
-        case DATA_TYPE_CURRENT_HEART_RATE:
-            return Rez.Strings.dataTypeCurHR;
-        case DATA_TYPE_CURRENT_SPEED:
-            return Rez.Strings.dataTypeCurSpeed;
-        case DATA_TYPE_ELAPSED_DISTANCE:
-            return Rez.Strings.dataTypeDistance;
-        case DATA_TYPE_ELAPSED_TIME:
-            return Rez.Strings.dataTypeTime;
-        case DATA_TYPE_TOTAL_ASCENT:
-            return Rez.Strings.dataTypeAscent;
-        case DATA_TYPE_TOTAL_DESCENT:
-            return Rez.Strings.dataTypeDescent;
-        case DATA_TYPE_AVERAGE_PACE:
-            return Rez.Strings.dataTypeAvgPace;
-        case DATA_TYPE_CURRENT_PACE:
-            return Rez.Strings.dataTypeCurPace;
-        default:
-            return Rez.Strings.dataTypeNone;
     }
 }
 
@@ -306,12 +257,6 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
                     settings.minTrackPointDistanceM,
                     view
                 )
-            );
-        } else if (itemId == :settingsMainTrackPointReductionMethod) {
-            WatchUi.pushView(
-                new $.Rez.Menus.SettingsTrackPointReductionMethod(),
-                new $.SettingsTrackPointReductionMethodDelegate(view),
-                WatchUi.SLIDE_IMMEDIATE
             );
         } else if (itemId == :settingsMainUseTrackAsHeadingSpeedMPS) {
             startPicker(
@@ -470,37 +415,5 @@ class ClearRoutesDelegate extends WatchUi.ConfirmationDelegate {
         }
 
         return true; // we always handle it
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsTrackPointReductionMethodDelegate extends WatchUi.Menu2InputDelegate {
-    private var parent as SettingsMain;
-
-    function initialize(parent as SettingsMain) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-    }
-
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var itemId = item.getId();
-
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        var value = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE;
-
-        if (itemId == :trackPointReductionMethodDownsample) {
-            value = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE;
-        } else if (itemId == :trackPointReductionMethodReumannWitkam) {
-            value = TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM;
-        }
-
-        settings.setTrackPointReductionMethod(value);
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
     }
 }

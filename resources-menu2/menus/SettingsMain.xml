@@ -4,7 +4,6 @@
     <toggle-menu-item id="settingsMainDisplayLatLong" label="@Strings.displayLatLongTitle"/>
     <menu-item id="settingsMainMaxTrackPoints" label="@Strings.maxTrackPointsTitle"/>
     <menu-item id="settingsMainMinTrackPointDistanceM" label="@Strings.minTrackPointDistanceMTitle"/>
-    <menu-item id="settingsMainTrackPointReductionMethod" label="@Strings.trackPointReductionMethodTitle"/>
     <menu-item id="settingsMainUseTrackAsHeadingSpeedMPS" label="@Strings.useTrackAsHeadingSpeedMPSTitle"/>
     <menu-item id="settingsMainZoomAtPace" label="@Strings.zoomAtPaceTitle"/>
     <menu-item id="settingsMainRoutes" label="@Strings.routesTitle"/>

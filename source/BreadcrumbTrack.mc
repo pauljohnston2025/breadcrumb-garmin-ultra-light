@@ -188,11 +188,7 @@ class BreadcrumbTrack {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal != null) {
             if (
-                coordinates.restrictPoints(
-                    _breadcrumbContextLocal.settings.maxTrackPoints,
-                    _breadcrumbContextLocal.settings.trackPointReductionMethod,
-                    _breadcrumbContextLocal.cachedValues.currentScale
-                )
+                coordinates.restrictPoints(_breadcrumbContextLocal.settings.maxTrackPoints)
             ) {
                 // a resize occurred, calculate important data again
                 updatePointDataFromAllPoints();

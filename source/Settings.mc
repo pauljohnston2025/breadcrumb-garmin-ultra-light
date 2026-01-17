@@ -7,11 +7,6 @@ import Toybox.Communications;
 import Toybox.WatchUi;
 import Toybox.PersistedContent;
 
-enum /*TrackPointReductionMethod*/ {
-    TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE = 0,
-    TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM = 1,
-}
-    
 enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_PACE,
     ZOOM_AT_PACE_MODE_STOPPED,
@@ -33,9 +28,10 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "b" => Application.Properties.getValue("b"),
             "e" => Application.Properties.getValue("e"),
             "n" => Application.Properties.getValue("n"),
-            "useTrackAsHeadingSpeedMPS" => Application.Properties.getValue("useTrackAsHeadingSpeedMPS"),
+            "useTrackAsHeadingSpeedMPS" => Application.Properties.getValue(
+                "useTrackAsHeadingSpeedMPS"
+            ),
             "minTrackPointDistanceM" => Application.Properties.getValue("minTrackPointDistanceM"),
-            "trackPointReductionMethod" => Application.Properties.getValue("trackPointReductionMethod"),
         }) as Dictionary<String, PropertyValueType>
     );
 }
@@ -58,9 +54,8 @@ class Settings {
     var zoomAtPaceSpeedMPS as Float = 1.0; // meters per second
     var useTrackAsHeadingSpeedMPS as Float = 1000f; // meters per second
     var minTrackPointDistanceM as Number = 5; // minimum distance between 2 track points
-    var trackPointReductionMethod as Number = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE; 
     var routesEnabled as Boolean = true;
-    
+
     var displayLatLong as Boolean = true;
 
     // how many seconds should we wait before even considering the next point
@@ -120,18 +115,12 @@ class Settings {
 
         var currentScale = _breadcrumbContextLocal.cachedValues.currentScale;
         var minDistanceMScaled = minTrackPointDistanceM.toFloat();
-        if(currentScale != 0f){
+        if (currentScale != 0f) {
             minDistanceMScaled = minDistanceMScaled * currentScale;
         }
         _breadcrumbContextLocal.track.minDistanceMScaled = minDistanceMScaled;
     }
-    
-    (:settingsView,:menu2)
-    function setTrackPointReductionMethod(value as Number) as Void {
-        trackPointReductionMethod = value;
-        setValue("trackPointReductionMethod", trackPointReductionMethod);
-    }
-    
+
     (:settingsView,:menu2)
     function setMaxTrackPoints(value as Number) as Void {
         var oldmaxTrackPoints = maxTrackPoints;
@@ -148,11 +137,7 @@ class Settings {
             breadcrumbContextWasNull();
             return;
         }
-        _breadcrumbContextLocal.track.coordinates.restrictPointsToMaxMemory(
-            maxTrackPoints,
-            _breadcrumbContextLocal.settings.trackPointReductionMethod,
-            _breadcrumbContextLocal.cachedValues.currentScale
-            );
+        _breadcrumbContextLocal.track.coordinates.restrictPointsToMaxMemory(maxTrackPoints);
     }
 
     (:settingsView,:menu2)
@@ -173,7 +158,7 @@ class Settings {
         displayLatLong = value;
         setValue("o", displayLatLong);
     }
-    
+
     function setRoutesEnabled(_routesEnabled as Boolean) as Void {
         routesEnabled = _routesEnabled;
         setValue("n", routesEnabled);
@@ -184,7 +169,7 @@ class Settings {
         displayLatLong = !displayLatLong;
         setValue("o", displayLatLong);
     }
-    
+
     (:settingsView,:menu2)
     function toggleRoutesEnabled() as Void {
         routesEnabled = !routesEnabled;
@@ -213,7 +198,11 @@ class Settings {
 
     function parseNumber(key as String, defaultValue as Number) as Number {
         try {
-            var resF = parseFloatRaw(key, Application.Properties.getValue(key), defaultValue.toFloat());
+            var resF = parseFloatRaw(
+                key,
+                Application.Properties.getValue(key),
+                defaultValue.toFloat()
+            );
             return resF.toNumber();
         } catch (e) {
             logE("Error parsing float: " + key);
@@ -342,7 +331,6 @@ class Settings {
             useTrackAsHeadingSpeedMPS
         );
         minTrackPointDistanceM = parseNumber("minTrackPointDistanceM", minTrackPointDistanceM);
-        trackPointReductionMethod = parseNumber("trackPointReductionMethod", trackPointReductionMethod);
     }
 
     function onSettingsChanged() as Void {
@@ -355,8 +343,7 @@ class Settings {
             maxTrackPointsChanged();
         }
 
-        if (oldMinTrackPointDistanceM != minTrackPointDistanceM)
-        {
+        if (oldMinTrackPointDistanceM != minTrackPointDistanceM) {
             setMinTrackPointDistanceMSideEffect();
         }
 

@@ -51,35 +51,6 @@ Determines if the current latitude and longitude are displayed on the watch scre
 
 The maximum number of coordinates to store for the current track the user is moving along. Each coordinate point contains a latitude, longitude and altitude. A smaller number should be used to conserve memory and cpu. Larger numbers results in a smoother track line drawn on screen.   
 
-### Top Data Field Type
-
-Breadcrumb supports adding datafield values to the top and bottom of the screen. 
-
-The currently supported fields are:
-
-* None - Nothing displayed
-* Map Scale - Scale bar for map distance
-* Altitude - Current elevation
-* Avg Heart Rate - Average heart rate
-* Avg Speed - Average speed
-* Heart Rate - Current heart rate
-* Speed - Current speed
-* Distance - Distance traveled
-* Time - Elapsed time
-* Total Ascent - Total elevation gain
-* Total Descent - Total elevation loss
-* Avg Pace - Average pace
-* Pace - Current pace
-
-
-### Bottom Data Field Type
-
-Same as [Top Data Field Type](#top-data-field-type) but at the bottom of the screen.
-
-### Data Field Text Size
-
-The text size for the top and bottom data fields.  
-
 ### Use Track As Heading Speed 
 
 If the user travels above this speed (in m/s) we will use the last few track points to get a bearing (for screen rotations) instead of the devices magnetic compass. This is mostly helpful for when running or any activity where your wrist is likely to be moving around alot, since it is hard to hold your wrist still enough to see the direction of travel. It also stops any delay when first looking at the watch, since it may have rendered when your wrist was not angled straight ahead.
@@ -101,14 +72,6 @@ If setting `Use Track As Heading Speed ` to 0 the heading will not update when s
 ### Min Track Point Distance (m)
 
 The minimum distance (in meters) between 2 track points in order to store them in teh current track. Larger values will result in a more granular track an require less operations of [Track Point Reduction Method](#track-point-reduction-method) which should increase battery performance. The number of track points will never exceed [Max Track Points](#max-track-points).
-
-### Track Point Reduction Method
-
-How to reduce the number of track points when we reach [Max Track Points](#max-track-points). When the limit is reached restrictPoints is called with the selected method.
-
-Downsample - A dumb but battery and cpu efficient method to remove half of the points from the track. It keeps every second point, so may remove corner points from the track.
-
-Reumann Witkam - A smart but computationally heavy method of removing only points that are needed. It tries to only keep only the corner points, as straight lines down a road can be just 2 points. It may use more battery and will result in more calls to restrictPoints since it does not remove all points. Based on https://psimpl.sourceforge.net/reumann-witkam.html . Falls back to the `Downsample` strategy if not enough points are removed.
 
 ### Compute Interval
 
