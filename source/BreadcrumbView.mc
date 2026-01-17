@@ -150,7 +150,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
         renderUnbufferedRotating(dc);
 
-        renderer.renderCurrentScale(dc);
+        renderer.renderDataFields(dc);
 
         var lastPoint = _breadcrumbContext.track.lastPoint();
         if (lastPoint != null) {

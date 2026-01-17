@@ -51,6 +51,65 @@ Determines if the current latitude and longitude are displayed on the watch scre
 
 The maximum number of coordinates to store for the current track the user is moving along. Each coordinate point contains a latitude, longitude and altitude. A smaller number should be used to conserve memory and cpu. Larger numbers results in a smoother track line drawn on screen.   
 
+### Top Data Field Type
+
+Breadcrumb supports adding datafield values to the top and bottom of the screen. 
+
+The currently supported fields are:
+
+* None - Nothing displayed
+* Map Scale - Scale bar for map distance
+* Altitude - Current elevation
+* Avg Heart Rate - Average heart rate
+* Avg Speed - Average speed
+* Heart Rate - Current heart rate
+* Speed - Current speed
+* Distance - Distance traveled
+* Time - Elapsed time
+* Total Ascent - Total elevation gain
+* Total Descent - Total elevation loss
+* Avg Pace - Average pace
+* Pace - Current pace
+
+
+### Bottom Data Field Type
+
+Same as [Top Data Field Type](#top-data-field-type) but at the bottom of the screen.
+
+### Data Field Text Size
+
+The text size for the top and bottom data fields.  
+
+### Use Track As Heading Speed 
+
+If the user travels above this speed (in m/s) we will use the last few track points to get a bearing (for screen rotations) instead of the devices magnetic compass. This is mostly helpful for when running or any activity where your wrist is likely to be moving around alot, since it is hard to hold your wrist still enough to see the direction of travel. It also stops any delay when first looking at the watch, since it may have rendered when your wrist was not angled straight ahead.
+
+0 - Always use track
+large number (eg. 1000) - Never use track
+0.5 - Use track when traveling faster than 0.5m/s and magnetic compass when traveling slower (stopped)
+
+This method of calculating the heading may result in slow updates to the heading angle, due to it needing a few points after a turn in order to know the turn has happened. This is most noticeable directly after exiting a corner, it may take a second or 2 for the heading to update.
+
+For best results:  
+
+[Compute Interval](#compute-interval) should be set to 1 (or a smaller number) in order to log as many track points as possible. Higher values of compute interval will result in delayed angle changes to the heading when turning corners.  
+[Min Track Point Distance (m)](#min-track-point-distance-m) should be set to 0 so all points are stored, which will result in smoother corner transitions.
+
+If setting `Use Track As Heading Speed ` to 0 the heading will not update when stationary. This is because the gps will ping around on your current location, and would result in constant changes to the heading if we kept updating it based on the last track points. 
+
+
+### Min Track Point Distance (m)
+
+The minimum distance (in meters) between 2 track points in order to store them in teh current track. Larger values will result in a more granular track an require less operations of [Track Point Reduction Method](#track-point-reduction-method) which should increase battery performance. The number of track points will never exceed [Max Track Points](#max-track-points).
+
+### Track Point Reduction Method
+
+How to reduce the number of track points when we reach [Max Track Points](#max-track-points). When the limit is reached restrictPoints is called with the selected method.
+
+Downsample - A dumb but battery and cpu efficient method to remove half of the points from the track. It keeps every second point, so may remove corner points from the track.
+
+Reumann Witkam - A smart but computationally heavy method of removing only points that are needed. It tries to only keep only the corner points, as straight lines down a road can be just 2 points. It may use more battery and will result in more calls to restrictPoints since it does not remove all points. Based on https://psimpl.sourceforge.net/reumann-witkam.html . Falls back to the `Downsample` strategy if not enough points are removed.
+
 ### Compute Interval
 
 The number of seconds that need to elapse before we try and add or next track point. Higher values should result in better battery performance (less calculations), but will also mean you need to wait longer for the map and track to update. This setting is also used to control how often to refresh the buffer if using a buffered render mode. A lower number should be used for high speed activities such as cycling.
@@ -77,7 +136,7 @@ Routes Without Tack - Same as `Never Zoom` but does not include the track in the
 
 ### Zoom At Pace Meters Around User
 
-How far, in meters, to render around the user when zoomed in.
+How far, in meters, to render around the user when zoomed in. This is also a 'minimum' render distance for when the bounding box of the current track/route is too small. If we allow rendering of really small bounding boxes, it zooms in too far and results in blury maps.
 
 ### Zoom At Pace Speed
 
@@ -101,7 +160,8 @@ It is much easier to configure the settings from the ConnectIQ store, or through
 ![](images/settings/ondevice.png)
 ![](images/settings/numberpicker.png)
 
-To use the number/colour pickers entering the value by touching characters/numbers on the screen then confirmed/removed by pressing the device buttons. Confirm to confirm on screen selection, back to delete a character or exit without making a change.
+To use the number/colour pickers entering the value by touching characters/numbers on the screen then confirmed/removed by pressing the device buttons. Confirm to confirm on screen selection, back to delete a character or exit without making a change.  
+Devices that have multiple buttons can also use the up/down buttons to move the cursor around the screen.
 
 ### Before Activity Start
 

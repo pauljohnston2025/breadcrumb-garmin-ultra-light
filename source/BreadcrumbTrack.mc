@@ -8,7 +8,6 @@ import Toybox.Application;
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 
-const MIN_DISTANCE_M = 5; // meters
 const RESTART_STABILITY_POINT_COUNT = 10; // number of points in a row that need to be within RESTART_STABILITY_DISTANCE_M to be considered a valid course
 //note: RESTART_STABILITY_POINT_COUNT should be set based on DELAY_COMPUTE_COUNT
 // if DELAY_COMPUTE_COUNT = 5 seconds, 10 points give us startup checking for 50 seconds, enough time to get a lock
@@ -48,7 +47,7 @@ class BreadcrumbTrack {
     var seenStartupPoints as Number = 0;
     var possibleBadPointsAdded as Number = 0;
     var inRestartMode as Boolean = true;
-    var minDistanceMScaled as Float = MIN_DISTANCE_M.toFloat(); // SCALED
+    var minDistanceMScaled as Float = 5f; // SCALED
     var maxDistanceMScaled as Float = STABILITY_MAX_DISTANCE_M.toFloat(); // SCALED
 
     var boundingBox as [Float, Float, Float, Float] = BOUNDING_BOX_DEFAULT(); // SCALED -- since the points are used to generate it on failure
@@ -188,7 +187,13 @@ class BreadcrumbTrack {
         // todo have a local ref to settings
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal != null) {
-            if (coordinates.restrictPoints(_breadcrumbContextLocal.settings.maxTrackPoints)) {
+            if (
+                coordinates.restrictPoints(
+                    _breadcrumbContextLocal.settings.maxTrackPoints,
+                    _breadcrumbContextLocal.settings.trackPointReductionMethod,
+                    _breadcrumbContextLocal.cachedValues.currentScale
+                )
+            ) {
                 // a resize occurred, calculate important data again
                 updatePointDataFromAllPoints();
                 // opt to remove more points then less, to ensure we get the bad point, or 1 of the good points instead

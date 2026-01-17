@@ -18,6 +18,78 @@
         <settingConfig type="numeric" min="1"/>
     </setting>
 
+    <setting propertyKey="@Properties.topDataType" title="@Strings.topDataTypeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.dataTypeNone</listEntry>
+            <listEntry value="1">@Strings.dataTypeScale</listEntry>
+            <listEntry value="2">@Strings.dataTypeAltitude</listEntry>
+            <listEntry value="3">@Strings.dataTypeAvgHR</listEntry>
+            <listEntry value="4">@Strings.dataTypeAvgSpeed</listEntry>
+            <listEntry value="5">@Strings.dataTypeCurHR</listEntry>
+            <listEntry value="6">@Strings.dataTypeCurSpeed</listEntry>
+            <listEntry value="7">@Strings.dataTypeDistance</listEntry>
+            <listEntry value="8">@Strings.dataTypeTime</listEntry>
+            <listEntry value="9">@Strings.dataTypeAscent</listEntry>
+            <listEntry value="10">@Strings.dataTypeDescent</listEntry>
+            <listEntry value="11">@Strings.dataTypeAvgPace</listEntry>
+            <listEntry value="12">@Strings.dataTypeCurPace</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.bottomDataType" title="@Strings.bottomDataTypeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.dataTypeNone</listEntry>
+            <listEntry value="1">@Strings.dataTypeScale</listEntry>
+            <listEntry value="2">@Strings.dataTypeAltitude</listEntry>
+            <listEntry value="3">@Strings.dataTypeAvgHR</listEntry>
+            <listEntry value="4">@Strings.dataTypeAvgSpeed</listEntry>
+            <listEntry value="5">@Strings.dataTypeCurHR</listEntry>
+            <listEntry value="6">@Strings.dataTypeCurSpeed</listEntry>
+            <listEntry value="7">@Strings.dataTypeDistance</listEntry>
+            <listEntry value="8">@Strings.dataTypeTime</listEntry>
+            <listEntry value="9">@Strings.dataTypeAscent</listEntry>
+            <listEntry value="10">@Strings.dataTypeDescent</listEntry>
+            <listEntry value="11">@Strings.dataTypeAvgPace</listEntry>
+            <listEntry value="12">@Strings.dataTypeCurPace</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.dataFieldTextSize" title="@Strings.dataFieldTextSizeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.fontXTiny</listEntry>
+            <listEntry value="1">@Strings.fontTiny</listEntry>
+            <listEntry value="2">@Strings.fontSmall</listEntry>
+            <listEntry value="3">@Strings.fontMedium</listEntry>
+            <listEntry value="4">@Strings.fontLarge</listEntry>
+            <!-- numbers cannot be used because we add letters too, and the numbers fonts only renders numbers -->
+            <!-- <listEntry value="5">@Strings.fontNumMild</listEntry>
+            <listEntry value="6">@Strings.fontNumMedium</listEntry>
+            <listEntry value="7">@Strings.fontNumHot</listEntry>
+            <listEntry value="8">@Strings.fontNumThaiHot</listEntry> -->
+            <!-- System Fonts seem to be almost the same, so save the space for the strings and code-->
+            <!-- <listEntry value="9">@Strings.fontSysXTiny</listEntry>
+            <listEntry value="10">@Strings.fontSysTiny</listEntry>
+            <listEntry value="11">@Strings.fontSysSmall</listEntry>
+            <listEntry value="12">@Strings.fontSysMedium</listEntry>
+            <listEntry value="13">@Strings.fontSysLarge</listEntry> -->
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.minTrackPointDistanceM" title="@Strings.minTrackPointDistanceMTitle">
+        <settingConfig type="numeric" min="0"/>
+    </setting>
+    
+    <setting propertyKey="@Properties.trackPointReductionMethod" title="@Strings.trackPointReductionMethodTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.trackPointReductionMethodDownsample</listEntry>
+            <listEntry value="1">@Strings.trackPointReductionMethodReumannWitkam</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.useTrackAsHeadingSpeedMPS" title="@Strings.useTrackAsHeadingSpeedMPSTitle">
+        <settingConfig type="numeric" min="0"/>
+    </setting>
+
     <!-- <group id="zoomAtPace" title="@Strings.zoomAtPaceTitle"> -->
         <setting propertyKey="@Properties.b" title="@Strings.zoomAtPaceModeTitle">
             <settingConfig type="list">

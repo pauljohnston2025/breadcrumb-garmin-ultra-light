@@ -23,10 +23,12 @@ note: Some older devices will not support all of the features (eg. routes/ devic
 The current mirrors are: 
 
 * [BreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin) 
+  * [Garmin Store](https://apps.garmin.com/apps/99d7ebcc-3586-4dbd-8684-08b5ce4ddd80)
   * Type - DataField
   * Full breadcrumb trail with map tile support
 * [BreadcrumbApp](https://github.com/pauljohnston2025/breadcrumb-garmin-app)
   * [Upstream mirror - BreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin)
+  * [Garmin Store](https://apps.garmin.com/apps/40e128d2-db98-41d1-b5a9-624a725e6e68)
   * Type - App
   * An app instead of a datafield
   * Full breadcrumb trail with map tile support
@@ -36,10 +38,12 @@ The current mirrors are:
   * Supports more features on more devices (the app has larger memory limits than a datafield)
 * [LWBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-light-weight)
   * [Upstream mirror - BreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin)
+  * [Garmin Store](https://apps.garmin.com/apps/3506adc5-7098-42ff-8c3f-601de1184aa5)
   * Type - DataField
   * Full breadcrumb trail (no map tile support)
 * [ULBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-ultra-light)
   * [Upstream mirror - LWBreadcrumbDataField](https://github.com/pauljohnston2025/breadcrumb-garmin-light-weight)
+  * [Garmin Store](https://apps.garmin.com/apps/fc5a0149-347a-4c39-aaf2-735eddd7b7bd)
   * Type - DataField
   * Limited breadcrumb trail (no map support, no alerts)
   * This is the lightest weight datafield and is supported on more devices, it is restricted to 1 route and 1 track and alot of customisation is missing

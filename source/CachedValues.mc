@@ -24,6 +24,7 @@ class CachedValues {
     // updated whenever we get new activity data with a new heading
     var rotateCos as Float = Math.cos(0f).toFloat() as Float;
     var rotateSin as Float = Math.sin(0f).toFloat() as Float;
+    private var _lastStableHeading as Float = 0.0f;
     var currentSpeed as Float = -1f;
     var currentlyZoomingAroundUser as Boolean = false;
 
@@ -122,7 +123,23 @@ class CachedValues {
                 : optionalTrackBoundingBox()
         );
         calcCenterPointForBoundingBox(boundingBox);
-        return getNewScaleFromBoundingBox(boundingBox);
+        var newScale = getNewScaleFromBoundingBox(boundingBox);
+        // this is a special case that makes us zoom more when we are in the 'overview'
+        // its also pretty bad when 'never' or 'routes' zoom at pace mode zooms in really small
+        // so treating renderDistanceM as a min render distance (can still manually zoom in)
+        // ie. with ZOOM_AT_PACE_MODE_PACE
+        // - move a little bit (only 6m)
+        // - stop moving so we are not currentlyZoomingAroundUser
+        // - normally this should zoom out to show the entire map area, but if we have no routes it actually zooms in to a blurry map (since its a bounding box of 6m)
+
+        // if we are not in a dynamic mode, we will do exactly what the user asks
+        // if we are in a dynamic mode, cap the 'zoomed out' zoom level so it always shows more area, never less
+        var scaleFromRenderDistance = calcScaleForScreenMeters(_settings.metersAroundUser.toFloat());
+        if (scaleFromRenderDistance < newScale) {
+            newScale = scaleFromRenderDistance;
+        }
+
+        return newScale;
     }
 
     function optionalTrackBoundingBox() as [Float, Float, Float, Float]? {
@@ -135,6 +152,11 @@ class CachedValues {
         return _breadcrumbContextLocal.track.coordinates.lastPoint() == null
             ? null
             : _breadcrumbContextLocal.track.boundingBox;
+    }
+
+    function calculateHeading(p1 as RectangularPoint, p2 as RectangularPoint) as Float {
+        // atan2(dx, dy) for North-up orientation
+        return Math.atan2(p2.x - p1.x, p2.y - p1.y).toFloat();
     }
 
     /** returns true if a rescale occurred */
@@ -152,20 +174,83 @@ class CachedValues {
         // based on some of the posts here, its better to use currentHeading if we want our compas to work whilst not moving, and track is only supported on some devices
         // https://forums.garmin.com/developer/connect-iq/f/discussion/258978/currentheading
         var currentHeading = activityInfo.currentHeading;
-        if (activityInfo has :track) {
-            var track = activityInfo.track;
-            if (currentHeading == null && track != null) {
-                currentHeading = track;
+        var _currentSpeed = activityInfo.currentSpeed;
+        if (_currentSpeed != null) {
+            currentSpeed = _currentSpeed;
+            if (currentSpeed >= _settings.useTrackAsHeadingSpeedMPS) {
+                if (currentSpeed != 0.0f) {
+                    var _breadcrumbContextLocal = $._breadcrumbContext;
+                    if (_breadcrumbContextLocal == null) {
+                        breadcrumbContextWasNull();
+                        return false;
+                    }
+                    var track = _breadcrumbContextLocal.track;
+                    var size = track.coordinates.pointSize();
+
+                    var lastPoint = track.coordinates.lastPoint();
+                    if (lastPoint != null) {
+                        var lookbackPoint = null;
+                        // We find a point at least X meters away to get a stable vector
+                        var tolerancePixels = 5;
+                        if (currentScale != 0.0f) {
+                            tolerancePixels = tolerancePixels * currentScale;
+                        }
+
+                        // Search back at most 10 points to find one 7m+ away
+                        var stopIndex = size - 10 < 0 ? 0 : size - 10;
+                        for (var i = size - 2; i >= stopIndex; --i) {
+                            // keep it updated as we go back through the for loop, we may break out when we hit the last point, but still not be the required distance away
+                            lookbackPoint = track.coordinates.getPoint(i);
+                            if (
+                                lookbackPoint != null &&
+                                lastPoint.distanceTo(lookbackPoint) > tolerancePixels
+                            ) {
+                                break;
+                            }
+                        }
+
+                        if (lookbackPoint != null) {
+                            var rawHeading = calculateHeading(lookbackPoint, lastPoint);
+
+                            // 2. DYNAMIC ALPHA SMOOTHING
+                            // Calculate how much we are turning
+                            var diff = (rawHeading - _lastStableHeading).abs();
+                            if (diff > Math.PI) {
+                                diff = 2 * Math.PI - diff;
+                            } // Handle wrap-around
+
+                            var alpha;
+                            if (diff > 0.52) {
+                                // > 30 degrees: We are turning!
+                                alpha = 0.9f; // Respond almost instantly
+                            } else if (diff > 0.17) {
+                                // > 10 degrees: Slight curve
+                                alpha = 0.5f; // Balanced
+                            } else {
+                                alpha = 0.15f; // Moving straight: Heavy smoothing to kill jitter
+                            }
+
+                            // 3. VECTOR BLENDING (Prevents 360/0 degree glitches)
+                            var newX =
+                                (1.0 - alpha) * Math.cos(_lastStableHeading) +
+                                alpha * Math.cos(rawHeading);
+                            var newY =
+                                (1.0 - alpha) * Math.sin(_lastStableHeading) +
+                                alpha * Math.sin(rawHeading);
+
+                            _lastStableHeading = Math.atan2(newY, newX).toFloat();
+                            currentHeading = _lastStableHeading;
+                        }
+                    }
+                } else {
+                    currentHeading = _lastStableHeading;
+                }
             }
         }
 
         if (currentHeading != null) {
             rotateCos = Math.cos(currentHeading).toFloat();
             rotateSin = Math.sin(currentHeading).toFloat();
-        }
-        var _currentSpeed = activityInfo.currentSpeed;
-        if (_currentSpeed != null) {
-            currentSpeed = _currentSpeed;
         }
 
         // we are either in 2 cases
@@ -240,7 +325,7 @@ class CachedValues {
             return false;
         }
 
-        if (abs(currentScale - newScale) < 0.000001) {
+        if ((currentScale - newScale).abs() < 0.000001) {
             // ignore any minor scale changes, esp if the scale is the same but float == does not work
             return false;
         }
@@ -250,6 +335,7 @@ class CachedValues {
         }
 
         var scaleFactor = newScale;
+        logT("moving to scale: " + newScale);
         if (currentScale != null && currentScale != 0f) {
             // adjust by old scale
             scaleFactor = newScale / currentScale;
