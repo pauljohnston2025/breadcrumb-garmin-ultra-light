@@ -177,7 +177,203 @@ class BreadcrumbRenderer {
         return [foundPixelWidth, foundDistanceKey, foundName];
     }
 
-    function renderCurrentScale(dc as Dc) as Void {
+    function renderDataFields(dc as Dc) as Void {
+        var edgeOffset = 25f;
+        renderDataField(dc, settings.topDataType, edgeOffset, 1);
+        renderDataField(
+            dc,
+            settings.bottomDataType,
+            _cachedValues.physicalScreenHeight - edgeOffset,
+            -1
+        );
+    }
+
+    function renderDataField(dc as Dc, type as Number, y as Float, direction as Number) as Void {
+        dc.setColor(settings.normalModeColour, Graphics.COLOR_TRANSPARENT);
+
+        if (type == DATA_TYPE_NONE) {
+            return;
+        }
+
+        if (type == DATA_TYPE_SCALE) {
+            renderCurrentScale(dc, y, direction);
+            return;
+        }
+
+        var info = Activity.getActivityInfo();
+        if (info == null) {
+            // all other metrics depend on info
+            return;
+        }
+
+        var centeredTextOffset =
+            (direction *
+                dc.getTextDimensions("A", settings.dataFieldTextSize as Graphics.FontType)[1]) /
+            2;
+        y = y + centeredTextOffset;
+
+        if (type == DATA_TYPE_ALTITUDE) {
+            renderElevationMetric(dc, y, info.altitude);
+        } else if (type == DATA_TYPE_AVERAGE_HEART_RATE) {
+            renderHeartRateMetric(dc, y, info.averageHeartRate);
+        } else if (type == DATA_TYPE_CURRENT_HEART_RATE) {
+            renderHeartRateMetric(dc, y, info.currentHeartRate);
+        } else if (type == DATA_TYPE_AVERAGE_SPEED) {
+            renderSpeedMetric(dc, y, info.averageSpeed);
+        } else if (type == DATA_TYPE_CURRENT_SPEED) {
+            renderSpeedMetric(dc, y, info.currentSpeed);
+        } else if (type == DATA_TYPE_ELAPSED_DISTANCE) {
+            renderDistanceMetric(dc, y, info.elapsedDistance);
+        } else if (type == DATA_TYPE_ELAPSED_TIME) {
+            renderTimeMetric(dc, y, info.elapsedTime);
+        } else if (type == DATA_TYPE_TOTAL_ASCENT) {
+            renderElevationMetric(dc, y, info.totalAscent);
+        } else if (type == DATA_TYPE_TOTAL_DESCENT) {
+            renderElevationMetric(dc, y, info.totalDescent);
+        } else if (type == DATA_TYPE_AVERAGE_PACE) {
+            renderPaceMetric(dc, y, info.averageSpeed);
+        } else if (type == DATA_TYPE_CURRENT_PACE) {
+            renderPaceMetric(dc, y, info.currentSpeed);
+        }
+    }
+
+    function renderTextMetric(dc as Dc, y as Float, val as String) as Void {
+        dc.drawText(
+            _cachedValues.xHalfPhysical,
+            y,
+            settings.dataFieldTextSize as Graphics.FontType,
+            val,
+            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
+        );
+    }
+
+    function renderHeartRateMetric(dc as Dc, y as Float, hr as Number?) as Void {
+        if (hr == null) {
+            renderTextMetric(dc, y, "-");
+            return;
+        }
+        // e.g. "145bpm"
+        renderTextMetric(dc, y, hr.toString() + "bpm");
+    }
+
+    function renderTimeMetric(dc as Dc, y as Float, timeMs as Number?) as Void {
+        if (timeMs == null) {
+            renderTextMetric(dc, y, "--:--");
+            return;
+        }
+
+        var secondsTotal = timeMs / 1000;
+        var hours = secondsTotal / 3600;
+        var minutes = (secondsTotal % 3600) / 60;
+        var seconds = secondsTotal % 60;
+
+        var timeStr;
+        if (hours > 0) {
+            timeStr = Lang.format("$1$:$2$:$3$", [
+                hours,
+                minutes.format("%02d"),
+                seconds.format("%02d"),
+            ]);
+        } else {
+            timeStr = Lang.format("$1$:$2$", [minutes, seconds.format("%02d")]);
+        }
+        renderTextMetric(dc, y, timeStr);
+    }
+
+    function renderSpeedMetric(dc as Dc, y as Float, speedMps as Float?) as Void {
+        if (speedMps == null) {
+            renderTextMetric(dc, y, "-.-");
+            return;
+        }
+
+        var speedConverted = speedMps;
+        var suffix = "k/h";
+
+        if (settings.distanceImperialUnits) {
+            speedConverted = speedMps * 2.23694f;
+            suffix = "m/h";
+        } else {
+            speedConverted = speedMps * 3.6f;
+        }
+
+        // e.g. "12.5k/h"
+        renderTextMetric(dc, y, speedConverted.format("%.1f") + suffix);
+    }
+
+    function renderPaceMetric(dc as Dc, y as Float, speedMps as Float?) as Void {
+        if (speedMps == null || speedMps < 0.2f) {
+            renderTextMetric(dc, y, "--:--");
+            return;
+        }
+
+        var secondsPerUnit;
+        var suffix = "/km";
+
+        if (settings.distanceImperialUnits) {
+            secondsPerUnit = 1609.34f / speedMps;
+            suffix = "/mi";
+        } else {
+            secondsPerUnit = 1000.0f / speedMps;
+        }
+
+        var minutes = (secondsPerUnit / 60).toNumber();
+        var seconds = secondsPerUnit.toNumber() % 60;
+
+        if (minutes > 99) {
+            renderTextMetric(dc, y, "--:--");
+        } else {
+            // e.g. "5:30/km"
+            renderTextMetric(
+                dc,
+                y,
+                Lang.format("$1$:$2$", [minutes, seconds.format("%02d")]) + suffix
+            );
+        }
+    }
+
+    function renderDistanceMetric(dc as Dc, y as Float, distMeters as Float?) as Void {
+        if (distMeters == null) {
+            renderTextMetric(dc, y, "-.--");
+            return;
+        }
+
+        var distConverted;
+        var suffix = "km";
+
+        if (settings.distanceImperialUnits) {
+            distConverted = distMeters / 1609.34f;
+            suffix = "mi";
+        } else {
+            distConverted = distMeters / 1000.0f;
+        }
+
+        // e.g. "5.23km"
+        renderTextMetric(dc, y, distConverted.format("%.2f") + suffix);
+    }
+
+    function renderElevationMetric(
+        dc as Dc,
+        y as Float,
+        elevationMeters as Float or Number or Null
+    ) as Void {
+        if (elevationMeters == null) {
+            renderTextMetric(dc, y, "-");
+            return;
+        }
+
+        var elevationConverted = elevationMeters.toFloat();
+        var suffix = "m";
+
+        if (settings.elevationImperialUnits) {
+            elevationConverted = elevationMeters * 3.28084f;
+            suffix = "ft";
+        }
+
+        // e.g. "1250ft"
+        renderTextMetric(dc, y, elevationConverted.format("%.0f") + suffix);
+    }
+
+    function renderCurrentScale(dc as Dc, y as Float, direction as Number) as Void {
         var scaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
         var scaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
         var scaleData = getScaleSizeGeneric(
@@ -193,8 +389,6 @@ class BreadcrumbRenderer {
             return;
         }
 
-        var y = _cachedValues.physicalScreenHeight - 25;
-        dc.setColor(settings.normalModeColour, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
         dc.drawLine(
             _cachedValues.xHalfPhysical - pixelWidth / 2.0f,
@@ -204,10 +398,17 @@ class BreadcrumbRenderer {
         );
         dc.drawText(
             _cachedValues.xHalfPhysical,
-            y - 30,
-            Graphics.FONT_XTINY,
+            y +
+                direction * 2 +
+                (direction *
+                    dc.getTextDimensions(
+                        foundName,
+                        settings.dataFieldTextSize as Graphics.FontType
+                    )[1]) /
+                    2,
+            settings.dataFieldTextSize as Graphics.FontType,
             foundName,
-            Graphics.TEXT_JUSTIFY_CENTER
+            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
         );
     }
 
@@ -602,9 +803,8 @@ class BreadcrumbRenderer {
         dc as Dc,
         breadcrumb as BreadcrumbTrack,
         colour as Graphics.ColorType
-    ) as Void {
-    }
-        
+    ) as Void {}
+
     (:unbufferedRotations)
     function renderTrackCheverons(
         dc as Dc,
@@ -1253,7 +1453,6 @@ class BreadcrumbRenderer {
         // make this a const
         var halfLineLength = 10;
         var lineFromEdge = 10;
-        var scaleFromEdge = 75; // guestimate
 
         if (_cachedValues.fixedPosition != null || _cachedValues.scale != null) {
             // crosshair
@@ -1280,6 +1479,16 @@ class BreadcrumbRenderer {
         }
 
         if (settings.displayLatLong) {
+            var bottomDataFieldFromEdge =
+                    dc.getTextDimensions(
+                        "A",
+                        settings.dataFieldTextSize as Graphics.FontType
+                    )[1] /* the scale/bottom datafield */ +
+                    dc.getTextDimensions(
+                        "A",
+                        Graphics.FONT_XTINY
+                    )[1] /* the text we are about to write for lat/long */ +
+                    25 /* padding and bottom symbol */;
             var fixedLatitude = settings.fixedLatitude;
             var fixedLongitude = settings.fixedLongitude;
             if (
@@ -1290,7 +1499,7 @@ class BreadcrumbRenderer {
                 var txt = fixedLatitude.format("%.3f") + ", " + fixedLongitude.format("%.3f");
                 dc.drawText(
                     xHalfPhysical,
-                    physicalScreenHeight - scaleFromEdge,
+                    physicalScreenHeight - bottomDataFieldFromEdge,
                     Graphics.FONT_XTINY,
                     txt,
                     Graphics.TEXT_JUSTIFY_CENTER
@@ -1304,7 +1513,7 @@ class BreadcrumbRenderer {
                     var txt = latLong[0].format("%.3f") + ", " + latLong[1].format("%.3f");
                     dc.drawText(
                         xHalfPhysical,
-                        physicalScreenHeight - scaleFromEdge,
+                        physicalScreenHeight - bottomDataFieldFromEdge,
                         Graphics.FONT_XTINY,
                         txt,
                         Graphics.TEXT_JUSTIFY_CENTER
@@ -1888,7 +2097,7 @@ class BreadcrumbRenderer {
         }
 
         // abs really only needed until we get the first point (then max should always be more than min)
-        var elevationChange = abs(maxElevation - minElevation);
+        var elevationChange = (maxElevation - minElevation).abs();
         var startAt = minElevation + elevationChange / 2;
         return getElevationScaleRaw(maxDistanceScaled, elevationChange, startAt);
     }
@@ -1923,7 +2132,7 @@ class BreadcrumbRenderer {
         var maxDistanceScaled = maxF(allRouteDistanceScaled, maxTrackDistanceScaled);
 
         // abs really only needed until we get the first point (then max should always be more than min)
-        var elevationChange = abs(maxElevation - minElevation);
+        var elevationChange = (maxElevation - minElevation).abs();
         var startAt = minElevation + elevationChange / 2;
         return getElevationScaleRaw(maxDistanceScaled, elevationChange, startAt);
     }

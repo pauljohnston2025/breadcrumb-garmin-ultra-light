@@ -2,6 +2,9 @@
     <string id="AppName">LWBreadcrumbDataField</string>
     <string id="settingsTitle">Light Weight Breadcrumb Data Field</string>
 
+    <string id="useTrackAsHeadingSpeedMPSTitle">Use Track As Heading Speed (m/s)</string>
+    <string id="topDataTypeTitle">Top Data Field</string>
+    <string id="bottomDataTypeTitle">Bottom Data Field</string>
     <string id="modeTitle">Display Mode</string>
     <string id="elevationModeTitle">Elevation Mode</string>
     <string id="elevationModeStacked">Stacked</string>
@@ -100,6 +103,43 @@
     <string id="clearRoutes1">Clearing all routes, are you sure?</string>
     <string id="clearRoutes2">Confirm route clear</string>
     <string id="clearRoutes3">Clearing all routes, LAST CHANCE!!!</string>
+
+    <string id="dataTypeNone">None</string>
+    <string id="dataTypeScale">Map Scale</string>
+    <string id="dataTypeAltitude">Altitude</string>
+    <string id="dataTypeAvgHR">Avg Heart Rate</string>
+    <string id="dataTypeAvgSpeed">Avg Speed</string>
+    <string id="dataTypeCurHR">Heart Rate</string>
+    <string id="dataTypeCurSpeed">Speed</string>
+    <string id="dataTypeDistance">Distance</string>
+    <string id="dataTypeTime">Time</string>
+    <string id="dataTypeAscent">Total Ascent</string>
+    <string id="dataTypeDescent">Total Descent</string>
+    <string id="dataTypeAvgPace">Avg Pace</string>
+    <string id="dataTypeCurPace">Pace</string>
+
+    <string id="dataFieldTextSizeTitle">Data Field Text Size</string>
+    <string id="fontXTiny">Extra Tiny</string>
+    <string id="fontTiny">Tiny</string>
+    <string id="fontSmall">Small</string>
+    <string id="fontMedium">Medium</string>
+    <string id="fontLarge">Large</string>
+     <!-- numbers cannot be used because we add letters too, and the numbers fonts only renders numbers -->
+    <!-- <string id="fontNumMild">Number Mild</string>
+    <string id="fontNumMedium">Number Medium</string>
+    <string id="fontNumHot">Number Hot</string>
+    <string id="fontNumThaiHot">Number Thai Hot</string> -->
+    <!-- System Fonts seem to be almost the same, so save the space for the strings and code-->
+    <!-- <string id="fontSysXTiny">System Extra Tiny</string>
+    <string id="fontSysTiny">System Tiny</string>
+    <string id="fontSysSmall">System Small</string>
+    <string id="fontSysMedium">System Medium</string>
+    <string id="fontSysLarge">System Large</string> -->
+
+    <string id="minTrackPointDistanceMTitle">Min Track Point Distance (m)</string>
+    <string id="trackPointReductionMethodTitle">Track Point Reduction Method</string>
+    <string id="trackPointReductionMethodDownsample">Downsample</string>
+    <string id="trackPointReductionMethodReumannWitkam">Reumann Witkam</string>
 
     <string id="mustUpdate">Update mobile app or watch app</string>
     
