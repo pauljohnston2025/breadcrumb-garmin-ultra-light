@@ -10,9 +10,6 @@
 	<property id="k" type="number">100</property>
 
 	<property id="useTrackAsHeadingSpeedMPS" type="float">1000.0</property>
-	<property id="topDataType" type="number">0</property>
-	<property id="bottomDataType" type="number">1</property>
-	<property id="dataFieldTextSize" type="number">0</property>
 	<property id="minTrackPointDistanceM" type="number">5</property>
 	<property id="trackPointReductionMethod" type="number">0</property>
 

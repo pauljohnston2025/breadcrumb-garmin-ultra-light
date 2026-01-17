@@ -97,26 +97,10 @@ class SettingsMain extends Rez.Menus.SettingsMain {
         );
         safeSetToggle(me, :settingsMainDisplayLatLong, settings.displayLatLong);
         safeSetSubLabel(me, :settingsMainMaxTrackPoints, settings.maxTrackPoints.toString());
-        safeSetSubLabel(me, :settingsMainTopDataType, getDataTypeString(settings.topDataType));
-        safeSetSubLabel(
-            me,
-            :settingsMainDataFieldTextSize,
-            getFontSizeString(settings.dataFieldTextSize)
-        );
-        safeSetSubLabel(
-            me,
-            :settingsMainBottomDataType,
-            getDataTypeString(settings.bottomDataType)
-        );
         safeSetSubLabel(
             me,
             :settingsMainUseTrackAsHeadingSpeedMPS,
             settings.useTrackAsHeadingSpeedMPS.format("%.2f") + "m/s"
-        );
-        safeSetSubLabel(
-            me,
-            :settingsMainMapMoveScreenSize,
-            settings.mapMoveScreenSize.format("%.2f")
         );
         safeSetSubLabel(
             me,
@@ -315,24 +299,6 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
                 new $.SettingsRoutesDelegate(view, settings),
                 WatchUi.SLIDE_IMMEDIATE
             );
-        } else if (itemId == :settingsMainTopDataType) {
-            WatchUi.pushView(
-                new $.Rez.Menus.SettingsDataFieldType(),
-                new $.SettingsDataFieldTypeDelegate(view, settings.method(:setTopDataType)),
-                WatchUi.SLIDE_IMMEDIATE
-            );
-        } else if (itemId == :settingsMainBottomDataType) {
-            WatchUi.pushView(
-                new $.Rez.Menus.SettingsDataFieldType(),
-                new $.SettingsDataFieldTypeDelegate(view, settings.method(:setBottomDataType)),
-                WatchUi.SLIDE_IMMEDIATE
-            );
-        } else if (itemId == :settingsMainDataFieldTextSize) {
-            WatchUi.pushView(
-                new $.Rez.Menus.SettingsFontSize(),
-                new $.SettingsFontSizeDelegate(view, settings.method(:setDataFieldTextSize)),
-                WatchUi.SLIDE_IMMEDIATE
-            );
         } else if (itemId == :settingsMainMinTrackPointDistanceM) {
             startPicker(
                 new SettingsNumberPicker(
@@ -504,134 +470,6 @@ class ClearRoutesDelegate extends WatchUi.ConfirmationDelegate {
         }
 
         return true; // we always handle it
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsDataFieldTypeDelegate extends WatchUi.Menu2InputDelegate {
-    private var callback as (Method(value as Number) as Void);
-    var parent as SettingsMain;
-    function initialize(parent as SettingsMain, _callback as (Method(value as Number) as Void)) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-        me.callback = _callback;
-    }
-
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var itemId = item.getId();
-        if (itemId == :settingsDataTypeNone) {
-            callback.invoke(DATA_TYPE_NONE);
-        } else if (itemId == :settingsDataTypeScale) {
-            callback.invoke(DATA_TYPE_SCALE);
-        } else if (itemId == :settingsDataTypeAltitude) {
-            callback.invoke(DATA_TYPE_ALTITUDE);
-        } else if (itemId == :settingsDataTypeAvgHR) {
-            callback.invoke(DATA_TYPE_AVERAGE_HEART_RATE);
-        } else if (itemId == :settingsDataTypeAvgSpeed) {
-            callback.invoke(DATA_TYPE_AVERAGE_SPEED);
-        } else if (itemId == :settingsDataTypeCurHR) {
-            callback.invoke(DATA_TYPE_CURRENT_HEART_RATE);
-        } else if (itemId == :settingsDataTypeCurSpeed) {
-            callback.invoke(DATA_TYPE_CURRENT_SPEED);
-        } else if (itemId == :settingsDataTypeDistance) {
-            callback.invoke(DATA_TYPE_ELAPSED_DISTANCE);
-        } else if (itemId == :settingsDataTypeTime) {
-            callback.invoke(DATA_TYPE_ELAPSED_TIME);
-        } else if (itemId == :settingsDataTypeAscent) {
-            callback.invoke(DATA_TYPE_TOTAL_ASCENT);
-        } else if (itemId == :settingsDataTypeDescent) {
-            callback.invoke(DATA_TYPE_TOTAL_DESCENT);
-        } else if (itemId == :settingsDataTypeAvgPace) {
-            callback.invoke(DATA_TYPE_AVERAGE_PACE);
-        } else if (itemId == :settingsDataTypeCurPace) {
-            callback.invoke(DATA_TYPE_CURRENT_PACE);
-        }
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-    }
-}
-
-(:settingsView,:menu2)
-function getFontSizeString(font as Number) as ResourceId {
-    switch (font) {
-        case Graphics.FONT_XTINY:
-            return Rez.Strings.fontXTiny;
-        case Graphics.FONT_TINY:
-            return Rez.Strings.fontTiny;
-        case Graphics.FONT_SMALL:
-            return Rez.Strings.fontSmall;
-        case Graphics.FONT_MEDIUM:
-            return Rez.Strings.fontMedium;
-        case Graphics.FONT_LARGE:
-            return Rez.Strings.fontLarge;
-        // numbers cannot be used because we add letters too, and the numbers fonts only renders numbers
-        // case Graphics.FONT_NUMBER_MILD: return Rez.Strings.fontNumMild;
-        // case Graphics.FONT_NUMBER_MEDIUM: return Rez.Strings.fontNumMedium;
-        // case Graphics.FONT_NUMBER_HOT: return Rez.Strings.fontNumHot;
-        // case Graphics.FONT_NUMBER_THAI_HOT: return Rez.Strings.fontNumThaiHot;
-        // <!-- System Fonts seem to be almost the same, so save the space for the strings and code-->
-        // case Graphics.FONT_SYSTEM_XTINY: return Rez.Strings.fontSysXTiny;
-        // case Graphics.FONT_SYSTEM_TINY: return Rez.Strings.fontSysTiny;
-        // case Graphics.FONT_SYSTEM_SMALL: return Rez.Strings.fontSysSmall;
-        // case Graphics.FONT_SYSTEM_MEDIUM: return Rez.Strings.fontSysMedium;
-        // case Graphics.FONT_SYSTEM_LARGE: return Rez.Strings.fontSysLarge;
-        default:
-            return Rez.Strings.fontMedium;
-    }
-}
-
-(:settingsView,:menu2)
-class SettingsFontSizeDelegate extends WatchUi.Menu2InputDelegate {
-    private var callback as (Method(value as Number) as Void);
-    private var parent as SettingsMain;
-
-    function initialize(parent as SettingsMain, _callback as (Method(value as Number) as Void)) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-        me.callback = _callback;
-    }
-
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var itemId = item.getId();
-
-        // Map the symbol ID back to the Graphics Font constant
-        var fontValue = Graphics.FONT_MEDIUM; // Default
-
-        if (itemId == :fontXTiny) {
-            fontValue = Graphics.FONT_XTINY;
-        } else if (itemId == :fontTiny) {
-            fontValue = Graphics.FONT_TINY;
-        } else if (itemId == :fontSmall) {
-            fontValue = Graphics.FONT_SMALL;
-        } else if (itemId == :fontMedium) {
-            fontValue = Graphics.FONT_MEDIUM;
-        } else if (itemId == :fontLarge) {
-            fontValue = Graphics.FONT_LARGE;
-        }
-        /* else if (itemId == :fontNumMild) {
-            fontValue = Graphics.FONT_NUMBER_MILD;
-        } else if (itemId == :fontNumMedium) {
-            fontValue = Graphics.FONT_NUMBER_MEDIUM;
-        } else if (itemId == :fontNumHot) {
-            fontValue = Graphics.FONT_NUMBER_HOT;
-        } else if (itemId == :fontNumThaiHot) {
-            fontValue = Graphics.FONT_NUMBER_THAI_HOT;
-        } else if (itemId == :fontSysXTiny) {
-            fontValue = Graphics.FONT_SYSTEM_XTINY;
-        }
-         else if (itemId == :fontSysTiny) {
-            fontValue = Graphics.FONT_SYSTEM_TINY;
-        } else if (itemId == :fontSysSmall) {
-            fontValue = Graphics.FONT_SYSTEM_SMALL;
-        } else if (itemId == :fontSysMedium) {
-            fontValue = Graphics.FONT_SYSTEM_MEDIUM;
-        } else if (itemId == :fontSysLarge) {
-            fontValue = Graphics.FONT_SYSTEM_LARGE;
-        }*/
-
-        callback.invoke(fontValue);
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
     }
 }
 

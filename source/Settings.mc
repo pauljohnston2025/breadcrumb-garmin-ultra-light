@@ -12,29 +12,6 @@ enum /*TrackPointReductionMethod*/ {
     TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM = 1,
 }
     
-enum /*DataType*/ {
-    DATA_TYPE_NONE,
-    DATA_TYPE_SCALE,
-    DATA_TYPE_ALTITUDE,
-    DATA_TYPE_AVERAGE_HEART_RATE,
-    DATA_TYPE_AVERAGE_SPEED,
-    DATA_TYPE_CURRENT_HEART_RATE,
-    DATA_TYPE_CURRENT_SPEED,
-    DATA_TYPE_ELAPSED_DISTANCE,
-    DATA_TYPE_ELAPSED_TIME,
-    DATA_TYPE_TOTAL_ASCENT,
-    DATA_TYPE_TOTAL_DESCENT,
-    DATA_TYPE_AVERAGE_PACE,
-    DATA_TYPE_CURRENT_PACE,
-
-    // other metrics that might be good
-    // most of these are inbuilt garmin ones (so could easily be added to a second data screen)
-    // Ill add them if users ask, but currently only have requests for pace https://github.com/pauljohnston2025/breadcrumb-garmin/issues/8
-    // anything to do with laps I will need to store timestamps when onTimerLap() is called, and probably store all the activity info? or maybe just store distance/and timestamp?
-    // time of day - wall clock
-    // last lap time
-    // current lap time
-}
 enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_PACE,
     ZOOM_AT_PACE_MODE_STOPPED,
@@ -57,9 +34,6 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "e" => Application.Properties.getValue("e"),
             "n" => Application.Properties.getValue("n"),
             "useTrackAsHeadingSpeedMPS" => Application.Properties.getValue("useTrackAsHeadingSpeedMPS"),
-            "topDataType" => Application.Properties.getValue("topDataType"),
-            "bottomDataType" => Application.Properties.getValue("bottomDataType"),
-            "dataFieldTextSize" => Application.Properties.getValue("dataFieldTextSize"),
             "minTrackPointDistanceM" => Application.Properties.getValue("minTrackPointDistanceM"),
             "trackPointReductionMethod" => Application.Properties.getValue("trackPointReductionMethod"),
         }) as Dictionary<String, PropertyValueType>
@@ -83,9 +57,6 @@ class Settings {
     var zoomAtPaceMode as Number = ZOOM_AT_PACE_MODE_PACE;
     var zoomAtPaceSpeedMPS as Float = 1.0; // meters per second
     var useTrackAsHeadingSpeedMPS as Float = 1000f; // meters per second
-    var topDataType as Number = DATA_TYPE_NONE;
-    var bottomDataType as Number = DATA_TYPE_SCALE;
-    var dataFieldTextSize as Number = Graphics.FONT_XTINY;
     var minTrackPointDistanceM as Number = 5; // minimum distance between 2 track points
     var trackPointReductionMethod as Number = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE; 
     var routesEnabled as Boolean = true;
@@ -134,15 +105,10 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setTopDataType(value as Number) as Void {
-        topDataType = value;
-        setValue("topDataType", topDataType);
-    }
-
-    (:settingsView,:menu2)
-    function setBottomDataType(value as Number) as Void {
-        bottomDataType = value;
-        setValue("bottomDataType", bottomDataType);
+    function setMinTrackPointDistanceM(value as Number) as Void {
+        minTrackPointDistanceM = value;
+        setValue("minTrackPointDistanceM", minTrackPointDistanceM);
+        setMinTrackPointDistanceMSideEffect();
     }
 
     function setMinTrackPointDistanceMSideEffect() as Void {
@@ -166,12 +132,6 @@ class Settings {
         setValue("trackPointReductionMethod", trackPointReductionMethod);
     }
     
-    (:settingsView,:menu2)
-    function setDataFieldTextSize(value as Number) as Void {
-        dataFieldTextSize = value;
-        setValue("dataFieldTextSize", dataFieldTextSize);
-    }
-
     (:settingsView,:menu2)
     function setMaxTrackPoints(value as Number) as Void {
         var oldmaxTrackPoints = maxTrackPoints;
@@ -381,9 +341,6 @@ class Settings {
             "useTrackAsHeadingSpeedMPS",
             useTrackAsHeadingSpeedMPS
         );
-        topDataType = parseNumber("topDataType", topDataType);
-        bottomDataType = parseNumber("bottomDataType", bottomDataType);
-        dataFieldTextSize = parseNumber("dataFieldTextSize", dataFieldTextSize);
         minTrackPointDistanceM = parseNumber("minTrackPointDistanceM", minTrackPointDistanceM);
         trackPointReductionMethod = parseNumber("trackPointReductionMethod", trackPointReductionMethod);
     }
