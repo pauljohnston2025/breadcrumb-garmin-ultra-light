@@ -26,6 +26,8 @@
     <string id="maxTrackPointsTitle">Max Track Points</string>
     
     <string id="minTrackPointDistanceMTitle">Min Track Point Distance (m)</string>
+    <string id="trackSettingsTitle">Track</string>
+    <string id="generalSettingsTitle">General</string>
 
     <string id="mustUpdate">Update mobile app or watch app</string>
     

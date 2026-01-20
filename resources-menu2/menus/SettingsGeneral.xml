@@ -1,0 +1,5 @@
+<menu2 id="SettingsGeneral" title="@Strings.generalSettingsTitle">
+    <menu-item id="settingsGeneralRecalculateIntervalS" label="@Strings.recalculateIntervalSTitle"/>
+    <menu-item id="settingsGeneralCenterUserOffsetY" label="@Strings.centerUserOffsetYTitle"/>
+    <toggle-menu-item id="settingsGeneralDisplayLatLong" label="@Strings.displayLatLongTitle"/>
+</menu2>

@@ -79,34 +79,7 @@ class SettingsMain extends Rez.Menus.SettingsMain {
     }
 
     function rerender() as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        safeSetSubLabel(
-            me,
-            :settingsMainRecalculateIntervalS,
-            settings.recalculateIntervalS.toString()
-        );
-        safeSetSubLabel(
-            me,
-            :settingsMainCenterUserOffsetY,
-            settings.centerUserOffsetY.format("%.2f")
-        );
-        safeSetToggle(me, :settingsMainDisplayLatLong, settings.displayLatLong);
-        safeSetSubLabel(me, :settingsMainMaxTrackPoints, settings.maxTrackPoints.toString());
-        safeSetSubLabel(
-            me,
-            :settingsMainUseTrackAsHeadingSpeedMPS,
-            settings.useTrackAsHeadingSpeedMPS.format("%.2f") + "m/s"
-        );
-        safeSetSubLabel(
-            me,
-            :settingsMainMinTrackPointDistanceM,
-            settings.minTrackPointDistanceM.toString()
-        );
+
     }
 }
 
@@ -152,6 +125,62 @@ class SettingsZoomAtPace extends Rez.Menus.SettingsZoomAtPace {
             me,
             :settingsZoomAtPaceMPS,
             settings.zoomAtPaceSpeedMPS.format("%.2f") + "m/s"
+        );
+    }
+}
+
+(:settingsView,:menu2)
+class SettingsGeneral extends Rez.Menus.SettingsGeneral {
+    function initialize() {
+        Rez.Menus.SettingsGeneral.initialize();
+        rerender();
+    }
+
+    function rerender() as Void {
+        var _breadcrumbContextLocal = $._breadcrumbContext;
+        if (_breadcrumbContextLocal == null) {
+            breadcrumbContextWasNull();
+            return;
+        }
+        var settings = _breadcrumbContextLocal.settings;
+        safeSetSubLabel(
+            me,
+            :settingsGeneralRecalculateIntervalS,
+            settings.recalculateIntervalS.toString()
+        );
+        safeSetSubLabel(
+            me,
+            :settingsGeneralCenterUserOffsetY,
+            settings.centerUserOffsetY.format("%.2f")
+        );
+        safeSetToggle(me, :settingsGeneralDisplayLatLong, settings.displayLatLong);
+    }
+}
+
+(:settingsView,:menu2)
+class SettingsTrack extends Rez.Menus.SettingsTrack {
+    function initialize() {
+        Rez.Menus.SettingsTrack.initialize();
+        rerender();
+    }
+
+    function rerender() as Void {
+        var _breadcrumbContextLocal = $._breadcrumbContext;
+        if (_breadcrumbContextLocal == null) {
+            breadcrumbContextWasNull();
+            return;
+        }
+        var settings = _breadcrumbContextLocal.settings;
+        safeSetSubLabel(me, :settingsTrackMaxTrackPoints, settings.maxTrackPoints.toString());
+        safeSetSubLabel(
+            me,
+            :settingsTrackMinTrackPointDistanceM,
+            settings.minTrackPointDistanceM.toString()
+        );
+        safeSetSubLabel(
+            me,
+            :settingsTrackUseTrackAsHeadingSpeedMPS,
+            settings.useTrackAsHeadingSpeedMPS.format("%.2f") + "m/s"
         );
     }
 }
@@ -213,33 +242,13 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
         }
         var settings = _breadcrumbContextLocal.settings;
         var itemId = item.getId();
-        if (itemId == :settingsMainRecalculateIntervalS) {
-            startPicker(
-                new SettingsNumberPicker(
-                    settings.method(:setRecalculateIntervalS),
-                    settings.recalculateIntervalS,
-                    view
-                )
-            );
-        } else if (itemId == :settingsMainCenterUserOffsetY) {
-            startPicker(
-                new SettingsFloatPicker(
-                    settings.method(:setCenterUserOffsetY),
-                    settings.centerUserOffsetY,
-                    view
-                )
-            );
-        } else if (itemId == :settingsMainDisplayLatLong) {
-            settings.toggleDisplayLatLong();
-            view.rerender();
-        } else if (itemId == :settingsMainMaxTrackPoints) {
-            startPicker(
-                new SettingsNumberPicker(
-                    settings.method(:setMaxTrackPoints),
-                    settings.maxTrackPoints,
-                    view
-                )
-            );
+
+        if (itemId == :settingsMainGeneral) {
+            var view = new $.SettingsGeneral();
+            WatchUi.pushView(view, new $.SettingsGeneralDelegate(view), WatchUi.SLIDE_IMMEDIATE);
+        } else if (itemId == :settingsMainTrack) {
+            var view = new $.SettingsTrack();
+            WatchUi.pushView(view, new $.SettingsTrackDelegate(view), WatchUi.SLIDE_IMMEDIATE);
         } else if (itemId == :settingsMainZoomAtPace) {
             var view = new $.SettingsZoomAtPace();
             WatchUi.pushView(view, new $.SettingsZoomAtPaceDelegate(view), WatchUi.SLIDE_IMMEDIATE);
@@ -249,22 +258,6 @@ class SettingsMainDelegate extends WatchUi.Menu2InputDelegate {
                 view,
                 new $.SettingsRoutesDelegate(view, settings),
                 WatchUi.SLIDE_IMMEDIATE
-            );
-        } else if (itemId == :settingsMainMinTrackPointDistanceM) {
-            startPicker(
-                new SettingsNumberPicker(
-                    settings.method(:setMinTrackPointDistanceM),
-                    settings.minTrackPointDistanceM,
-                    view
-                )
-            );
-        } else if (itemId == :settingsMainUseTrackAsHeadingSpeedMPS) {
-            startPicker(
-                new SettingsFloatPicker(
-                    settings.method(:setUseTrackAsHeadingSpeedMPS),
-                    settings.useTrackAsHeadingSpeedMPS,
-                    view
-                )
             );
         }
     }
@@ -304,6 +297,89 @@ class SettingsZoomAtPaceDelegate extends WatchUi.Menu2InputDelegate {
                 new SettingsFloatPicker(
                     settings.method(:setZoomAtPaceSpeedMPS),
                     settings.zoomAtPaceSpeedMPS,
+                    view
+                )
+            );
+        }
+    }
+}
+
+(:settingsView,:menu2)
+class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
+    var view as SettingsGeneral;
+    function initialize(view as SettingsGeneral) {
+        WatchUi.Menu2InputDelegate.initialize();
+        me.view = view;
+    }
+    public function onSelect(item as WatchUi.MenuItem) as Void {
+        var _breadcrumbContextLocal = $._breadcrumbContext;
+        if (_breadcrumbContextLocal == null) {
+            breadcrumbContextWasNull();
+            return;
+        }
+        var settings = _breadcrumbContextLocal.settings;
+        var itemId = item.getId();
+
+        if (itemId == :settingsGeneralRecalculateIntervalS) {
+            startPicker(
+                new SettingsNumberPicker(
+                    settings.method(:setRecalculateIntervalS),
+                    settings.recalculateIntervalS,
+                    view
+                )
+            );
+        }else if (itemId == :settingsGeneralCenterUserOffsetY) {
+            startPicker(
+                new SettingsFloatPicker(
+                    settings.method(:setCenterUserOffsetY),
+                    settings.centerUserOffsetY,
+                    view
+                )
+            );
+        } else if (itemId == :settingsGeneralDisplayLatLong) {
+            settings.toggleDisplayLatLong();
+            view.rerender();
+        }
+    }
+}
+
+(:settingsView,:menu2)
+class SettingsTrackDelegate extends WatchUi.Menu2InputDelegate {
+    var view as SettingsTrack;
+    function initialize(view as SettingsTrack) {
+        WatchUi.Menu2InputDelegate.initialize();
+        me.view = view;
+    }
+    public function onSelect(item as WatchUi.MenuItem) as Void {
+        var _breadcrumbContextLocal = $._breadcrumbContext;
+        if (_breadcrumbContextLocal == null) {
+            breadcrumbContextWasNull();
+            return;
+        }
+        var settings = _breadcrumbContextLocal.settings;
+        var itemId = item.getId();
+
+        if (itemId == :settingsTrackMaxTrackPoints) {
+            startPicker(
+                new SettingsNumberPicker(
+                    settings.method(:setMaxTrackPoints),
+                    settings.maxTrackPoints,
+                    view
+                )
+            );
+        } else if (itemId == :settingsTrackMinTrackPointDistanceM) {
+            startPicker(
+                new SettingsNumberPicker(
+                    settings.method(:setMinTrackPointDistanceM),
+                    settings.minTrackPointDistanceM,
+                    view
+                )
+            );
+        } else if (itemId == :settingsTrackUseTrackAsHeadingSpeedMPS) {
+            startPicker(
+                new SettingsFloatPicker(
+                    settings.method(:setUseTrackAsHeadingSpeedMPS),
+                    settings.useTrackAsHeadingSpeedMPS,
                     view
                 )
             );

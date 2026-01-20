@@ -43,9 +43,23 @@ Please note: The nested garmin settings have a strange behaviour of the app is n
 
 ---
 
+# General
+
 ### Display Lat/Long
 
 Determines if the current latitude and longitude are displayed on the watch screen.
+
+### Compute Interval
+
+The number of seconds that need to elapse before we try and add or next track point. Higher values should result in better battery performance (less calculations), but will also mean you need to wait longer for the map and track to update. This setting is also used to control how often to refresh the buffer if using a buffered render mode. A lower number should be used for high speed activities such as cycling.
+
+### Center User Offset Y
+
+Offsets the users vertical position by a fraction of the screen size. Larger values will move the position further down the screen. eg. 0.5 - user in the middle, 0.75 user 3/4 of the way down the screen (near the bottom), 0.25 user near the top of the screen. Larger values are generally preferred, as it allow you to see more of the route in front of the users position. The users offset only applies when 'zooming' around the user, see [Zoom At Pace Mode](#zoom-at-pace-mode). Note: The offset can also be applied if you have manually zoomed into the map and have overridden the Zoom At Pace Mode.  
+
+---
+
+# Track
 
 ### Max Track Points
 
@@ -72,14 +86,6 @@ If setting `Use Track As Heading Speed ` to 0 the heading will not update when s
 ### Min Track Point Distance (m)
 
 The minimum distance (in meters) between 2 track points in order to store them in teh current track. Larger values will result in a more granular track an require less operations of [Track Point Reduction Method](#track-point-reduction-method) which should increase battery performance. The number of track points will never exceed [Max Track Points](#max-track-points).
-
-### Compute Interval
-
-The number of seconds that need to elapse before we try and add or next track point. Higher values should result in better battery performance (less calculations), but will also mean you need to wait longer for the map and track to update. This setting is also used to control how often to refresh the buffer if using a buffered render mode. A lower number should be used for high speed activities such as cycling.
-
-### Center User Offset Y
-
-Offsets the users vertical position by a fraction of the screen size. Larger values will move the position further down the screen. eg. 0.5 - user in the middle, 0.75 user 3/4 of the way down the screen (near the bottom), 0.25 user near the top of the screen. Larger values are generally preferred, as it allow you to see more of the route in front of the users position. The users offset only applies when 'zooming' around the user, see [Zoom At Pace Mode](#zoom-at-pace-mode). Note: The offset can also be applied if you have manually zoomed into the map and have overridden the Zoom At Pace Mode.  
 
 ---
 

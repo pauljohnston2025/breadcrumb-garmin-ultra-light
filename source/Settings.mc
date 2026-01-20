@@ -52,6 +52,7 @@ class Settings {
     var zoomAtPaceSpeedMPS as Float = 1.0; // meters per second
     var useTrackAsHeadingSpeedMPS as Float = 1000f; // meters per second
     var minTrackPointDistanceM as Number = 5; // minimum distance between 2 track points
+
     var routesEnabled as Boolean = true;
 
     var displayLatLong as Boolean = true;
@@ -104,6 +105,7 @@ class Settings {
         setMinTrackPointDistanceMSideEffect();
     }
 
+    (:settingsView,:menu2)
     function setMinTrackPointDistanceMSideEffect() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -111,12 +113,11 @@ class Settings {
             return;
         }
 
-        var currentScale = _breadcrumbContextLocal.cachedValues.currentScale;
-        var minDistanceMScaled = minTrackPointDistanceM.toFloat();
-        if (currentScale != 0f) {
-            minDistanceMScaled = minDistanceMScaled * currentScale;
-        }
-        _breadcrumbContextLocal.track.minDistanceMScaled = minDistanceMScaled;
+        // only the track needs the setting, routes do not matter, they can stay at the default (5m) because they are limited by the companion app anyway
+        _breadcrumbContextLocal.track.setMinDistanceM(
+            minTrackPointDistanceM.toFloat(),
+            _breadcrumbContextLocal.cachedValues.currentScale
+        );
     }
 
     (:settingsView,:menu2)
@@ -135,6 +136,7 @@ class Settings {
             breadcrumbContextWasNull();
             return;
         }
+
         _breadcrumbContextLocal.track.coordinates.restrictPointsToMaxMemory(maxTrackPoints);
     }
 
