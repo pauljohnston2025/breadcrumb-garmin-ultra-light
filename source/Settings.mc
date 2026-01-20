@@ -11,7 +11,7 @@ enum /*TrackPointReductionMethod*/ {
     TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE = 0,
     TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM = 1,
 }
-    
+
 enum /*DataType*/ {
     DATA_TYPE_NONE,
     DATA_TYPE_SCALE,
@@ -173,7 +173,7 @@ class Settings {
     var bottomDataType as Number = DATA_TYPE_SCALE;
     var dataFieldTextSize as Number = Graphics.FONT_XTINY;
     var minTrackPointDistanceM as Number = 5; // minimum distance between 2 track points
-    var trackPointReductionMethod as Number = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE; 
+    var trackPointReductionMethod as Number = TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE;
     var uiMode as Number = UI_MODE_SHOW_ALL;
     var fixedLatitude as Float? = null;
     var fixedLongitude as Float? = null;
@@ -390,6 +390,7 @@ class Settings {
         setMinTrackPointDistanceMSideEffect();
     }
 
+    (:settingsView,:menu2)
     function setMinTrackPointDistanceMSideEffect() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -397,20 +398,19 @@ class Settings {
             return;
         }
 
-        var currentScale = _breadcrumbContextLocal.cachedValues.currentScale;
-        var minDistanceMScaled = minTrackPointDistanceM.toFloat();
-        if(currentScale != 0f){
-            minDistanceMScaled = minDistanceMScaled * currentScale;
-        }
-        _breadcrumbContextLocal.track.minDistanceMScaled = minDistanceMScaled;
+        // only the track needs the setting, routes do not matter, they can stay at the default (5m) because they are limited by the companion app anyway
+        _breadcrumbContextLocal.track.setMinDistanceM(
+            minTrackPointDistanceM.toFloat(),
+            _breadcrumbContextLocal.cachedValues.currentScale
+        );
     }
-    
+
     (:settingsView,:menu2)
     function setTrackPointReductionMethod(value as Number) as Void {
         trackPointReductionMethod = value;
         setValue("trackPointReductionMethod", trackPointReductionMethod);
     }
-    
+
     (:settingsView,:menu2)
     function setDataFieldTextSize(value as Number) as Void {
         dataFieldTextSize = value;
@@ -459,7 +459,7 @@ class Settings {
             maxTrackPoints,
             _breadcrumbContextLocal.settings.trackPointReductionMethod,
             _breadcrumbContextLocal.cachedValues.currentScale
-            );
+        );
     }
 
     (:settingsView,:menu2)
@@ -1468,7 +1468,10 @@ class Settings {
         topDataType = parseNumber("topDataType", topDataType);
         bottomDataType = parseNumber("bottomDataType", bottomDataType);
         minTrackPointDistanceM = parseNumber("minTrackPointDistanceM", minTrackPointDistanceM);
-        trackPointReductionMethod = parseNumber("trackPointReductionMethod", trackPointReductionMethod);
+        trackPointReductionMethod = parseNumber(
+            "trackPointReductionMethod",
+            trackPointReductionMethod
+        );
         dataFieldTextSize = parseNumber("dataFieldTextSize", dataFieldTextSize);
         uiMode = parseNumber("uiMode", uiMode);
         elevationMode = parseNumber("elevationMode", elevationMode);
@@ -1593,8 +1596,7 @@ class Settings {
             maxTrackPointsChanged();
         }
 
-        if (oldMinTrackPointDistanceM != minTrackPointDistanceM)
-        {
+        if (oldMinTrackPointDistanceM != minTrackPointDistanceM) {
             setMinTrackPointDistanceMSideEffect();
         }
 

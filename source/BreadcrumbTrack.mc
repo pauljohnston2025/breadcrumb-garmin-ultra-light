@@ -1085,4 +1085,11 @@ class BreadcrumbTrack {
 
         return [true, addPointRaw(newScaledPoint, distance)];
     }
+
+    function setMinDistanceM(minTrackPointDistanceM as Float, currentScale as Float) as Void {
+        minDistanceMScaled = minTrackPointDistanceM;
+        if (currentScale != 0f) {
+            minDistanceMScaled = minDistanceMScaled * currentScale;
+        }
+    }
 }
