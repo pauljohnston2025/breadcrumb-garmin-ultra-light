@@ -390,7 +390,6 @@ class Settings {
         setMinTrackPointDistanceMSideEffect();
     }
 
-    (:settingsView,:menu2)
     function setMinTrackPointDistanceMSideEffect() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
