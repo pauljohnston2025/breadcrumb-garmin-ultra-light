@@ -224,8 +224,6 @@ class PointArray {
             return false; // we don't have any points, user must have set maxPoints really low (0 or negative)
         }
 
-        System.println("" + Time.now().value() + " restrictPointsDecimation starting");
-
         // Always preserve the last point
         var lastPoint = lastPoint();
 
@@ -256,7 +254,6 @@ class PointArray {
             add(lastPoint);
         }
 
-        System.println("" + Time.now().value() + " restrictPointsDecimation ended");
         logD("restrictPointsDecimation occurred");
         return true;
     }

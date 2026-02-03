@@ -17,6 +17,34 @@ import Toybox.System;
 // note: this only allows taps, cannot handle swipes/holds etc. (need to test on
 // real device)
 class BreadcrumbDataFieldView extends WatchUi.DataField {
+    (:blackAndWhite)
+    const TRACK_COLOUR = Graphics.COLOR_WHITE;
+    (:fullColours)
+    const TRACK_COLOUR = Graphics.COLOR_GREEN;
+    (:reducedColors)
+    const TRACK_COLOUR = Graphics.COLOR_GREEN;
+    
+    (:blackAndWhite)
+    const ROUTE_COLOUR = Graphics.COLOR_WHITE;
+    (:fullColours)
+    const ROUTE_COLOUR = Graphics.COLOR_BLUE;
+    (:reducedColors)
+    const ROUTE_COLOUR = Graphics.COLOR_BLUE;
+    
+    (:blackAndWhite)
+    const ROUTE_WIDTH = 2; // needs to be thinner so we can tell the difference between track and route (the track will hopefully go right on top of the route and fill it in more)
+    (:fullColours)
+    const ROUTE_WIDTH = 4;
+    (:reducedColors)
+    const ROUTE_WIDTH = 4;
+
+    (:blackAndWhite)
+    const TRACK_WIDTH = 6;
+    (:fullColours)
+    const TRACK_WIDTH = 4;
+    (:reducedColors)
+    const TRACK_WIDTH = 4;
+
     var _breadcrumbContext as BreadcrumbContext;
     var settings as Settings;
     var _cachedValues as CachedValues;
@@ -166,8 +194,8 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         if (route != null && settings.routesEnabled) {
-            renderer.renderTrack(dc, route, Graphics.COLOR_BLUE, true);
+            renderer.renderTrack(dc, route, ROUTE_COLOUR, true, ROUTE_WIDTH);
         }
-        renderer.renderTrack(dc, track, Graphics.COLOR_GREEN, false);
+        renderer.renderTrack(dc, track, TRACK_COLOUR, false, TRACK_WIDTH);
     }
 }

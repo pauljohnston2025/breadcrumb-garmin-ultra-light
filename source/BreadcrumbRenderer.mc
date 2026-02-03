@@ -11,7 +11,33 @@ const DESIRED_SCALE_PIXEL_WIDTH as Float = 100.0f;
 // note sure why this has anything to do with DESIRED_SCALE_PIXEL_WIDTH, should just be whatever tile layer 0 equates to for the screen size
 const MIN_SCALE as Float = DESIRED_SCALE_PIXEL_WIDTH / 1000000000.0f;
 
+(:blackAndWhite)
+const UI_COLOUR = Graphics.COLOR_WHITE;
+(:fullColours)
 const UI_COLOUR = Graphics.COLOR_DK_GRAY;
+(:reducedColors)
+const UI_COLOUR = Graphics.COLOR_DK_GRAY;
+
+(:blackAndWhite)
+const USER_AND_SCALE_COLOUR = Graphics.COLOR_WHITE;
+(:fullColours)
+const USER_AND_SCALE_COLOUR = Graphics.COLOR_ORANGE;
+(:reducedColors)
+const USER_AND_SCALE_COLOUR = Graphics.COLOR_ORANGE;
+
+(:blackAndWhite)
+const START_COLOUR = Graphics.COLOR_WHITE;
+(:fullColours)
+const START_COLOUR = Graphics.COLOR_GREEN;
+(:reducedColors)
+const START_COLOUR = Graphics.COLOR_GREEN;
+
+(:blackAndWhite)
+const END_COLOUR = Graphics.COLOR_WHITE;
+(:fullColours)
+const END_COLOUR = Graphics.COLOR_RED;
+(:reducedColors)
+const END_COLOUR = Graphics.COLOR_RED;
 
 class BreadcrumbRenderer {
     // todo put into ui class
@@ -130,7 +156,7 @@ class BreadcrumbRenderer {
         }
 
         var y = dc.getHeight() - 25;
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(USER_AND_SCALE_COLOUR, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
         dc.drawLine(
             _cachedValues.xHalfPhysical - pixelWidth / 2.0f,
@@ -177,7 +203,7 @@ class BreadcrumbRenderer {
         var triangleRightX = triangleTopX + triangleSizeX;
         var triangleRightY = triangleLeftY;
 
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
+        dc.setColor(USER_AND_SCALE_COLOUR, Graphics.COLOR_BLACK);
         dc.setPenWidth(6);
         dc.drawLine(triangleTopX, triangleTopY, triangleRightX, triangleRightY);
         dc.drawLine(triangleRightX, triangleRightY, triangleLeftX, triangleLeftY);
@@ -188,7 +214,8 @@ class BreadcrumbRenderer {
         dc as Dc,
         breadcrumb as BreadcrumbTrack,
         colour as Graphics.ColorType,
-        drawEndMarker as Boolean
+        drawEndMarker as Boolean,
+        penWidth as Number
     ) as Void {
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
         var rotateCos = _cachedValues.rotateCos; // local lookup faster
@@ -197,7 +224,7 @@ class BreadcrumbRenderer {
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
 
         dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(4);
+        dc.setPenWidth(penWidth);
 
         var size = breadcrumb.coordinates.size();
         var coordinatesRaw = breadcrumb.coordinates._internalArrayBuffer;
@@ -261,10 +288,10 @@ class BreadcrumbRenderer {
         // could add a start play button and a finnish flag (not Finland's flag, the checkered kind)
         var squareSize = 10;
         var squareHalf = squareSize / 2;
-        dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
+        dc.setColor(START_COLOUR, Graphics.COLOR_BLACK);
         dc.fillRectangle(firstX - squareHalf, firstY - squareHalf, squareSize, squareSize);
         if (drawEndMarker) {
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+            dc.setColor(END_COLOUR, Graphics.COLOR_BLACK);
             dc.fillRectangle(lastX - squareHalf, lastY - squareHalf, squareSize, squareSize);
         }
     }
