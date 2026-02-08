@@ -2409,10 +2409,11 @@ class BreadcrumbRenderer {
         style as Number,
         texture as Graphics.BitmapTexture or Number,
         width as Number,
-        hScale as Float,
-        vScale as Float,
+        scales as [Float, Float],
         startAt as Float
     ) as Float {
+        var hScale = scales[0];
+        var vScale = scales[0];
         var yHalfPhysical = _cachedValues.yHalfPhysical; // local lookup faster
 
         var sizeRaw = track.coordinates.size();

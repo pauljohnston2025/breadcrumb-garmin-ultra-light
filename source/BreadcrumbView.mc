@@ -531,7 +531,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         if (renderer.renderClearTrackUi(dc)) {
             return;
         }
-        
+
         // mode should be stored here, but is needed for rendering the ui
         // should structure this way better, but oh well (renderer per mode etc.)
         if (settings.mode == MODE_ELEVATION) {
@@ -565,9 +565,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     continue;
                 }
                 var routeColour = settings.routeColour(route.storageIndex);
-                if (
-                    settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING
-                ) {
+                if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
                     renderer.renderTrackName(dc, route, routeColour);
                 } else {
                     renderer.renderTrackNameUnrotated(dc, route, routeColour);
@@ -880,10 +878,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         if (info != null && info.currentSpeed != null) {
             currentSpeedMPS = info.currentSpeed as Float;
         }
-        var cacheHits =
-            "speed: " +
-            currentSpeedMPS.format("%.1f") +
-            "m/s";
+        var cacheHits = "speed: " + currentSpeedMPS.format("%.1f") + "m/s";
         dc.drawText(x, y, Graphics.FONT_XTINY, cacheHits, Graphics.TEXT_JUSTIFY_CENTER);
         y += spacing;
         dc.drawText(
@@ -973,8 +968,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     settings.routeStyle(route.storageIndex),
                     settings.routeTexture(route.storageIndex),
                     settings.routeWidth(route.storageIndex),
-                    hScale,
-                    vScale,
+                    [hScale, vScale],
                     startAt
                 );
             }
@@ -987,8 +981,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             settings.trackStyle,
             settings.trackTexture,
             settings.trackWidth,
-            hScale,
-            vScale,
+            [hScale, vScale],
             startAt
         );
     }
@@ -1042,8 +1035,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     settings.routeStyle(route.storageIndex),
                     settings.routeTexture(route.storageIndex),
                     settings.routeWidth(route.storageIndex),
-                    hScale,
-                    vScale,
+                    [hScale, vScale],
                     startAt
                 );
             }
@@ -1056,8 +1048,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             settings.trackStyle,
             settings.trackTexture,
             settings.trackWidth,
-            hScale,
-            vScale,
+            [hScale, vScale],
             startAt
         );
     }
