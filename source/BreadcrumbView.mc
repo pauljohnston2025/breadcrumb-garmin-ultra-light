@@ -290,7 +290,6 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             } catch (e) {
                 logE("failed to turn on backlight: " + e.getErrorMessage());
             }
-
             try {
                 if (Attention has :vibrate) {
                     System.println("" + Time.now().value() + " " + "showing vibrate");
@@ -606,7 +605,15 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 continue;
             }
             var routeColour = settings.routeColour(route.storageIndex);
-            renderer.renderTrack(dc, route, routeColour, true);
+            renderer.renderTrack(
+                dc,
+                route,
+                routeColour,
+                true,
+                settings.routeStyle(route.storageIndex),
+                settings.routeTexture(route.storageIndex),
+                settings.routeWidth(route.storageIndex)
+            );
             if (settings.showPoints) {
                 renderer.renderTrackPoints(dc, route, Graphics.COLOR_ORANGE);
             }
@@ -617,7 +624,15 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 renderer.renderTrackDirectionPoints(dc, route, Graphics.COLOR_PURPLE);
             }
         }
-        renderer.renderTrack(dc, track, settings.trackColour, false);
+        renderer.renderTrack(
+            dc,
+            track,
+            settings.trackColour,
+            false,
+            settings.trackStyle,
+            settings.trackTexture,
+            settings.trackWidth
+        );
         if (settings.showPoints) {
             renderer.renderTrackPoints(dc, track, Graphics.COLOR_ORANGE);
         }
@@ -639,7 +654,15 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 continue;
             }
             var routeColour = settings.routeColour(route.storageIndex);
-            renderer.renderTrackUnrotated(dc, route, routeColour, true);
+            renderer.renderTrackUnrotated(
+                dc,
+                route,
+                routeColour,
+                true,
+                settings.routeStyle(route.storageIndex),
+                settings.routeTexture(route.storageIndex),
+                settings.routeWidth(route.storageIndex)
+            );
             if (settings.showPoints) {
                 renderer.renderTrackPointsUnrotated(dc, route, Graphics.COLOR_ORANGE);
             }
@@ -650,7 +673,15 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 renderer.renderTrackDirectionPointsUnrotated(dc, route, Graphics.COLOR_PURPLE);
             }
         }
-        renderer.renderTrackUnrotated(dc, track, settings.trackColour, false);
+        renderer.renderTrackUnrotated(
+            dc,
+            track,
+            settings.trackColour,
+            false,
+            settings.trackStyle,
+            settings.trackTexture,
+            settings.trackWidth
+        );
         if (settings.showPoints) {
             renderer.renderTrackPointsUnrotated(dc, track, Graphics.COLOR_ORANGE);
         }
@@ -939,6 +970,9 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     renderer._xElevationStart,
                     route,
                     settings.routeColour(route.storageIndex),
+                    settings.routeStyle(route.storageIndex),
+                    settings.routeTexture(route.storageIndex),
+                    settings.routeWidth(route.storageIndex),
                     hScale,
                     vScale,
                     startAt
@@ -950,6 +984,9 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             renderer._xElevationStart,
             track,
             settings.trackColour,
+            settings.trackStyle,
+            settings.trackTexture,
+            settings.trackWidth,
             hScale,
             vScale,
             startAt
@@ -1002,6 +1039,9 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     elevationStartX,
                     route,
                     settings.routeColour(route.storageIndex),
+                    settings.routeStyle(route.storageIndex),
+                    settings.routeTexture(route.storageIndex),
+                    settings.routeWidth(route.storageIndex),
                     hScale,
                     vScale,
                     startAt
@@ -1013,6 +1053,9 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             renderer._xElevationStart,
             track,
             settings.trackColour,
+            settings.trackStyle,
+            settings.trackTexture,
+            settings.trackWidth,
             hScale,
             vScale,
             startAt

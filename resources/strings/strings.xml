@@ -95,9 +95,29 @@
     <string id="minTurnAlertDistanceMTitle">Min Turn Alert Distance (m)</string>
     <string id="turnAlertPrompt">-1 to disable</string>
     <string id="maxTrackPointsTitle">Max Track Points</string>
+    <string id="trackWidthTitle">Track Width</string>
+    <string id="trackStyleTitle">Track Style</string>
+    <string id="routeWidthTitle">Width</string>
+    <string id="routeStyleTitle">Style</string>
     <string id="drawHitBoxesTitle">Draw Hit Boxes</string>
     <string id="showDirectionPointsTitle">Show Turn Points</string>
     <string id="showDirectionPointTextUnderIndexTitle">Show Turn Point Text Under Index</string>
+
+    <string id="trackStyleLine">Line</string>
+    <string id="trackStyleDashed">Dashed (CPU)</string>
+    <string id="trackStylePoints">Raw Points</string>
+    <string id="trackStylePointsInterp">Points (CPU)</string>
+    <string id="trackStyleBoxes">Raw Boxes</string>
+    <string id="trackStyleBoxesInterp">Boxes (CPU)</string>
+    <string id="trackStyleFilledSquare">Raw Filled Squares</string>
+    <string id="trackStyleFilledSquareInterp">Filled Squares (CPU)</string>
+    <string id="trackStylePointsOutline">Raw Circle Outlines</string>
+    <string id="trackStylePointsOutlineInterp">Circle Outlines (CPU)</string>
+    <string id="trackStyleChecker">Checkerboard (Texture)</string>
+    <string id="trackStyleHazard">Hazard Stripes (Texture)</string>
+    <string id="trackStyleMatrix">Dot Matrix (Texture)</string>
+    <string id="trackStylePolka">Polka Dot (Texture)</string>
+    <string id="trackStyleDiamond">Diamond Scale (Texture)</string>
 
 
     <string id="clearRoutes1">Clearing all routes, are you sure?</string>

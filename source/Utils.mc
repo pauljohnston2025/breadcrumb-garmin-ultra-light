@@ -41,6 +41,34 @@ function isnan(a as Float) as Boolean {
     return a != a;
 }
 
+class BitmapCreateError extends Lang.Exception {
+    function initialize() {
+        Exception.initialize();
+    }
+
+    function getErrorMessage() as String? {
+        return "failed bitmap create";
+    }
+}
+
+// https://developer.garmin.com/connect-iq/core-topics/graphics/#graphics
+// we must call get and keep the reference otherwise it can get cleanup up from under us
+// not too bad for temporaries, but terrible for tiles (they can not be garbage collected)
+function newBitmap(width as Number, height as Number) as Graphics.BufferedBitmap {
+    var options = {
+        :width => width,
+        :height => height,
+    };
+
+    var bitmap = Graphics.createBufferedBitmap(options).get();
+    if (!(bitmap instanceof BufferedBitmap)) {
+        logE("Could not allocate buffered bitmap");
+        throw new BitmapCreateError();
+    }
+
+    return bitmap;
+}
+
 (:debug,:inline)
 function logLevel(lvl as String, message as String) as Void {
     System.println("" + Time.now().value() + " " + lvl + " " + message);

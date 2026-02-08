@@ -7,9 +7,31 @@ import Toybox.Communications;
 import Toybox.WatchUi;
 import Toybox.PersistedContent;
 
+enum /* TrackStyle */ {
+    TRACK_STYLE_LINE = 0, // Standard continuous line
+    TRACK_STYLE_DASHED = 1, // Interpolated dashes
+    TRACK_STYLE_POINTS = 2, // Dots only at actual data points
+    TRACK_STYLE_POINTS_INTERPOLATED = 3, // Dots spaced evenly along the path
+    TRACK_STYLE_BOXES = 4, // Squares outline only at actual data points
+    TRACK_STYLE_BOXES_INTERPOLATED = 5, // Squares outline spaced evenly along the path
+    TRACK_STYLE_FILLED_SQUARE = 6, // Squares only at actual data points
+    TRACK_STYLE_FILLED_SQUARE_INTERPOLATED = 7, // Squares spaced evenly along the path
+    TRACK_STYLE_POINTS_OUTLINE = 8, // Dots only at actual data points, just the circle outline
+    TRACK_STYLE_POINTS_OUTLINE_INTERPOLATED = 9, // Dots spaced evenly along the path, just the circle outline
+    TRACK_STYLE_CHECKERBOARD = 10,
+    TRACK_STYLE_HAZARD = 11,
+    TRACK_STYLE_DOT_MATRIX = 12,
+    TRACK_STYLE_POLKA_DOT = 13,
+    TRACK_STYLE_DIAMOND = 14,
+
+    TRACK_STYLE_MAX,
+}
+
 enum /*TrackPointReductionMethod*/ {
     TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE = 0,
     TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM = 1,
+
+    TRACK_POINT_REDUCTION_METHOD_MAX
 }
 
 enum /*DataType*/ {
@@ -34,6 +56,8 @@ enum /*DataType*/ {
     // time of day - wall clock
     // last lap time
     // current lap time
+
+    DATA_TYPE_MAX,
 }
 
 enum /*Mode*/ {
@@ -211,6 +235,8 @@ class Settings {
     var turnAlertTimeS as Number = -1; // -1 disables the check
     var minTurnAlertDistanceM as Number = -1; // -1 disables the check
     var maxTrackPoints as Number = 400;
+    var trackStyle as Number = TRACK_STYLE_LINE;
+    var trackWidth as Number = 4;
 
     // bunch of debug settings
     var showPoints as Boolean = false;
@@ -226,6 +252,8 @@ class Settings {
         System.getDeviceSettings().distanceUnits == System.UNIT_STATUTE;
     var elevationImperialUnits as Boolean =
         System.getDeviceSettings().elevationUnits == System.UNIT_STATUTE;
+    var trackTexture as Graphics.BitmapTexture or Number = -1; // -1 is to say use colour instead
+    var routeTextures as Array<Graphics.BitmapTexture or Number> = []; // -1 is to say use colour instead
 
     (:lowMemory)
     function routeMax() as Number {
@@ -448,6 +476,20 @@ class Settings {
         setValue("maxTrackPoints", maxTrackPoints);
     }
 
+    (:settingsView)
+    function setTrackStyle(value as Number) as Void {
+        trackStyle = value;
+        setValue("trackStyle", trackStyle);
+        recomputeTrackTexture();
+    }
+
+    (:settingsView)
+    function setTrackWidth(value as Number) as Void {
+        trackWidth = value;
+        setValue("trackWidth", trackWidth);
+        recomputeTrackTexture();
+    }
+
     function maxTrackPointsChanged() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -647,6 +689,31 @@ class Settings {
         return routes[routeIndex]["reversed"] as Boolean;
     }
 
+    function routeStyle(routeId as Number) as Number {
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex == null) {
+            return TRACK_STYLE_LINE;
+        }
+        return routes[routeIndex]["style"] as Number;
+    }
+
+    function routeTexture(routeId as Number) as Graphics.BitmapTexture or Number {
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex == null) {
+            return -1;
+        }
+        padRouteTextures(routeIndex);
+        return routeTextures[routeIndex];
+    }
+
+    function routeWidth(routeId as Number) as Number {
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex == null) {
+            return 4;
+        }
+        return routes[routeIndex]["width"] as Number;
+    }
+
     function setRouteColour(routeId as Number, value as Number) as Void {
         ensureRouteId(routeId);
         var routeIndex = getRouteIndexById(routeId);
@@ -656,6 +723,7 @@ class Settings {
 
         routes[routeIndex]["colour"] = value;
         saveRoutes();
+        recomputeRouteTexture(routeIndex, routeStyle(routeId), routeWidth(routeId), value);
     }
 
     // see oddity with route name and route loading new in context.newRoute
@@ -668,6 +736,30 @@ class Settings {
 
         routes[routeIndex]["name"] = value;
         saveRoutes();
+    }
+
+    function setRouteStyle(routeId as Number, value as Number) as Void {
+        ensureRouteId(routeId);
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex == null) {
+            return;
+        }
+
+        routes[routeIndex]["style"] = value;
+        saveRoutes();
+        recomputeRouteTexture(routeIndex, value, routeWidth(routeId), routeColour(routeId));
+    }
+
+    function setRouteWidth(routeId as Number, value as Number) as Void {
+        ensureRouteId(routeId);
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex == null) {
+            return;
+        }
+
+        routes[routeIndex]["width"] = value;
+        saveRoutes();
+        recomputeRouteTexture(routeIndex, routeStyle(routeId), value, routeColour(routeId));
     }
 
     function setRouteEnabled(routeId as Number, value as Boolean) as Void {
@@ -717,7 +809,10 @@ class Settings {
             "enabled" => true,
             "colour" => routeColour(routeId),
             "reversed" => routeReversed(routeId),
+            "style" => routeStyle(routeId),
+            "width" => routeWidth(routeId),
         });
+        routeTextures.add(-1);
         saveRoutes();
     }
 
@@ -734,6 +829,7 @@ class Settings {
 
     function clearRoutes() as Void {
         routes = [];
+        routeTextures = [];
         saveRoutes();
     }
 
@@ -743,6 +839,7 @@ class Settings {
             return;
         }
         routes.remove(routes[routeIndex]);
+        routeTextures.remove(routeTextures[routeIndex]);
         saveRoutes();
     }
 
@@ -757,6 +854,8 @@ class Settings {
                     "enabled" => entry["enabled"] as Boolean,
                     "colour" => (entry["colour"] as Number).format("%X"), // this is why we have to copy it :(
                     "reversed" => entry["reversed"] as Boolean,
+                    "style" => entry["style"] as Number,
+                    "width" => entry["width"] as Number,
                 }) as Dictionary<String, PropertyValueType>;
             toSave.add(toAdd);
         }
@@ -779,6 +878,41 @@ class Settings {
     function setTrackColour(value as Number) as Void {
         trackColour = value;
         setValue("trackColour", trackColour.format("%X"));
+        recomputeTrackTexture();
+    }
+
+    function recomputeTrackTexture() as Void {
+        trackTexture = getTexture(trackStyle, trackWidth, trackWidth / 2, trackColour);
+    }
+
+    function recomputeRouteTexture(
+        routeIndex as Number,
+        currentStyle as Number,
+        currentWidth as Number,
+        currentColour as Number
+    ) as Void {
+        padRouteTextures(routeIndex);
+        routeTextures[routeIndex] = getTexture(
+            currentStyle,
+            currentWidth,
+            currentWidth / 2,
+            currentColour
+        );
+    }
+
+    function padRouteTextures(routeIndex as Number) as Void {
+        if (routeTextures.size() <= routeIndex) {
+            // Calculate how many new slots we need
+            var elementsToAdd = routeIndex + 1 - routeTextures.size();
+
+            // Create the "padding" array filled with -1
+            var padding = new [elementsToAdd] as Array<Graphics.BitmapTexture or Number>;
+            for (var i = 0; i < elementsToAdd; i++) {
+                padding[i] = -1;
+            }
+
+            routeTextures.addAll(padding);
+        }
     }
 
     (:settingsView,:menu2)
@@ -1275,6 +1409,8 @@ class Settings {
         turnAlertTimeS = defaultSettings.turnAlertTimeS;
         minTurnAlertDistanceM = defaultSettings.minTurnAlertDistanceM;
         maxTrackPoints = defaultSettings.maxTrackPoints;
+        trackStyle = defaultSettings.trackStyle;
+        trackWidth = defaultSettings.trackWidth;
         showDirectionPointTextUnderIndex = defaultSettings.showDirectionPointTextUnderIndex;
         centerUserOffsetY = defaultSettings.centerUserOffsetY;
         mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
@@ -1339,6 +1475,8 @@ class Settings {
                 "turnAlertTimeS" => turnAlertTimeS,
                 "minTurnAlertDistanceM" => minTurnAlertDistanceM,
                 "maxTrackPoints" => maxTrackPoints,
+                "trackStyle" => trackStyle,
+                "trackWidth" => trackWidth,
                 "showDirectionPointTextUnderIndex" => showDirectionPointTextUnderIndex,
                 "centerUserOffsetY" => centerUserOffsetY,
                 "mapMoveScreenSize" => mapMoveScreenSize,
@@ -1416,12 +1554,23 @@ class Settings {
         // assert the map choice when we load the settings, as it may have been changed when the app was not running and onSettingsChanged might not be called
         loadSettings();
         setMinTrackPointDistanceMSideEffect();
+        for (var i = 0; i < routes.size(); ++i) {
+            var routeId = routes[i]["routeId"] as Number;
+            recomputeRouteTexture(
+                i,
+                routeStyle(routeId),
+                routeWidth(routeId),
+                routeColour(routeId)
+            );
+        }
     }
 
     function loadSettingsPart1() as Void {
         turnAlertTimeS = parseNumber("turnAlertTimeS", turnAlertTimeS);
         minTurnAlertDistanceM = parseNumber("minTurnAlertDistanceM", minTurnAlertDistanceM);
         maxTrackPoints = parseNumber("maxTrackPoints", maxTrackPoints);
+        trackStyle = parseNumber("trackStyle", trackStyle);
+        trackWidth = parseNumber("trackWidth", trackWidth);
         showDirectionPointTextUnderIndex = parseNumber(
             "showDirectionPointTextUnderIndex",
             showDirectionPointTextUnderIndex
@@ -1482,13 +1631,15 @@ class Settings {
         setFixedPositionWithoutUpdate(fixedLatitude, fixedLongitude);
         routes = getArraySchema(
             "routes",
-            ["routeId", "name", "enabled", "colour", "reversed"],
+            ["routeId", "name", "enabled", "colour", "reversed", "style", "width"],
             [
                 method(:defaultNumberParser),
                 method(:emptyString),
                 method(:defaultFalse),
                 method(:defaultColourParser),
                 method(:defaultFalse),
+                method(:defaultNumberParser),
+                method(:defaultNumberParser4),
             ],
             routes
         );
@@ -1544,6 +1695,10 @@ class Settings {
         return parseNumberRaw(key, value, 0);
     }
 
+    function defaultNumberParser4(key as String, value as PropertyValueType) as Number {
+        return parseNumberRaw(key, value, 4);
+    }
+
     function defaultFalse(key as String, value as PropertyValueType) as Boolean {
         if (value instanceof Boolean) {
             return value;
@@ -1562,6 +1717,9 @@ class Settings {
         var oldRouteMax = _routeMax;
         var oldMaxTrackPoints = maxTrackPoints;
         var oldMinTrackPointDistanceM = minTrackPointDistanceM;
+        var oldTrackStyle = trackStyle;
+        var oldTrackWidth = trackWidth;
+        var oldTrackColour = trackColour;
         loadSettings();
         // route settins do not work because garmins setting spage cannot edit them
         // when any property is modified, so we have to explain to users not to touch the settings, but we cannot because it looks
@@ -1573,11 +1731,23 @@ class Settings {
             var routeIndex = getRouteIndexById(oldRouteId);
             if (routeIndex != null) {
                 // we have the same route
-                if (oldRouteEntry["reversed"] != routes[routeIndex]["reversed"]) {
+                var currentRouteEntry = routes[routeIndex];
+                if (oldRouteEntry["reversed"] != currentRouteEntry["reversed"]) {
                     var _breadcrumbContextLocal = $._breadcrumbContext;
                     if (_breadcrumbContextLocal != null) {
                         _breadcrumbContextLocal.reverseRouteId(oldRouteId);
                     }
+                }
+
+                var currentStyle = currentRouteEntry["style"] as Number;
+                var currentWidth = currentRouteEntry["width"] as Number;
+                var currentColour = currentRouteEntry["colour"] as Number;
+                if (
+                    oldRouteEntry["style"] != currentStyle ||
+                    oldRouteEntry["width"] != currentWidth ||
+                    oldRouteEntry["colour"] != currentColour
+                ) {
+                    recomputeRouteTexture(routeIndex, currentStyle, currentWidth, currentColour);
                 }
 
                 continue;
@@ -1597,6 +1767,14 @@ class Settings {
 
         if (oldMinTrackPointDistanceM != minTrackPointDistanceM) {
             setMinTrackPointDistanceMSideEffect();
+        }
+
+        if (
+            oldTrackStyle != trackStyle ||
+            oldTrackWidth != trackWidth ||
+            oldTrackColour != trackColour
+        ) {
+            recomputeTrackTexture();
         }
 
         setValueSideEffect();

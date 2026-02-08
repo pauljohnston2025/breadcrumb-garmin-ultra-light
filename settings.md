@@ -143,6 +143,41 @@ Offsets the users vertical position by a fraction of the screen size. Larger val
 
 The maximum number of coordinates to store for the current track the user is moving along. Each coordinate point contains a latitude, longitude and altitude. A smaller number should be used to conserve memory and cpu. Larger numbers results in a smoother track line drawn on screen.   
 
+### Track Style
+
+***BEWARE***
+Anything with (CPU Intensive) might crash with watchdog errors, since it uses line interpolations to draw the line in multiple sections.
+
+Determines the visual appearance of your breadcrumb trail.
+
+* Line: A standard continuous solid line.  
+* Dashed: A dashed line path. (CPU Intensive)   
+* Raw Points: Dots drawn only at actual GPS coordinates.  
+* Points: Dots spaced evenly along the path using interpolation. (CPU Intensive)  
+* Raw Boxes: Square outlines only at actual GPS coordinates.  
+* Boxes: Square outlines spaced evenly along the path. (CPU Intensive)  
+* Raw Filled Squares: Solid squares only at actual GPS coordinates.  
+* Filled Squares: Solid squares spaced evenly along the path. (CPU Intensive)  
+* Raw Circle Outlines: Hollow circles only at actual GPS coordinates.  
+* Circle Outlines: Hollow circles spaced evenly along the path. (CPU Intensive)  
+* Checkerboard: Tiled dual-tone pattern. Excellent for distinguishing overlapping tracks (Texture).  
+* Hazard Stripes: High-contrast diagonal stripes (Texture).  
+* Dot Matrix: A mesh-like texture that makes the track look semi-transparent (Texture).  
+* Polka Dot: Stylized dots; provides a clear but non-distracting path (Texture).  
+* Diamond Scale: Overlapping geometric pattern resembling scales (Texture).  
+
+(Raw) Styles should be used with a high [Max Track Points](#max-track-points) or [Coordinate Point Limit](https://github.com/pauljohnston2025/breadcrumb-mobile/blob/master/manual.md#routes) so that the points/boxes appear along the whole path, rather than just at the corners. For best results you should use [Track Point Reduction Method](#track-point-reduction-method) `Downsample` so that points are kept a consistent distance apart.  
+
+(Texture) denotes styles that are generated with a texture, this may only work on some supported devices.
+
+Performance Note: Styles labeled as (CPU Intensive) use interpolation to create a smooth, high-density visual path. This requires significantly more calculations per frame than "Raw" or "Line" styles and may impact battery life, or result in watchdog errors that cause a crash, use them with care.
+
+### Track Width
+
+The thickness (in pixels) of the track drawn on the screen. Default is usually 4 pixels. Larger widths make the track easier to see but may obscure map details.  
+Be careful about making the track/route too wide, it leads to more pixels needing to be drawn, and can slow down the renders (especially if using a texture).
+
+
 ### Use Track As Heading Speed 
 
 If the user travels above this speed (in m/s) we will use the last few track points to get a bearing (for screen rotations) instead of the devices magnetic compass. This is mostly helpful for when running or any activity where your wrist is likely to be moving around alot, since it is hard to hold your wrist still enough to see the direction of travel. It also stops any delay when first looking at the watch, since it may have rendered when your wrist was not angled straight ahead.
@@ -334,7 +369,9 @@ Id - The id of the route - read only
 Name - Defaults to the route name that was added, but can be modified to anything you desire.  
 Enabled - If this route appears on any of the device screens, routes can be disabled so that multiple routes can be pre loaded and enabled when needed. eg. Day 1, Day 2.  
 Route Colour - The colour of the route.  
-Reversed - To reverse the direction of the route.
+Reversed - To reverse the direction of the route.  
+Style - see [Track Style](#track-style).  
+Width - see [Track Width](#track-width).  
 
 ---
 
