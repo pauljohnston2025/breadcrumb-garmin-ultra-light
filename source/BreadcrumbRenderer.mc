@@ -192,8 +192,8 @@ class BreadcrumbRenderer {
             rotateAroundScreenYOffsetFactoredIn -
             (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
 
-        var triangleSizeY = 10;
-        var triangleSizeX = 4;
+        var triangleSizeY = 16;
+        var triangleSizeX = 10;
         var triangleTopX = userPosRotatedX;
         var triangleTopY = userPosRotatedY - triangleSizeY;
 
@@ -204,10 +204,11 @@ class BreadcrumbRenderer {
         var triangleRightY = triangleLeftY;
 
         dc.setColor(USER_AND_SCALE_COLOUR, Graphics.COLOR_BLACK);
-        dc.setPenWidth(6);
-        dc.drawLine(triangleTopX, triangleTopY, triangleRightX, triangleRightY);
-        dc.drawLine(triangleRightX, triangleRightY, triangleLeftX, triangleLeftY);
-        dc.drawLine(triangleLeftX, triangleLeftY, triangleTopX, triangleTopY);
+        dc.fillPolygon([
+            [triangleTopX, triangleTopY],
+            [triangleRightX, triangleRightY],
+            [triangleLeftX, triangleLeftY],
+        ]);
     }
 
     function renderTrack(
@@ -215,7 +216,7 @@ class BreadcrumbRenderer {
         breadcrumb as BreadcrumbTrack,
         colour as Graphics.ColorType,
         drawEndMarker as Boolean,
-        penWidth as Number
+        width as Number
     ) as Void {
         var centerPosition = _cachedValues.centerPosition; // local lookup faster
         var rotateCos = _cachedValues.rotateCos; // local lookup faster
@@ -224,7 +225,7 @@ class BreadcrumbRenderer {
         var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
 
         dc.setColor(colour, Graphics.COLOR_BLACK);
-        dc.setPenWidth(penWidth);
+        dc.setPenWidth(width);
 
         var size = breadcrumb.coordinates.size();
         var coordinatesRaw = breadcrumb.coordinates._internalArrayBuffer;
@@ -259,7 +260,13 @@ class BreadcrumbRenderer {
                     rotateAroundScreenYOffsetFactoredIn -
                     (rotateSin * nextXScaledAtCenter + rotateCos * nextYScaledAtCenter);
 
-                dc.drawLine(lastXRotated, lastYRotated, nextXRotated, nextYRotated);
+                renderLineChecked(
+                    dc,
+                    lastXRotated,
+                    lastYRotated,
+                    nextXRotated,
+                    nextYRotated
+                );
 
                 lastXRotated = nextXRotated;
                 lastYRotated = nextYRotated;
@@ -274,6 +281,37 @@ class BreadcrumbRenderer {
                 drawEndMarker
             );
         }
+    }
+
+    function renderLineChecked(
+        dc as Dc,
+        xStart as Float,
+        yStart as Float,
+        xEnd as Float,
+        yEnd as Float
+    ) as Void {
+        // I assumed garmin checked the limits of the line before trying to render it, but textured line renders take a long time at high zoom levels.
+        // I assume garmin expect all calls to dc.draw to be on the screen, and so they try and grab the colour for each pixel from the texture before rendering it to their buffer.
+        // This proves to be extremely slow, since at high zoom levels the pixel dimensions are really large, and most will be off screen.
+        // Also my renderInterpolatedLineStyle algorithm takes longer and longer, as the length of the line segments becomes larger as we zoom in further. This leads to watchdog crashes, so I've got to handle it anyway for that.
+
+        // how expensive are these function calls?
+        // and all these checks?
+        var screenWidth = dc.getWidth();
+        var screenHeight = dc.getHeight();
+        // note: this check is not perfect, as the line has width, but its normally on the order of <10 pixels, which means only 5 pixels form the corners 'might' be touching the edge of the screen.
+        // Its a round screen most of the time anyway, so it would only be clipping the very edge of frame, so we will just skip it for now, so we do not have to do more math and more computations here.
+        // We could pass in screenWidth and screenHeight that is already offset
+        if (
+            (xStart < 0 && xEnd < 0) ||
+            (yStart < 0 && yEnd < 0) ||
+            (xStart > screenWidth && xEnd > screenWidth) ||
+            (yStart > screenHeight && yEnd > screenHeight)
+        ) {
+            return;
+        }
+
+        dc.drawLine(xStart, yStart, xEnd, yEnd);
     }
 
     function renderStartAndEnd(

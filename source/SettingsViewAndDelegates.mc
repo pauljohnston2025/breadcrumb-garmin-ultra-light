@@ -78,8 +78,24 @@ class SettingsMain extends Rez.Menus.SettingsMain {
         rerender();
     }
 
-    function rerender() as Void {
+    function rerender() as Void {}
+}
 
+(:settingsView,:menu2)
+function getZoomAtPaceModeString(mode as Number) as ResourceId or String {
+    switch (mode) {
+        case ZOOM_AT_PACE_MODE_PACE:
+            return Rez.Strings.zoomAtPaceModePace;
+        case ZOOM_AT_PACE_MODE_STOPPED:
+            return Rez.Strings.zoomAtPaceModeStopped;
+        case ZOOM_AT_PACE_MODE_NEVER_ZOOM:
+            return Rez.Strings.zoomAtPaceModeNever;
+        case ZOOM_AT_PACE_MODE_ALWAYS_ZOOM:
+            return Rez.Strings.zoomAtPaceModeAlways;
+        case ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK:
+            return Rez.Strings.zoomAtPaceModeRoutesWithoutTrack;
+        default:
+            return "";
     }
 }
 
@@ -97,25 +113,11 @@ class SettingsZoomAtPace extends Rez.Menus.SettingsZoomAtPace {
             return;
         }
         var settings = _breadcrumbContextLocal.settings;
-        var modeString = "";
-        switch (settings.zoomAtPaceMode) {
-            case ZOOM_AT_PACE_MODE_PACE:
-                modeString = Rez.Strings.zoomAtPaceModePace;
-                break;
-            case ZOOM_AT_PACE_MODE_STOPPED:
-                modeString = Rez.Strings.zoomAtPaceModeStopped;
-                break;
-            case ZOOM_AT_PACE_MODE_NEVER_ZOOM:
-                modeString = Rez.Strings.zoomAtPaceModeNever;
-                break;
-            case ZOOM_AT_PACE_MODE_ALWAYS_ZOOM:
-                modeString = Rez.Strings.zoomAtPaceModeAlways;
-                break;
-            case ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK:
-                modeString = Rez.Strings.zoomAtPaceModeRoutesWithoutTrack;
-                break;
-        }
-        safeSetSubLabel(me, :settingsZoomAtPaceMode, modeString);
+        safeSetSubLabel(
+            me,
+            :settingsZoomAtPaceMode,
+            getZoomAtPaceModeString(settings.zoomAtPaceMode)
+        );
         safeSetSubLabel(
             me,
             :settingsZoomAtPaceUserMeters,
@@ -148,6 +150,7 @@ class SettingsGeneral extends Rez.Menus.SettingsGeneral {
             :settingsGeneralRecalculateIntervalS,
             settings.recalculateIntervalS.toString()
         );
+
         safeSetSubLabel(
             me,
             :settingsGeneralCenterUserOffsetY,
@@ -270,6 +273,12 @@ class SettingsZoomAtPaceDelegate extends WatchUi.Menu2InputDelegate {
         WatchUi.Menu2InputDelegate.initialize();
         me.view = view;
     }
+
+    // compiler complains it cannot find the global ones
+    // even $.method(:...) does not seem to work
+    public function getZoomAtPaceModeStringL(value as Number) as ResourceId or String {
+        return getZoomAtPaceModeString(value);
+    }
     public function onSelect(item as WatchUi.MenuItem) as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -280,8 +289,13 @@ class SettingsZoomAtPaceDelegate extends WatchUi.Menu2InputDelegate {
         var itemId = item.getId();
         if (itemId == :settingsZoomAtPaceMode) {
             WatchUi.pushView(
-                new $.Rez.Menus.SettingsZoomAtPaceMode(),
-                new $.SettingsZoomAtPaceModeDelegate(view),
+                new EnumMenu(
+                    Rez.Strings.zoomAtPaceModeTitle,
+                    method(:getZoomAtPaceModeStringL),
+                    settings.zoomAtPaceMode,
+                    ZOOM_AT_PACE_MODE_MAX
+                ),
+                new $.EnumDelegate(settings.method(:setZoomAtPaceMode), view),
                 WatchUi.SLIDE_IMMEDIATE
             );
         } else if (itemId == :settingsZoomAtPaceUserMeters) {
@@ -311,6 +325,7 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
         WatchUi.Menu2InputDelegate.initialize();
         me.view = view;
     }
+
     public function onSelect(item as WatchUi.MenuItem) as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -328,7 +343,7 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
                     view
                 )
             );
-        }else if (itemId == :settingsGeneralCenterUserOffsetY) {
+        } else if (itemId == :settingsGeneralCenterUserOffsetY) {
             startPicker(
                 new SettingsFloatPicker(
                     settings.method(:setCenterUserOffsetY),
@@ -350,6 +365,7 @@ class SettingsTrackDelegate extends WatchUi.Menu2InputDelegate {
         WatchUi.Menu2InputDelegate.initialize();
         me.view = view;
     }
+
     public function onSelect(item as WatchUi.MenuItem) as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -422,38 +438,6 @@ class SettingsRoutesDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 (:settingsView,:menu2)
-class SettingsZoomAtPaceModeDelegate extends WatchUi.Menu2InputDelegate {
-    var parent as SettingsZoomAtPace;
-    function initialize(parent as SettingsZoomAtPace) {
-        WatchUi.Menu2InputDelegate.initialize();
-        me.parent = parent;
-    }
-    public function onSelect(item as WatchUi.MenuItem) as Void {
-        var _breadcrumbContextLocal = $._breadcrumbContext;
-        if (_breadcrumbContextLocal == null) {
-            breadcrumbContextWasNull();
-            return;
-        }
-        var settings = _breadcrumbContextLocal.settings;
-        var itemId = item.getId();
-        if (itemId == :settingsZoomAtPaceModePace) {
-            settings.setZoomAtPaceMode(ZOOM_AT_PACE_MODE_PACE);
-        } else if (itemId == :settingsZoomAtPaceModeStopped) {
-            settings.setZoomAtPaceMode(ZOOM_AT_PACE_MODE_STOPPED);
-        } else if (itemId == :settingsZoomAtPaceModeNever) {
-            settings.setZoomAtPaceMode(ZOOM_AT_PACE_MODE_NEVER_ZOOM);
-        } else if (itemId == :settingsZoomAtPaceModeAlways) {
-            settings.setZoomAtPaceMode(ZOOM_AT_PACE_MODE_ALWAYS_ZOOM);
-        } else if (itemId == :settingsZoomAtPaceModeRoutesWithoutTrack) {
-            settings.setZoomAtPaceMode(ZOOM_AT_PACE_MODE_SHOW_ROUTES_WITHOUT_TRACK);
-        }
-
-        parent.rerender();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-    }
-}
-
-(:settingsView,:menu2)
 class DummyView extends WatchUi.View {
     function initialize() {
         View.initialize();
@@ -491,5 +475,43 @@ class ClearRoutesDelegate extends WatchUi.ConfirmationDelegate {
         }
 
         return true; // we always handle it
+    }
+}
+
+(:settingsView,:menu2)
+class EnumMenu extends WatchUi.Menu2 {
+    function initialize(
+        title as String or ResourceId,
+        callback as (Method(value as Number) as ResourceId or String),
+        current as Number,
+        max as Number
+    ) {
+        Menu2.initialize({ :title => title });
+        for (var i = 0; i < max; i++) {
+            var label = callback.invoke(i);
+            if (label.equals("")) {
+                continue;
+            }
+            var isSelected = i == current;
+            addItem(new MenuItem(label, isSelected ? "Selected" : "", i, {}));
+        }
+    }
+}
+
+(:settingsView,:menu2)
+class EnumDelegate extends WatchUi.Menu2InputDelegate {
+    private var callback as (Method(value as Number) as Void);
+    private var parent as Renderable;
+
+    function initialize(callback as (Method(value as Number) as Void), parent as Renderable) {
+        Menu2InputDelegate.initialize();
+        self.callback = callback;
+        self.parent = parent;
+    }
+
+    function onSelect(item as MenuItem) as Void {
+        callback.invoke(item.getId() as Number);
+        parent.rerender();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
     }
 }
