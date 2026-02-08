@@ -1674,6 +1674,7 @@ function getTrackStyleString(style as Number) as ResourceId {
     }
 }
 
+(:settingsView,:menu2)
 class EnumMenu extends WatchUi.Menu2 {
     function initialize(
         title as String or ResourceId,
