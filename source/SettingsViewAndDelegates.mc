@@ -72,9 +72,17 @@ function safeSetToggle(menu as WatchUi.Menu2, id as Object, value as Boolean) as
 
 // https://forums.garmin.com/developer/connect-iq/f/discussion/304179/programmatically-set-the-state-of-togglemenuitem
 (:settingsView,:menu2)
-class SettingsMain extends Rez.Menus.SettingsMain {
+class SettingsMain extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsMain.initialize();
+        Menu2.initialize({ :title => Rez.Strings.AppName});
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.generalSettingsTitle, null, :settingsMainGeneral, {})
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.trackSettingsTitle, null, :settingsMainTrack, {}));
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceTitle, null, :settingsMainZoomAtPace, {})
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.routesTitle, null, :settingsMainRoutes, {}));
         rerender();
     }
 
@@ -100,9 +108,23 @@ function getZoomAtPaceModeString(mode as Number) as ResourceId or String {
 }
 
 (:settingsView,:menu2)
-class SettingsZoomAtPace extends Rez.Menus.SettingsZoomAtPace {
+class SettingsZoomAtPace extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsZoomAtPace.initialize();
+        Menu2.initialize({ :title => Rez.Strings.zoomAtPaceTitle });
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceModeTitle, null, :settingsZoomAtPaceMode, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.metersAroundUser,
+                null,
+                :settingsZoomAtPaceUserMeters,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceSpeedMPS, null, :settingsZoomAtPaceMPS, {})
+        );
         rerender();
     }
 
@@ -132,9 +154,34 @@ class SettingsZoomAtPace extends Rez.Menus.SettingsZoomAtPace {
 }
 
 (:settingsView,:menu2)
-class SettingsGeneral extends Rez.Menus.SettingsGeneral {
+class SettingsGeneral extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsGeneral.initialize();
+        Menu2.initialize({ :title => Rez.Strings.generalSettingsTitle });
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.recalculateIntervalSTitle,
+                null,
+                :settingsGeneralRecalculateIntervalS,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.centerUserOffsetYTitle,
+                null,
+                :settingsGeneralCenterUserOffsetY,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.displayLatLongTitle,
+                null,
+                :settingsGeneralDisplayLatLong,
+                false,
+                {}
+            )
+        );
         rerender();
     }
 
@@ -161,9 +208,33 @@ class SettingsGeneral extends Rez.Menus.SettingsGeneral {
 }
 
 (:settingsView,:menu2)
-class SettingsTrack extends Rez.Menus.SettingsTrack {
+class SettingsTrack extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsTrack.initialize();
+        Menu2.initialize({ :title => Rez.Strings.trackSettingsTitle });
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.maxTrackPointsTitle,
+                null,
+                :settingsTrackMaxTrackPoints,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.minTrackPointDistanceMTitle,
+                null,
+                :settingsTrackMinTrackPointDistanceM,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.useTrackAsHeadingSpeedMPSTitle,
+                null,
+                :settingsTrackUseTrackAsHeadingSpeedMPS,
+                {}
+            )
+        );
         rerender();
     }
 

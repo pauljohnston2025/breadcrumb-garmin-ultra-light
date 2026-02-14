@@ -22,7 +22,6 @@
     <string id="routesTitle">Routes</string>
     <string id="routesEnabled">Enable Routes</string>
     <string id="clearRoutes">Clear All Routes</string>
-
     <string id="maxTrackPointsTitle">Max Track Points</string>
     
     <string id="minTrackPointDistanceMTitle">Min Track Point Distance (m)</string>

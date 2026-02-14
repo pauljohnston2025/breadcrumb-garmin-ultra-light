@@ -114,6 +114,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // }
 
         // make sure tile seed or anything else does not stop our computes completely
+        // block any tasks until we return from setting view (settings view adds more memory, so we ned to do the least memeory intensive tasks)
         var weReallyNeedACompute = _computeCounter > 3 * settings.recalculateIntervalS;
         if (!weReallyNeedACompute) {
             // store rotations and speed every time
@@ -128,23 +129,27 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
         // slow down the calls to onActivityInfo as its a heavy operation checking
         // the distance we don't really need data much faster than this anyway
+        var newPoint = BreadcrumbTrack.pointFromActivityInfo(info);
+        if (newPoint == null) {
+            return;
+        }
+
+        _cachedValues.handleHeadingPoint(newPoint.clone()); // prevent scale in place from below
+
         if (_computeCounter < settings.recalculateIntervalS) {
             return;
         }
 
         _computeCounter = 0;
 
-        var newPoint = _breadcrumbContext.track.pointFromActivityInfo(info);
-        if (newPoint != null) {
-            if (_cachedValues.currentScale != 0f) {
-                newPoint.rescaleInPlace(_cachedValues.currentScale);
-            }
-            var trackAddRes = _breadcrumbContext.track.onActivityInfo(newPoint);
-            var pointAdded = trackAddRes[0];
-            var complexOperationHappened = trackAddRes[1];
-            if (pointAdded && !complexOperationHappened) {
-                _cachedValues.updateScaleCenter();
-            }
+        if (_cachedValues.currentScale != 0f) {
+            newPoint.rescaleInPlace(_cachedValues.currentScale);
+        }
+        var trackAddRes = _breadcrumbContext.track.onActivityInfo(newPoint);
+        var pointAdded = trackAddRes[0];
+        var complexOperationHappened = trackAddRes[1];
+        if (pointAdded && !complexOperationHappened) {
+            _cachedValues.updateScaleCenter();
         }
     }
 
