@@ -33,10 +33,14 @@ class BreadcrumbContext {
             if (route == null) {
                 continue;
             }
-            settings.ensureRouteId(route.storageIndex); // may not actually add the route if we are over route max
+            settings.ensureRouteIdNoSideEffect(route.storageIndex); // may not actually add the route if we are over route max
             if (settings.getRouteIndexById(route.storageIndex) == null) {
                 clearRouteId(route.storageIndex); // clear it from storage, it was meant to get purged when we changed the settings
                 continue;
+            }
+
+            if (settings.routeReversed(route.storageIndex)) {
+                route.reverse();
             }
 
             if (currentScale != 0f) {
@@ -48,7 +52,7 @@ class BreadcrumbContext {
 
             if (settings.routeName(route.storageIndex).equals("")) {
                 // settings label takes precedence over our internal one until the setting route entry removed
-                settings.setRouteName(route.storageIndex, route.name);
+                settings.setRouteNameNoSideEffect(route.storageIndex, route.name);
             }
         }
 
@@ -104,11 +108,7 @@ class BreadcrumbContext {
             var routeId = oldestOrFirstDisabledRoute.storageIndex;
             var route = new BreadcrumbTrack(routeId, name, 0);
             routes.add(route);
-            settings.ensureRouteId(routeId);
-            settings.setRouteReversed(routeId, false);
-            settings.setRouteName(routeId, route.name);
-            settings.setRouteEnabled(routeId, true);
-            settings.setRouteColour(routeId, settings.defaultRouteColour);
+            settings.ensureDefaultRoute(routeId, route.name);
             return route;
         }
 
@@ -120,11 +120,7 @@ class BreadcrumbContext {
         }
         var route = new BreadcrumbTrack(nextId, name, 0);
         routes.add(route);
-        settings.ensureRouteId(nextId);
-        settings.setRouteReversed(nextId, false);
-        settings.setRouteName(nextId, route.name);
-        settings.setRouteEnabled(nextId, true);
-        settings.setRouteColour(nextId, settings.defaultRouteColour);
+        settings.ensureDefaultRoute(nextId, route.name);
         return route;
     }
 

@@ -45,18 +45,41 @@ Please note: The nested garmin settings have a strange behaviour of the app is n
 
 # General
 
+### Mode Display Order
+
+Changes the order that modes are displayed in, modes can be removed entirely by omitting them from the list. CSV integer list of [display modes](#display-mode).  
+An empty list forces the mode to not change when pressing the 'next mode' button. This can be useful for locking the display to a user selected mode.  
+Note: Even with this setting, users can manually select a mode to display that is not in this list, when the 'next mode' is pressed we will return to cycling through modes, and may never return to the mode that was manually selected if it is not in the list.  
+
+eg. 
+
+0,1,2 - Each button press of the 'next mode' will go Track/Route -> Elevation -> Map Move -> <loop back to start>
+
+1,3,2 - Elevation -> Debug -> Map Move -> <loop back to start>
+
+1 - Just show the Elevation page, nothing else
+
+<empty list> - Stay on whatever page the user manually selected (disables the 'next mode' button)
+
+Numbers MUST not appear twice in the list also numbers that are not in the modes list below MUST not be included.
+
+
+
 ### Display Mode
 
 Configure which screen is displayed for the datafield.
 
-Track/Route - Current track, and any loaded routes, will be shown  
+0 - Track/Route - Current track, and any loaded routes, will be shown  
 ![](images/track-full.png)  
-Elevation - An elevation chart showing current distance traveled, current elevation and the route/track profile.  
+1 - Elevation - An elevation chart showing current distance traveled, current elevation and the route/track profile.  
 ![](images/elevation.png)  
-Map Move - Allows panning around the map at a set zoom.  
-![](images/settings/mapmove.png)  
-Debug - A debug screen that may be removed in future releases. Shows the current state of the app.  
-![](images/settings/debug.png)
+2 - Map Move - Allows panning around the map at a set zoom.  
+![](images/settings/mapmove.png)    
+3 - Debug - A debug screen that may be removed in future releases. Shows the current state of the app.  
+![](images/settings/debug.png)  
+4 - map move zoom (similar to map move page, but only allows zooming in and out (larger hitbox area)
+5 - map move up/down (similar to map move page, but only allows moving up and down (larger hitbox area)
+6 - map move left/right (similar to map move page, but only allows moving left and right (larger hitbox area)
 
 ### Display Lat/Long
 
@@ -98,6 +121,9 @@ Display Mode - See [Display Mode](#display-mode)
 - E - Elevation
 - M - Map Move
 - D - Debug
+- Z - Map move zoom
+- V - Map move up/down
+- H - Map move left/right
 
 `+` Button (top of screen) allows zooming into the current location  
 `-` Button (bottom of screen) allows zooming out of the current location  
@@ -180,7 +206,7 @@ Be careful about making the track/route too wide, it leads to more pixels needin
 
 ### Use Track As Heading Speed 
 
-If the user travels above this speed (in m/s) we will use the last few track points to get a bearing (for screen rotations) instead of the devices magnetic compass. This is mostly helpful for when running or any activity where your wrist is likely to be moving around alot, since it is hard to hold your wrist still enough to see the direction of travel. It also stops any delay when first looking at the watch, since it may have rendered when your wrist was not angled straight ahead.
+If the user travels above this speed (in m/s) we will use 2 last recorded points to get a bearing (for screen rotations) instead of the devices magnetic compass. This is mostly helpful for when running or any activity where your wrist is likely to be moving around alot, since it is hard to hold your wrist still enough to see the direction of travel. It also stops any delay when glancing at the watch during the run, since it may have rendered when your wrist was not angled straight ahead.
 
 0 - Always use track  
 large number (eg. 1000) - Never use track  
@@ -189,9 +215,6 @@ large number (eg. 1000) - Never use track
 This method of calculating the heading may result in slow updates to the heading angle, due to it needing a few points after a turn in order to know the turn has happened. This is most noticeable directly after exiting a corner, it may take a second or 2 for the heading to update.
 
 For best results:  
-
-[Compute Interval](#compute-interval) should be set to 1 (or a smaller number) in order to log as many track points as possible. Higher values of compute interval will result in delayed angle changes to the heading when turning corners.  
-[Min Track Point Distance (m)](#min-track-point-distance-m) should be set to 0 so all points are stored, which will result in smoother corner transitions.
 
 If setting `Use Track As Heading Speed ` to 0 the heading will not update when stationary. This is because the gps will ping around on your current location, and would result in constant changes to the heading if we kept updating it based on the last track points. 
 
@@ -335,6 +358,7 @@ How often, in seconds, an alert should fire. Alerts will continue firing until y
 Should be set to a valid hex code RRGGBB not all are required eg. FF00 will render as green
 
 Track Colour - The colour of the in progress track  
+Track Colour 2 - The secondary colour of the in progress track (only used in some track styles) 
 Default Route Colour - The default colour of newly loaded routes
 Elevation Colour - The colour of the scale/numbers on the elevation page  
 User Colour - The colour of the user triangle (current user position)  
@@ -369,6 +393,7 @@ Id - The id of the route - read only
 Name - Defaults to the route name that was added, but can be modified to anything you desire.  
 Enabled - If this route appears on any of the device screens, routes can be disabled so that multiple routes can be pre loaded and enabled when needed. eg. Day 1, Day 2.  
 Route Colour - The colour of the route.  
+Route Colour 2 - The secondary colour of the route (only used with some route styles).  
 Reversed - To reverse the direction of the route.  
 Style - see [Track Style](#track-style).  
 Width - see [Track Width](#track-width).  
@@ -383,7 +408,7 @@ Note: Not all debug settings will work on all release builds, a message will be 
 
 ### Show Points
 
-Shows points at each latitude/longitude on the routes and track.
+*REMOVED* use [Track Style](#track-style) instead
 
 ![](images/settings/debug-points.png)
 ![](images/settings/debug-points-zoomed.png)
@@ -394,7 +419,7 @@ Similar to the off track alerts line, but draws the line to the closest point on
 
 ### Include Debug Page In On Screen Ui
 
-Include the debug page when navigating between pages in the on screen ui.
+*REMOVED* use [Mode Display Order](#mode-display-order) instead
 
 ### Draw Hit Boxes
 

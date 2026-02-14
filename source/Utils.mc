@@ -204,7 +204,6 @@ function mustUpdate() as Void {
     WatchUi.showToast(Rez.Strings.mustUpdate, {});
 }
 
-
 (:release)
 function breadcrumbContextWasNull() as Void {
 }

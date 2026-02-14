@@ -105,6 +105,10 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
         logT("Get initial view");
         setupGlobals();
 
+        // the initial view is called again when the settings close (sometimes)
+        // we also catch this in the 'onUpdate' function in the main view
+        $._view.allowTaskComputes = true;
+
         if (Background has :registerForPhoneAppMessageEvent) {
             Background.registerForPhoneAppMessageEvent();
         } else {
@@ -137,6 +141,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
     (:settingsView,:menu2,:typecheck(disableBackgroundCheck))
     function getSettingsView() as [Views] or [Views, InputDelegates] or Null {
         setupGlobals();
+        $._view.allowTaskComputes = false;
         var settings = new $.SettingsMain();
         return [settings, new $.SettingsMainDelegate(settings)];
     }

@@ -11,38 +11,12 @@ typedef Renderable as interface {
 };
 
 (:settingsView,:menu2)
-class SettingsStringPicker extends MyTextPickerDelegate {
-    private var callback as (Method(value as String) as Void);
-    public var parent as Renderable;
-    function initialize(
-        callback as (Method(value as String) as Void),
-        parent as Renderable,
-        picker as TextPickerView
-    ) {
-        MyTextPickerDelegate.initialize(me.method(:onTextEntered), picker);
-        self.callback = callback;
-        self.parent = parent;
-    }
-
-    function onTextEntered(text as Lang.String) as Lang.Boolean {
-        logT("onTextEntered: " + text);
-
-        callback.invoke(text);
-        parent.rerender();
-
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        return true;
-    }
-
-    function onCancel() as Boolean {
-        logT("canceled");
-        return true;
-    }
-}
-
-(:settingsView,:menu2)
 function startPicker(
-    picker as SettingsFloatPicker or SettingsColourPicker or SettingsNumberPicker
+    picker as
+        SettingsFloatPicker or
+            SettingsNumberPicker or
+            SettingsColourPickerTransparency or
+            TextEditorPicker
 ) as Void {
     WatchUi.pushView(
         new $.NumberPickerView(picker),
@@ -150,9 +124,44 @@ function safeSetIcon(menu as WatchUi.Menu2, id as Object, value as WatchUi.Drawa
 
 // https://forums.garmin.com/developer/connect-iq/f/discussion/304179/programmatically-set-the-state-of-togglemenuitem
 (:settingsView,:menu2)
-class SettingsMain extends Rez.Menus.SettingsMain {
+class SettingsMain extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsMain.initialize();
+        Menu2.initialize({ :title => Rez.Strings.settingsTitle });
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.generalSettingsTitle, null, :settingsMainGeneral, {})
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.trackSettingsTitle, null, :settingsMainTrack, {}));
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.dataFieldSettingsTitle,
+                null,
+                :settingsMainDataField,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceTitle, null, :settingsMainZoomAtPace, {})
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.routesTitle, null, :settingsMainRoutes, {}));
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.offTrackAlertsGroupTitle,
+                null,
+                :settingsMainAlerts,
+                {}
+            )
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.coloursTitle, null, :settingsMainColours, {}));
+        addItem(new WatchUi.MenuItem(Rez.Strings.debugSettingsTitle, null, :settingsMainDebug, {}));
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.clearStorage, null, :settingsMainClearStorage, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.returnToUserTitle, null, :settingsMainReturnToUser, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.resetDefaults, null, :settingsMainResetDefaults, {})
+        );
         rerender();
     }
 
@@ -212,9 +221,23 @@ function getZoomAtPaceModeString(mode as Number) as ResourceId or String {
 }
 
 (:settingsView,:menu2)
-class SettingsZoomAtPace extends Rez.Menus.SettingsZoomAtPace {
+class SettingsZoomAtPace extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsZoomAtPace.initialize();
+        Menu2.initialize({ :title => Rez.Strings.zoomAtPaceTitle });
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceModeTitle, null, :settingsZoomAtPaceMode, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.metersAroundUser,
+                null,
+                :settingsZoomAtPaceUserMeters,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.zoomAtPaceSpeedMPS, null, :settingsZoomAtPaceMPS, {})
+        );
         rerender();
     }
 
@@ -254,6 +277,12 @@ function getModeString(mode as Number) as ResourceId or String {
             return Rez.Strings.mapMove;
         case MODE_DEBUG:
             return Rez.Strings.debug;
+        case MODE_MAP_MOVE_ZOOM:
+            return Rez.Strings.mapMoveZoom;
+        case MODE_MAP_MOVE_UP_DOWN:
+            return Rez.Strings.mapMoveUD;
+        case MODE_MAP_MOVE_LEFT_RIGHT:
+            return Rez.Strings.mapMoveLR;
         default:
             return "";
     }
@@ -298,9 +327,65 @@ function getRenderModeString(mode as Number) as ResourceId or String {
 }
 
 (:settingsView,:menu2)
-class SettingsGeneral extends Rez.Menus.SettingsGeneral {
+class SettingsGeneral extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsGeneral.initialize();
+        Menu2.initialize({ :title => Rez.Strings.generalSettingsTitle });
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.modeDisplayOrderTitle,
+                null,
+                :settingsGeneralModeDisplayOrder,
+                {}
+            )
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.modeTitle, null, :settingsGeneralMode, {}));
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.uiModeTitle, null, :settingsGeneralModeUiMode, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.elevationModeTitle,
+                null,
+                :settingsGeneralModeElevationMode,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.recalculateIntervalSTitle,
+                null,
+                :settingsGeneralRecalculateIntervalS,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.renderModeTitle, null, :settingsGeneralRenderMode, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.centerUserOffsetYTitle,
+                null,
+                :settingsGeneralCenterUserOffsetY,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.displayLatLongTitle,
+                null,
+                :settingsGeneralDisplayLatLong,
+                false,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.mapMoveScreenSizeTitle,
+                null,
+                :settingsGeneralMapMoveScreenSize,
+                {}
+            )
+        );
         rerender();
     }
 
@@ -311,6 +396,12 @@ class SettingsGeneral extends Rez.Menus.SettingsGeneral {
             return;
         }
         var settings = _breadcrumbContextLocal.settings;
+
+        safeSetSubLabel(
+            me,
+            :settingsGeneralModeDisplayOrder,
+            Settings.encodeCSV(settings.modeDisplayOrder)
+        );
         safeSetSubLabel(me, :settingsGeneralMode, getModeString(settings.mode));
         safeSetSubLabel(me, :settingsGeneralModeUiMode, getUiModeString(settings.uiMode));
         safeSetSubLabel(
@@ -351,9 +442,47 @@ function getTrackPointReductionMethodString(mode as Number) as ResourceId or Str
 }
 
 (:settingsView,:menu2)
-class SettingsTrack extends Rez.Menus.SettingsTrack {
+class SettingsTrack extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsTrack.initialize();
+        Menu2.initialize({ :title => Rez.Strings.trackSettingsTitle });
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.maxTrackPointsTitle,
+                null,
+                :settingsTrackMaxTrackPoints,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.trackStyleTitle, null, :settingsTrackTrackStyle, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.trackWidthTitle, null, :settingsTrackTrackWidth, {})
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.minTrackPointDistanceMTitle,
+                null,
+                :settingsTrackMinTrackPointDistanceM,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.trackPointReductionMethodTitle,
+                null,
+                :settingTrackTrackPointReductionMethod,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.useTrackAsHeadingSpeedMPSTitle,
+                null,
+                :settingsTrackUseTrackAsHeadingSpeedMPS,
+                {}
+            )
+        );
         rerender();
     }
 
@@ -386,9 +515,33 @@ class SettingsTrack extends Rez.Menus.SettingsTrack {
 }
 
 (:settingsView,:menu2)
-class SettingsDataField extends Rez.Menus.SettingsDataField {
+class SettingsDataField extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsDataField.initialize();
+        Menu2.initialize({ :title => Rez.Strings.dataFieldSettingsTitle });
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.topDataTypeTitle,
+                null,
+                :settingsDataFieldTopDataType,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.bottomDataTypeTitle,
+                null,
+                :settingsDataFieldBottomDataType,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.dataFieldTextSizeTitle,
+                null,
+                :settingsDataFieldTextSize,
+                {}
+            )
+        );
         rerender();
     }
 
@@ -413,10 +566,85 @@ class SettingsDataField extends Rez.Menus.SettingsDataField {
     }
 }
 
+function alertsCommonMenu(menu as WatchUi.Menu2) as Void {
+    menu.addItem(
+        new WatchUi.MenuItem(
+            Rez.Strings.offTrackAlertsDistanceMTitle,
+            null,
+            :settingsAlertsOffTrackDistanceM,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.MenuItem(
+            Rez.Strings.offTrackCheckIntervalSTitle,
+            null,
+            :settingsAlertsOffTrackCheckIntervalS,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.ToggleMenuItem(
+            Rez.Strings.drawLineToClosestPointTitle,
+            null,
+            :settingsAlertsDrawLineToClosestPoint,
+            false,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.ToggleMenuItem(
+            Rez.Strings.drawCheveronsTitle,
+            null,
+            :settingsAlertsDrawCheverons,
+            false,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.ToggleMenuItem(
+            Rez.Strings.offTrackWrongDirectionTitle,
+            null,
+            :settingsAlertsOffTrackWrongDirection,
+            false,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.ToggleMenuItem(
+            Rez.Strings.enableOffTrackAlertsTitle,
+            null,
+            :settingsAlertsEnabled,
+            false,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.MenuItem(
+            Rez.Strings.turnAlertTimeSTitle,
+            null,
+            :settingsAlertsTurnAlertTimeS,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.MenuItem(
+            Rez.Strings.minTurnAlertDistanceMTitle,
+            null,
+            :settingsAlertsMinTurnAlertDistanceM,
+            {}
+        )
+    );
+    menu.addItem(
+        new WatchUi.MenuItem(Rez.Strings.alertTypeTitle, null, :settingsAlertsAlertType, {})
+    );
+}
+
 (:settingsView,:menu2)
-class SettingsAlerts extends Rez.Menus.SettingsAlerts {
+class SettingsAlerts extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsAlerts.initialize();
+        Menu2.initialize({ :title => Rez.Strings.offTrackAlertsGroupTitle });
+        alertsCommonMenu(self);
         rerender();
     }
 
@@ -476,9 +704,10 @@ function alertsCommon(menu as WatchUi.Menu2, settings as Settings) as Void {
 }
 
 (:settingsView,:menu2)
-class SettingsAlertsDisabled extends Rez.Menus.SettingsAlertsDisabled {
+class SettingsAlertsDisabled extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsAlertsDisabled.initialize();
+        Menu2.initialize({ :title => Rez.Strings.offTrackAlertsGroupTitle });
+        alertsCommonMenu(self);
         rerender();
     }
 
@@ -494,9 +723,81 @@ class SettingsAlertsDisabled extends Rez.Menus.SettingsAlertsDisabled {
 }
 
 (:settingsView,:menu2)
-class SettingsColours extends Rez.Menus.SettingsColours {
+class SettingsColours extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsColours.initialize();
+        Menu2.initialize({ :title => Rez.Strings.coloursTitle });
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.trackColourTitle,
+                null,
+                :settingsColoursTrackColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.trackColour2Title,
+                null,
+                :settingsColoursTrackColour2,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.defaultRouteColourTitle,
+                null,
+                :settingsColoursDefaultRouteColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.elevationColourTitle,
+                null,
+                :settingsColoursElevationColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.userColour,
+                null,
+                :settingsColoursUserColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.normalModeColour,
+                null,
+                :settingsColoursNormalModeColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.uiColour,
+                null,
+                :settingsColoursUiColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.debugColour,
+                null,
+                :settingsColoursDebugColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
         rerender();
     }
 
@@ -508,6 +809,7 @@ class SettingsColours extends Rez.Menus.SettingsColours {
         }
         var settings = _breadcrumbContextLocal.settings;
         safeSetIcon(me, :settingsColoursTrackColour, new ColourIcon(settings.trackColour));
+        safeSetIcon(me, :settingsColoursTrackColour2, new ColourIcon(settings.trackColour2));
         safeSetIcon(
             me,
             :settingsColoursDefaultRouteColour,
@@ -526,9 +828,44 @@ class SettingsColours extends Rez.Menus.SettingsColours {
 }
 
 (:settingsView,:menu2)
-class SettingsDebug extends Rez.Menus.SettingsDebug {
+class SettingsDebug extends WatchUi.Menu2 {
     function initialize() {
-        Rez.Menus.SettingsDebug.initialize();
+        Menu2.initialize({ :title => Rez.Strings.debugSettingsTitle });
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.drawLineToClosestTrackTitle,
+                null,
+                :settingsDebugDrawLineToClosestTrack,
+                false,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.drawHitBoxesTitle,
+                null,
+                :settingsDebugDrawHitBoxes,
+                false,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.showDirectionPointsTitle,
+                null,
+                :settingsDebugShowDirectionPoints,
+                false,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.MenuItem(
+                Rez.Strings.showDirectionPointTextUnderIndexTitle,
+                null,
+                :settingsDebugShowDirectionPointTextUnderIndex,
+                {}
+            )
+        );
         rerender();
     }
 
@@ -539,13 +876,7 @@ class SettingsDebug extends Rez.Menus.SettingsDebug {
             return;
         }
         var settings = _breadcrumbContextLocal.settings;
-        safeSetToggle(me, :settingsDebugShowPoints, settings.showPoints);
         safeSetToggle(me, :settingsDebugDrawLineToClosestTrack, settings.drawLineToClosestTrack);
-        safeSetToggle(
-            me,
-            :settingsDebugIncludeDebugPageInOnScreenUi,
-            settings.includeDebugPageInOnScreenUi
-        );
         safeSetToggle(me, :settingsDebugDrawHitBoxes, settings.drawHitBoxes);
         safeSetToggle(me, :settingsDebugShowDirectionPoints, settings.showDirectionPoints);
         safeSetSubLabel(
@@ -557,12 +888,52 @@ class SettingsDebug extends Rez.Menus.SettingsDebug {
 }
 
 (:settingsView,:menu2)
-class SettingsRoute extends Rez.Menus.SettingsRoute {
+class SettingsRoute extends WatchUi.Menu2 {
     var settings as Settings;
     var routeId as Number;
     var parent as SettingsRoutes;
     function initialize(settings as Settings, routeId as Number, parent as SettingsRoutes) {
-        Rez.Menus.SettingsRoute.initialize();
+        Menu2.initialize({ :title => Rez.Strings.routesTitle });
+        addItem(new WatchUi.MenuItem(Rez.Strings.routeName, null, :settingsRouteName, {}));
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.routeEnabled,
+                null,
+                :settingsRouteEnabled,
+                false,
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.routeColourTitle,
+                null,
+                :settingsRouteColour,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.IconMenuItem(
+                Rez.Strings.routeColour2Title,
+                null,
+                :settingsRouteColour2,
+                new ColourIcon(Graphics.COLOR_BLACK),
+                {}
+            )
+        );
+        addItem(
+            new WatchUi.ToggleMenuItem(
+                Rez.Strings.routeReversed,
+                null,
+                :settingsRouteReversed,
+                false,
+                {}
+            )
+        );
+        addItem(new WatchUi.MenuItem(Rez.Strings.routeStyleTitle, null, :settingsRouteStyle, {}));
+        addItem(new WatchUi.MenuItem(Rez.Strings.routeWidthTitle, null, :settingsRouteWidth, {}));
+        addItem(new WatchUi.MenuItem(Rez.Strings.routeDelete, null, :settingsRouteDelete, {}));
         self.settings = settings;
         self.routeId = routeId;
         self.parent = parent;
@@ -575,6 +946,7 @@ class SettingsRoute extends Rez.Menus.SettingsRoute {
         safeSetSubLabel(me, :settingsRouteName, name);
         safeSetToggle(me, :settingsRouteEnabled, settings.routeEnabled(routeId));
         safeSetIcon(me, :settingsRouteColour, new ColourIcon(settings.routeColour(routeId)));
+        safeSetIcon(me, :settingsRouteColour2, new ColourIcon(settings.routeColour2(routeId)));
         safeSetSubLabel(me, :settingsRouteStyle, getTrackStyleString(settings.routeStyle(routeId)));
         safeSetSubLabel(me, :settingsRouteWidth, settings.routeWidth(routeId).toString() + "px");
         safeSetToggle(me, :settingsRouteReversed, settings.routeReversed(routeId));
@@ -605,8 +977,16 @@ class SettingsRoute extends Rez.Menus.SettingsRoute {
         return settings.routeColour(routeId);
     }
 
+    function routeColour2() as Number {
+        return settings.routeColour2(routeId);
+    }
+
     function setColour(value as Number) as Void {
         settings.setRouteColour(routeId, value);
+    }
+
+    function setColour2(value as Number) as Void {
+        settings.setRouteColour2(routeId, value);
     }
 
     function setStyle(value as Number) as Void {
@@ -672,23 +1052,19 @@ class SettingsRoutes extends WatchUi.Menu2 {
             )
         );
 
-        for (var i = 0; i < settings.routeMax(); ++i) {
-            var routeIndex = settings.getRouteIndexById(i);
-            if (routeIndex == null) {
-                // do not show routes that are not in the settings array
-                // but still show disabled routes that are in the array
-                continue;
-            }
-            var routeName = settings.routeName(i);
-            var enabledStr = settings.routeEnabled(i) ? "Enabled" : "Disabled";
-            var reversedStr = settings.routeReversed(i) ? "Reversed" : "Forward";
+        // don't use route max, sometimes it gets out of sync, we want to pull in all the routes so we can remove them
+        for (var i = 0; i < settings.routes.size(); ++i) {
+            var routeId = settings.routes[i]["routeId"] as Number;
+            var routeName = settings.routeName(routeId);
+            var enabledStr = settings.routeEnabled(routeId) ? "Enabled" : "Disabled";
+            var reversedStr = settings.routeReversed(routeId) ? "Reversed" : "Forward";
             addItem(
                 // do not be tempted to switch this to a menuitem (IconMenuItem is supported since API 3.0.0, MenuItem only supports icons from API 3.4.0)
                 new IconMenuItem(
                     routeName.equals("") ? "<unlabeled>" : routeName,
                     enabledStr + " " + reversedStr,
-                    i,
-                    new ColourIcon(settings.routeColour(i)),
+                    routeId,
+                    new ColourIcon(settings.routeColour(routeId)),
                     {
                         // only get left or right, no center :(
                         :alignment => MenuItem.MENU_ITEM_LABEL_ALIGN_LEFT,
@@ -702,11 +1078,12 @@ class SettingsRoutes extends WatchUi.Menu2 {
         safeSetToggle(me, :settingsRoutesEnabled, settings.routesEnabled);
         safeSetToggle(me, :settingsDisplayRouteNames, settings.displayRouteNames);
         safeSetSubLabel(me, :settingsDisplayRouteMax, settings.routeMax().toString());
-        for (var i = 0; i < settings.routeMax(); ++i) {
-            var routeName = settings.routeName(i);
-            safeSetLabel(me, i, routeName.equals("") ? "<unlabeled>" : routeName);
-            safeSetIcon(me, i, new ColourIcon(settings.routeColour(i)));
-            safeSetSubLabel(me, i, settings.routeEnabled(i) ? "Enabled" : "Disabled");
+        for (var i = 0; i < settings.routes.size(); ++i) {
+            var routeId = settings.routes[i]["routeId"] as Number;
+            var routeName = settings.routeName(routeId);
+            safeSetLabel(me, routeId, routeName.equals("") ? "<unlabeled>" : routeName);
+            safeSetIcon(me, routeId, new ColourIcon(settings.routeColour(routeId)));
+            safeSetSubLabel(me, routeId, settings.routeEnabled(routeId) ? "Enabled" : "Disabled");
         }
     }
 }
@@ -792,7 +1169,7 @@ class ResetSettingsDelegate extends WatchUi.ConfirmationDelegate {
         if (response == WatchUi.CONFIRM_YES) {
             var _breadcrumbContextLocal = $._breadcrumbContext;
             if (_breadcrumbContextLocal != null) {
-                _breadcrumbContextLocal.settings.resetDefaults();
+                _breadcrumbContextLocal.settings.resetDefaultsFromMenu();
             }
         }
 
@@ -958,7 +1335,15 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
         var settings = _breadcrumbContextLocal.settings;
         var itemId = item.getId();
 
-        if (itemId == :settingsGeneralMode) {
+        if (itemId == :settingsGeneralModeDisplayOrder) {
+            startPicker(
+                new TextEditorPicker(
+                    settings.method(:setModeDisplayOrder),
+                    Settings.encodeCSV(settings.modeDisplayOrder),
+                    view
+                )
+            );
+        } else if (itemId == :settingsGeneralMode) {
             WatchUi.pushView(
                 new EnumMenu(
                     Rez.Strings.modeTitle,
@@ -1245,15 +1630,9 @@ class SettingsRouteDelegate extends WatchUi.Menu2InputDelegate {
     public function onSelect(item as WatchUi.MenuItem) as Void {
         var itemId = item.getId();
         if (itemId == :settingsRouteName) {
-            var pickerView = new TextPickerView(
-                "Route Name",
-                "",
-                0,
-                256,
-                settings.routeName(view.routeId)
+            startPicker(
+                new TextEditorPicker(view.method(:setName), settings.routeName(view.routeId), view)
             );
-            var picker = new SettingsStringPicker(view.method(:setName), view, pickerView);
-            WatchUi.pushView(pickerView, picker, WatchUi.SLIDE_IMMEDIATE);
         } else if (itemId == :settingsRouteEnabled) {
             if (view.routeEnabled()) {
                 view.setEnabled(false);
@@ -1270,7 +1649,21 @@ class SettingsRouteDelegate extends WatchUi.Menu2InputDelegate {
             view.rerender();
         } else if (itemId == :settingsRouteColour) {
             startPicker(
-                new SettingsColourPicker(view.method(:setColour), view.routeColour(), view)
+                new SettingsColourPickerTransparency(
+                    view.method(:setColour),
+                    view.routeColour(),
+                    view,
+                    false
+                )
+            );
+        } else if (itemId == :settingsRouteColour2) {
+            startPicker(
+                new SettingsColourPickerTransparency(
+                    view.method(:setColour2),
+                    view.routeColour2(),
+                    view,
+                    true
+                )
             );
         } else if (itemId == :settingsRouteDelete) {
             var dialog = new WatchUi.Confirmation(
@@ -1514,50 +1907,74 @@ class SettingsColoursDelegate extends WatchUi.Menu2InputDelegate {
         var itemId = item.getId();
         if (itemId == :settingsColoursTrackColour) {
             startPicker(
-                new SettingsColourPicker(
+                new SettingsColourPickerTransparency(
                     settings.method(:setTrackColour),
                     settings.trackColour,
-                    view
+                    view,
+                    false
+                )
+            );
+        } else if (itemId == :settingsColoursTrackColour2) {
+            startPicker(
+                new SettingsColourPickerTransparency(
+                    settings.method(:setTrackColour2),
+                    settings.trackColour2,
+                    view,
+                    true
                 )
             );
         } else if (itemId == :settingsColoursDefaultRouteColour) {
             startPicker(
-                new SettingsColourPicker(
+                new SettingsColourPickerTransparency(
                     settings.method(:setDefaultRouteColour),
                     settings.defaultRouteColour,
-                    view
+                    view,
+                    false
                 )
             );
         } else if (itemId == :settingsColoursElevationColour) {
             startPicker(
-                new SettingsColourPicker(
+                new SettingsColourPickerTransparency(
                     settings.method(:setElevationColour),
                     settings.elevationColour,
-                    view
+                    view,
+                    false
                 )
             );
         } else if (itemId == :settingsColoursUserColour) {
             startPicker(
-                new SettingsColourPicker(settings.method(:setUserColour), settings.userColour, view)
+                new SettingsColourPickerTransparency(
+                    settings.method(:setUserColour),
+                    settings.userColour,
+                    view,
+                    false
+                )
             );
         } else if (itemId == :settingsColoursNormalModeColour) {
             startPicker(
-                new SettingsColourPicker(
+                new SettingsColourPickerTransparency(
                     settings.method(:setNormalModeColour),
                     settings.normalModeColour,
-                    view
+                    view,
+                    false
                 )
             );
         } else if (itemId == :settingsColoursUiColour) {
             startPicker(
-                new SettingsColourPicker(settings.method(:setUiColour), settings.uiColour, view)
+                new SettingsColourPickerTransparency(
+                    settings.method(:setUiColour),
+                    settings.uiColour,
+                    view,
+                    false
+                )
             );
         } else if (itemId == :settingsColoursDebugColour) {
             startPicker(
-                new SettingsColourPicker(
+                new SettingsColourPickerTransparency(
                     settings.method(:setDebugColour),
                     settings.debugColour,
-                    view
+                    view,
+                    false
                 )
             );
         }
@@ -1579,14 +1996,8 @@ class SettingsDebugDelegate extends WatchUi.Menu2InputDelegate {
         }
         var settings = _breadcrumbContextLocal.settings;
         var itemId = item.getId();
-        if (itemId == :settingsDebugShowPoints) {
-            settings.toggleShowPoints();
-            view.rerender();
-        } else if (itemId == :settingsDebugDrawLineToClosestTrack) {
+        if (itemId == :settingsDebugDrawLineToClosestTrack) {
             settings.toggleDrawLineToClosestTrack();
-            view.rerender();
-        } else if (itemId == :settingsDebugIncludeDebugPageInOnScreenUi) {
-            settings.toggleIncludeDebugPageInOnScreenUi();
             view.rerender();
         } else if (itemId == :settingsDebugDrawHitBoxes) {
             settings.toggleDrawHitBoxes();

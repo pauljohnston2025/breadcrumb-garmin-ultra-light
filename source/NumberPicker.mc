@@ -6,41 +6,26 @@ import Toybox.WatchUi;
 import Toybox.Lang;
 
 (:settingsView,:menu2)
-class NumberPicker {
-    private var currentVal as String;
-    private var _charset as String;
-    private var maxLength as Number;
-    // letterPositions[0] is an ok button
-    private var letterPositions as Array<[Float, Float]>;
+class PositionPickerGeneric {
+    private var choices as Array<String>;
+    private var choicePositions as Array<[Float, Float]>;
     private var halfWidth as Number?;
-    private var myText as WatchUi.Text;
-    var halfHitboxSize as Number = 35;
-    var currentSelected as Number = 0;
+    private var halfHitboxSize as Number = 35;
+    private var currentSelected as Number = 0; // needs to always be a valid index of choices array
 
-    function initialize(charset as String, maxLength as Number) {
-        self.maxLength = maxLength;
-        _charset = charset;
-        currentVal = "";
-        // always force an ok button so index 0 is always valid
-        letterPositions = [[0f, 0f]];
+    function initialize(choices as Array<String>) {
+        self.choices = choices;
+        choicePositions = [];
         halfWidth = null;
-
-        myText = new WatchUi.Text({
-            :text => "",
-            :color => Graphics.COLOR_WHITE,
-            :font => Graphics.FONT_SMALL,
-            :locX => WatchUi.LAYOUT_HALIGN_CENTER,
-            :locY => WatchUi.LAYOUT_VALIGN_CENTER,
-        });
     }
 
     function onLayout(dc as Dc) as Void {
         halfWidth = dc.getWidth() / 2;
-        letterPositions = pointsOnCircle(
+        choicePositions = pointsOnCircle(
             halfWidth,
             halfWidth,
             halfWidth - halfHitboxSize,
-            _charset.length() + 1
+            choices.size()
         );
     }
 
@@ -51,103 +36,419 @@ class NumberPicker {
         numPoints as Number
     ) as Array<[Float, Float]> {
         var points = new [numPoints];
-
         var angleIncrement = (2 * Math.PI) / numPoints;
 
-        var x0 = (centerX + radius).toFloat();
-        var y0 = centerY.toFloat();
-        points[0] = [x0, y0];
-        var x = x0;
-        var y = y0;
+        // Shift the starting position to -90 degrees (Top of the screen)
+        var startAngleShift = -Math.PI / 2;
 
-        for (var i = 1; i < numPoints; i++) {
-            var angle = i * angleIncrement;
+        for (var i = 0; i < numPoints; i++) {
+            // Apply the shift to every point
+            var angle = i * angleIncrement + startAngleShift;
 
-            x = centerX + radius * Math.cos(angle).toFloat();
-            y = centerY + radius * Math.sin(angle).toFloat();
+            var x = centerX + radius * Math.cos(angle).toFloat();
+            var y = centerY + radius * Math.sin(angle).toFloat();
 
             points[i] = [x, y];
         }
 
-        // adjust the hitbox to be the max size between the points
-        halfHitboxSize = distance(x0, y0, x, y).toNumber() / 2;
+        if (numPoints > 1) {
+            halfHitboxSize =
+                distance(points[0][0] as Float, points[0][1]as Float, points[1][0]as Float, points[1][1]as Float).toNumber() / 2;
+        }
 
         return points as Array<[Float, Float]>;
     }
 
     function onUpdate(dc as Dc) as Void {
-        var bgColour = backgroundColour(currentVal);
+        var bgColour = backgroundColourInner();
         dc.setColor(Graphics.COLOR_WHITE, bgColour);
         dc.clear();
-        dc.clear();
+        drawText(dc);
+        dc.setColor(Graphics.COLOR_WHITE, bgColour);
         dc.setPenWidth(4);
-        dc.drawText(
-            letterPositions[0][0],
-            letterPositions[0][1],
-            Graphics.FONT_SMALL,
-            "OK",
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
-        for (var i = 1; i < letterPositions.size(); i++) {
-            var point = letterPositions[i];
+        for (var i = 0; i < choicePositions.size(); ++i) {
+            var point = choicePositions[i];
             var pointX = point[0];
             var pointY = point[1];
-            var letter = self._charset.substring(i - 1, i);
+            var choice = self.choices[i];
             dc.drawText(
                 pointX,
                 pointY,
                 Graphics.FONT_SMALL,
-                letter,
+                choice,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
             );
         }
-        var selected = letterPositions[currentSelected];
+        var selected = choicePositions[currentSelected];
         dc.drawCircle(selected[0], selected[1], halfHitboxSize);
-
-        myText.draw(dc);
     }
 
-    function tryComplete() as Boolean {
-        if (currentSelected == 0) {
-            // we are on the 'OK' button
-            onReading(currentVal);
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-            return true;
-        }
-
-        return false;
-    }
+    function drawText(dc as Dc) as Void;
 
     function confirm() as Void {
-        // confirm can be completing the number pick or adding the highlighted 'currentSelected'
-        if (tryComplete()) {
-            return;
-        }
-
-        // treat it like tapping the letter
-        if (currentSelected < letterPositions.size()) {
-            var position = letterPositions[currentSelected];
-            onTapInner(position[0].toNumber(), position[1].toNumber());
-        }
+        performAction(currentSelected);
     }
 
     function previousSelection() as Void {
         --currentSelected;
         if (currentSelected < 0) {
-            currentSelected = letterPositions.size() - 1;
+            currentSelected = choicePositions.size() - 1;
         }
         forceRefresh();
     }
 
     function nextSelection() as Void {
         ++currentSelected;
-        if (currentSelected >= letterPositions.size()) {
+        if (currentSelected >= choicePositions.size()) {
             currentSelected = 0;
         }
         forceRefresh();
     }
 
-    function removeLast() as Void {
+    function onBack() as Void {
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+    }
+
+    function onTap(x as Number, y as Number) as Boolean {
+        // for touch devices if we press the ok button exit immediately
+        var tapIndex = indexOfTap(x, y);
+        if (tapIndex == null) {
+            return false;
+        }
+
+        return performAction(tapIndex);
+    }
+
+    function indexOfTap(x as Number, y as Number) as Number? {
+        for (var i = 0; i < choicePositions.size(); i++) {
+            var point = choicePositions[i];
+            var pointX = point[0];
+            var pointY = point[1];
+
+            // Check if the tap is within the hit box
+            if (inHitbox(x, y, pointX, pointY, halfHitboxSize.toFloat())) {
+                currentSelected = i;
+                return i;
+            }
+        }
+
+        return null;
+    }
+
+    // performAction for the current index
+    // eg.
+    // onReading(myLookupThingToDo[tapIndex]);
+    // WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+    protected function performAction(tapIndex as Number) as Boolean {
+        return false;
+    }
+    protected function backgroundColourInner() as Number {
+        return Graphics.COLOR_BLACK;
+    }
+}
+
+(:settingsView,:menu2)
+class SingleLetterPicker extends PositionPickerGeneric {
+    private var charset as String;
+    private var onReading as (Method(value as String) as Void);
+
+    function initialize(charset as String, onReading as (Method(value as String) as Void)) {
+        self.charset = charset;
+        self.onReading = onReading;
+
+        var stringArr = stringToStringArray(charset);
+
+        PositionPickerGeneric.initialize(stringArr as Array<String>);
+    }
+
+    function performAction(tapIndex as Number) as Boolean {
+        onReading.invoke(self.charset.substring(tapIndex, tapIndex + 1) as String);
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        return true;
+    }
+}
+
+enum /*TextEditor*/ {
+    TEXT_EDITOR_OK,
+    TEXT_EDITOR_DEL,
+    TEXT_EDITOR_SPACE,
+    TEXT_EDITOR_LEFT,
+    TEXT_EDITOR_RIGHT,
+
+    TEXT_EDITOR_MAX,
+}
+
+(:settingsView,:menu2)
+class TextEditorPicker extends PositionPickerGeneric {
+    private var onReading as (Method(value as String) as Void);
+    private var currentVal as String;
+    private var parent as Renderable;
+    private var pickers as Array<SingleLetterPicker>;
+    private var cursorIndex as Number = 0; // Track cursor position
+    private var leftTextPart as String? = null;
+    private var rightTextPart as String? = null;
+
+    function initialize(
+        onReading as (Method(value as String) as Void),
+        initialValue as String,
+        parent as Renderable
+    ) {
+        self.currentVal = initialValue;
+        self.onReading = onReading;
+        self.parent = parent;
+        self.cursorIndex = initialValue.length(); // Start at the end
+
+        self.pickers = [
+            new SingleLetterPicker("abcdefghijklm", method(:addLetter)),
+            new SingleLetterPicker("nopqrstuvwxyz", method(:addLetter)),
+            new SingleLetterPicker("ABCDEFGHIJKLM", method(:addLetter)),
+            new SingleLetterPicker("NOPQRSTUVWXYZ", method(:addLetter)),
+            new SingleLetterPicker("0123456789", method(:addLetter)),
+            new SingleLetterPicker("`~!@#$%^&*()-_=+", method(:addLetter)),
+            new SingleLetterPicker("[]{}\\|;:'\"/,.<>?", method(:addLetter)),
+        ];
+
+        PositionPickerGeneric.initialize([
+            "OK",
+            "del",
+            "spc",
+            "<<",
+            ">>",
+            "a-m",
+            "n-z",
+            "A-M",
+            "N-Z",
+            "0-9",
+            "~-=",
+            "[-?",
+        ]);
+
+        updateDisplayText();
+        forceRefresh();
+    }
+
+    private const MAX_DISPLAY_CHARS = 12;
+
+    private function updateDisplayText() as Void {
+        var totalLen = currentVal.length();
+
+        // 1. If it fits entirely, just do the one-time build
+        if (totalLen < MAX_DISPLAY_CHARS) {
+            leftTextPart = currentVal.substring(0, cursorIndex);
+            rightTextPart = currentVal.substring(cursorIndex, null);
+            return;
+        }
+
+        // 2. Calculate the window around the cursorIndex
+        // We want the cursor roughly in the middle
+        var halfWindow = MAX_DISPLAY_CHARS / 2;
+        var windowStart = cursorIndex - halfWindow;
+        var windowEnd = cursorIndex + halfWindow;
+
+        // 3. Clamp the window to string boundaries
+        if (windowStart < 0) {
+            windowEnd -= windowStart; // Shift the end right
+            windowStart = 0;
+        }
+
+        if (windowEnd > totalLen) {
+            windowStart -= windowEnd - totalLen; // Shift the start left
+            windowEnd = totalLen;
+            if (windowStart < 0) {
+                windowStart = 0;
+            }
+        }
+
+        // 4. Build the final display string with minimal allocations
+        // This creates 2 small strings and joins them with the cursor
+        leftTextPart = currentVal.substring(windowStart, cursorIndex);
+        rightTextPart = currentVal.substring(cursorIndex, windowEnd);
+    }
+
+    function drawText(dc as Dc) as Void {
+        if (leftTextPart == null || rightTextPart == null) {
+            return;
+        }
+
+        var font = Graphics.FONT_SMALL;
+        var centerX = dc.getWidth() / 2;
+        var centerY = dc.getHeight() / 2;
+
+        // 1. Calculate widths so we know how to offset from center
+        var leftDims = dc.getTextDimensions(leftTextPart, font);
+        var leftWidth = leftDims[0];
+        var leftHeight = leftDims[1];
+        var rightDims = dc.getTextDimensions(rightTextPart, font);
+        var rightWidth = rightDims[0];
+        var rightHeight = rightDims[1];
+        var cursorWidth = 3;
+
+        // The total width of the visible text block
+        var totalWidth = leftWidth + cursorWidth + rightWidth;
+        var startX = centerX - totalWidth / 2;
+
+        // 2. Draw Left Part
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+            startX,
+            centerY,
+            font,
+            leftTextPart,
+            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER
+        );
+
+        // 3. Draw Cursor (Let's make it a distinct color like Red or Yellow)
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(1);
+        var lineX = startX + leftWidth + 1;
+        var cursorHeight = maxN(50, maxN(leftHeight, rightHeight) + 4); // maybe just hard code to 50? we need to handle when no characters on the screen
+        var halfCursorHeight = cursorHeight / 2;
+        dc.drawLine(lineX, centerY + halfCursorHeight, lineX, centerY - halfCursorHeight);
+
+        // 4. Draw Right Part
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+            startX + leftWidth + cursorWidth,
+            centerY,
+            font,
+            rightTextPart,
+            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER
+        );
+    }
+
+    function addLetter(letter as String) as Void {
+        // Insert letter at cursor position
+        var prefix = currentVal.substring(0, cursorIndex);
+        var suffix = currentVal.substring(cursorIndex, null);
+        if (prefix == null || suffix == null) {
+            return; // something went horribly wrong
+        }
+        currentVal = prefix + letter + suffix;
+
+        cursorIndex++; // Move cursor forward
+        updateDisplayText();
+        // forceRefresh(); do not push another view the SingleLetterPicker will pop its view and we will render
+    }
+
+    protected function performAction(tapIndex as Number) as Boolean {
+        if (tapIndex == TEXT_EDITOR_OK) {
+            onReading.invoke(currentVal);
+            parent.rerender();
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            return true;
+        } else if (tapIndex == TEXT_EDITOR_DEL) {
+            return deleteChar();
+        } else if (tapIndex == TEXT_EDITOR_SPACE) {
+            addLetter(" ");
+            forceRefresh();
+            return true;
+        } else if (tapIndex == TEXT_EDITOR_LEFT) {
+            if (cursorIndex > 0) {
+                cursorIndex--;
+                updateDisplayText();
+                forceRefresh();
+            }
+            return true;
+        } else if (tapIndex == TEXT_EDITOR_RIGHT) {
+            if (cursorIndex < currentVal.length()) {
+                cursorIndex++;
+                updateDisplayText();
+                forceRefresh();
+            }
+            return true;
+        }
+
+        var picker = self.pickers[tapIndex - TEXT_EDITOR_MAX];
+        WatchUi.pushView(
+            new $.NumberPickerView(picker),
+            new $.NumberPickerDelegate(picker),
+            WatchUi.SLIDE_IMMEDIATE
+        );
+        return true;
+    }
+
+    function deleteChar() as Boolean {
+        if (cursorIndex > 0) {
+            // Delete character BEFORE the cursor
+            var prefix = currentVal.substring(0, cursorIndex - 1);
+            var suffix = currentVal.substring(cursorIndex, null);
+            if (prefix == null || suffix == null) {
+                return false; // something went horribly wrong
+            }
+            currentVal = prefix + suffix;
+            cursorIndex--;
+            updateDisplayText();
+            forceRefresh();
+        }
+        return true;
+    }
+
+    function onBack() as Void {
+        // deleteChar();
+        // just dismiss the ui, no changes
+        // its not like the number pickers where the string is small and we can re-type it
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+    }
+}
+
+function stringToStringArray(charset as String) as Array<String> {
+    var stringArr = [] as Array<String>;
+    for (var i = 0; i < charset.length(); ++i) {
+        stringArr.add(charset.substring(i, i + 1) as String);
+    }
+    return stringArr;
+}
+
+(:settingsView,:menu2)
+class NumberPicker extends PositionPickerGeneric {
+    private var _charset as String;
+    private var maxLength as Number;
+    private var currentVal as String;
+    private var myText as WatchUi.Text;
+
+    function initialize(charset as String, maxLength as Number) {
+        self._charset = charset;
+        self.maxLength = maxLength;
+        self.currentVal = "";
+        myText = new WatchUi.Text({
+            :text => "",
+            :color => Graphics.COLOR_WHITE,
+            :font => Graphics.FONT_SMALL,
+            :locX => WatchUi.LAYOUT_HALIGN_CENTER,
+            :locY => WatchUi.LAYOUT_VALIGN_CENTER,
+        });
+
+        var stringArr = (["OK"] as Array<String>).addAll(stringToStringArray(charset));
+        PositionPickerGeneric.initialize(stringArr as Array<String>);
+    }
+
+    function drawText(dc as Dc) as Void {
+        myText.draw(dc);
+    }
+
+    function performAction(tapIndex as Number) as Boolean {
+        if (tapIndex == 0) {
+            // we are on the 'OK' button
+            onReading(currentVal);
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            return true;
+        }
+
+        if (currentVal.length() >= maxLength) {
+            return false; // can't handle it
+        }
+
+        if (tapIndex != 0) {
+            currentVal += self._charset.substring(tapIndex - 1, tapIndex);
+        }
+
+        myText.setText(currentVal);
+
+        forceRefresh();
+        return true;
+    }
+
+    function onBack() as Void {
         if (currentVal.length() <= 0) {
             WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
             return;
@@ -161,51 +462,15 @@ class NumberPicker {
         }
     }
 
-    function onTap(x as Number, y as Number) as Boolean {
-        // for touch devices if we press the ok button exit immediately
-        var res = onTapInner(x, y);
-        tryComplete();
-        return res;
+    protected function backgroundColourInner() as Number {
+        return backgroundColour(currentVal);
     }
 
-    function onTapInner(x as Number, y as Number) as Boolean {
-        var letter = letterOfTap(x, y);
-        if (letter == null || currentVal.length() >= maxLength) {
-            return false;
-        }
-
-        currentVal += letter;
-        myText.setText(currentVal);
-        forceRefresh();
-        return true;
-    }
-
-    function letterOfTap(x as Number, y as Number) as String? {
-        for (var i = 1; i < letterPositions.size(); i++) {
-            var point = letterPositions[i];
-            var pointX = point[0];
-            var pointY = point[1];
-
-            // Check if the tap is within the hit box
-            if (inHitbox(x, y, pointX, pointY, halfHitboxSize.toFloat())) {
-                currentSelected = i;
-                return self._charset.substring(i - 1, i);
-            }
-        }
-
-        var okButton = letterPositions[0];
-        if (inHitbox(x, y, okButton[0], okButton[1], halfHitboxSize.toFloat())) {
-            currentSelected = 0;
-            return null;
-        }
-
-        return null;
-    }
-
-    protected function onReading(value as String) as Void;
     protected function backgroundColour(value as String) as Number {
         return Graphics.COLOR_BLACK;
     }
+
+    protected function onReading(value as String) as Void;
 }
 
 (:settingsView,:menu2)
@@ -218,7 +483,7 @@ class SettingsFloatPicker extends NumberPicker {
         defaultVal as Float,
         parent as Renderable
     ) {
-        NumberPicker.initialize("0123456789.", 10);
+        NumberPicker.initialize("-0123456789.", 10);
         self.defaultVal = defaultVal;
         self.callback = callback;
         self.parent = parent;
@@ -247,7 +512,6 @@ class SettingsNumberPicker extends NumberPicker {
         self.parent = parent;
     }
 
-    
     protected function onReading(value as String) as Void {
         callback.invoke(Settings.parseNumberRaw("key", value, defaultVal));
         parent.rerender();
@@ -255,24 +519,44 @@ class SettingsNumberPicker extends NumberPicker {
 }
 
 (:settingsView,:menu2)
-class SettingsColourPicker extends NumberPicker {
+class SettingsColourPickerTransparency extends NumberPicker {
     private var callback as (Method(value as Number) as Void);
     private var parent as Renderable;
     private var defaultVal as Number;
-    function initialize(callback as (Method(value as Number) as Void), defaultVal as Number, parent as Renderable) {
-        NumberPicker.initialize("0123456789ABCDEF", 6);
+    private var allowTransparent as Boolean;
+    function initialize(
+        callback as (Method(value as Number) as Void),
+        defaultVal as Number,
+        parent as Renderable,
+        allowTransparent as Boolean
+    ) {
+        var defaultOptions = "0123456789ABCDEF";
+        if (allowTransparent) {
+            defaultOptions += "T"; // transparent
+        }
+        NumberPicker.initialize(defaultOptions, 6);
         self.defaultVal = defaultVal;
         self.callback = callback;
         self.parent = parent;
+        self.allowTransparent = allowTransparent;
     }
 
     protected function onReading(value as String) as Void {
-        callback.invoke(Settings.parseColourRaw("key", value, defaultVal));
+        if (value.find("T") != null) {
+            callback.invoke(Graphics.COLOR_TRANSPARENT); // transparent
+        } else {
+            callback.invoke(Settings.parseColourRaw("key", value, defaultVal, allowTransparent));
+        }
+
         parent.rerender();
     }
 
     protected function backgroundColour(value as String) as Number {
-        return Settings.parseColourRaw("key", value, Graphics.COLOR_BLACK);
+        if (value.find("T") != null) {
+            return Graphics.COLOR_TRANSPARENT;
+        }
+
+        return Settings.parseColourRaw("key", value, Graphics.COLOR_BLACK, allowTransparent);
     }
 }
 
@@ -303,9 +587,9 @@ function forceRefresh() as Void {
 
 (:settingsView,:menu2)
 class NumberPickerView extends WatchUi.View {
-    private var picker as NumberPicker;
+    private var picker as PositionPickerGeneric;
 
-    function initialize(picker as NumberPicker) {
+    function initialize(picker as PositionPickerGeneric) {
         self.picker = picker;
         View.initialize();
 
@@ -330,9 +614,9 @@ class NumberPickerView extends WatchUi.View {
 
 (:settingsView,:menu2)
 class NumberPickerDelegate extends WatchUi.BehaviorDelegate {
-    private var picker as NumberPicker;
+    private var picker as PositionPickerGeneric;
 
-    function initialize(picker as NumberPicker) {
+    function initialize(picker as PositionPickerGeneric) {
         self.picker = picker;
         WatchUi.BehaviorDelegate.initialize();
     }
@@ -391,7 +675,7 @@ class NumberPickerDelegate extends WatchUi.BehaviorDelegate {
 
     function onBack() as Boolean {
         // logT("got back");
-        picker.removeLast();
+        picker.onBack();
         return true;
     }
 }

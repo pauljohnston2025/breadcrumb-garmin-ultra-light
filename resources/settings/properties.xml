@@ -1,6 +1,7 @@
 <properties>
     <!-- https://developer.garmin.com/connect-iq/core-topics/properties-and-app-settings/ -->
 	<property id="mode" type="number">0</property>
+	<property id="modeDisplayOrder" type="string">0,1,2</property>
 	<property id="elevationMode" type="number">0</property>
 	<property id="uiMode" type="number">0</property>
 	<property id="renderMode" type="number">1</property>
@@ -11,7 +12,7 @@
 	<property id="zoomAtPaceSpeedMPS" type="float">1.0</property>
 	
 	<property id="trackColour" type="string">00FF00</property>
-	<property id="routeColour" type="string">0000FF</property>
+	<property id="trackColour2" type="string">FFFFFFFF</property>
 	<property id="elevationColour" type="string">FF5500</property>
 	<property id="userColour" type="string">FF5500</property>
 	<property id="normalModeColour" type="string">0000FF</property>
@@ -31,9 +32,7 @@
 	<property id="returnToUser" type="boolean">false</property>
 	<property id="resetDefaults" type="boolean">false</property>
 
-	<property id="showPoints" type="boolean">false</property>
 	<property id="drawLineToClosestTrack" type="boolean">false</property>
-	<property id="includeDebugPageInOnScreenUi" type="boolean">false</property>
 	<property id="offTrackWrongDirection" type="boolean">false</property>
 	<property id="drawCheverons" type="boolean">false</property>
 	<property id="centerUserOffsetY" type="float">0.5</property>

@@ -31,7 +31,7 @@ enum /*TrackPointReductionMethod*/ {
     TRACK_POINT_REDUCTION_METHOD_DOWNSAMPLE = 0,
     TRACK_POINT_REDUCTION_METHOD_REUMANN_WITKAM = 1,
 
-    TRACK_POINT_REDUCTION_METHOD_MAX
+    TRACK_POINT_REDUCTION_METHOD_MAX,
 }
 
 enum /*DataType*/ {
@@ -61,10 +61,14 @@ enum /*DataType*/ {
 }
 
 enum /*Mode*/ {
-    MODE_NORMAL,
-    MODE_ELEVATION,
-    MODE_MAP_MOVE,
-    MODE_DEBUG,
+    MODE_NORMAL = 0,
+    MODE_ELEVATION = 1,
+    MODE_MAP_MOVE = 2,
+    MODE_DEBUG = 3,
+    MODE_MAP_MOVE_ZOOM = 4, // mostly for app (and button presses), but also allows larger touch zones
+    MODE_MAP_MOVE_UP_DOWN = 5, // mostly for app (and button presses), but also allows larger touch zones
+    MODE_MAP_MOVE_LEFT_RIGHT = 6, // mostly for app (and button presses), but also allows larger touch zones
+
     MODE_MAX,
 }
 
@@ -179,9 +183,14 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
 // * Works fine
 class Settings {
     var mode as Number = MODE_NORMAL;
+    var modeDisplayOrder as Array<Number> = [0, 1, 2];
     var elevationMode as Number = ELEVATION_MODE_STACKED;
 
     var trackColour as Number = Graphics.COLOR_GREEN;
+    var trackColour2 as Number = Graphics.COLOR_TRANSPARENT;
+    const DEFAULT_ROUTE_COLOUR_2 = Graphics.COLOR_TRANSPARENT;
+    const DEFAULT_ROUTE_STYLE = TRACK_STYLE_LINE;
+    const DEFAULT_ROUTE_WIDTH = 4;
     var defaultRouteColour as Number = Graphics.COLOR_BLUE;
     var elevationColour as Number = Graphics.COLOR_ORANGE;
     var userColour as Number = Graphics.COLOR_ORANGE;
@@ -239,9 +248,7 @@ class Settings {
     var trackWidth as Number = 4;
 
     // bunch of debug settings
-    var showPoints as Boolean = false;
     var drawLineToClosestTrack as Boolean = false;
-    var includeDebugPageInOnScreenUi as Boolean = false;
     var drawHitBoxes as Boolean = false;
     var showDirectionPoints as Boolean = false;
     var showDirectionPointTextUnderIndex as Number = 0;
@@ -467,6 +474,18 @@ class Settings {
     }
 
     (:settingsView,:menu2)
+    function setModeDisplayOrder(value as String) as Void {
+        // try and validate it before saving the setting
+        modeDisplayOrder = parseCSVStringRaw(
+            "modeDisplayOrder",
+            value,
+            modeDisplayOrder,
+            method(:defaultNumberParser)
+        );
+        setValue("modeDisplayOrder", encodeCSV(modeDisplayOrder));
+    }
+
+    (:settingsView,:menu2)
     function setMaxTrackPoints(value as Number) as Void {
         var oldmaxTrackPoints = maxTrackPoints;
         maxTrackPoints = value;
@@ -591,19 +610,9 @@ class Settings {
     }
 
     (:settingsView,:menu2)
-    function setShowPoints(value as Boolean) as Void {
-        showPoints = value;
-        setValue("showPoints", showPoints);
-    }
-    (:settingsView,:menu2)
     function setDrawLineToClosestTrack(value as Boolean) as Void {
         drawLineToClosestTrack = value;
         setValue("drawLineToClosestTrack", drawLineToClosestTrack);
-    }
-    (:settingsView,:menu2)
-    function setIncludeDebugPageInOnScreenUi(value as Boolean) as Void {
-        includeDebugPageInOnScreenUi = value;
-        setValue("includeDebugPageInOnScreenUi", includeDebugPageInOnScreenUi);
     }
 
     (:settingsView,:menu2)
@@ -635,22 +644,29 @@ class Settings {
     }
 
     function routeColour(routeId as Number) as Number {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return defaultRouteColour;
-        }
+        return routeProp(routeId, "colour", defaultRouteColour) as Number;
+    }
 
-        return routes[routeIndex]["colour"] as Number;
+    function routeColour2(routeId as Number) as Number {
+        return routeProp(routeId, "colour2", DEFAULT_ROUTE_COLOUR_2) as Number;
     }
 
     // see oddity with route name and route loading new in context.newRoute
     function routeName(routeId as Number) as String {
+        return routeProp(routeId, "name", "") as String;
+    }
+
+    function routeProp(
+        routeId as Number,
+        key as String,
+        defaultVal as Number or String or Boolean
+    ) as Number or String or Boolean {
         var routeIndex = getRouteIndexById(routeId);
         if (routeIndex == null) {
-            return "";
+            return defaultVal;
         }
 
-        return routes[routeIndex]["name"] as String;
+        return routes[routeIndex][key] as Number or String or Boolean;
     }
 
     (:storage)
@@ -682,19 +698,11 @@ class Settings {
     }
 
     function routeReversed(routeId as Number) as Boolean {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return false;
-        }
-        return routes[routeIndex]["reversed"] as Boolean;
+        return routeProp(routeId, "reversed", false) as Boolean;
     }
 
     function routeStyle(routeId as Number) as Number {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return TRACK_STYLE_LINE;
-        }
-        return routes[routeIndex]["style"] as Number;
+        return routeProp(routeId, "style", DEFAULT_ROUTE_STYLE) as Number;
     }
 
     function routeTexture(routeId as Number) as Graphics.BitmapTexture or Number {
@@ -707,75 +715,75 @@ class Settings {
     }
 
     function routeWidth(routeId as Number) as Number {
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return 4;
-        }
-        return routes[routeIndex]["width"] as Number;
+        return routeProp(routeId, "width", DEFAULT_ROUTE_WIDTH) as Number;
     }
 
-    function setRouteColour(routeId as Number, value as Number) as Void {
-        ensureRouteId(routeId);
+    function ensureDefaultRoute(routeId as Number, name as String) as Void {
+        var routeIndex = getRouteIndexById(routeId);
+        if (routeIndex != null) {
+            routes[routeIndex] = defaultRoute(routeId, name);
+            routeTextures[routeIndex] = -1;
+            saveRoutes();
+            return;
+        }
+
+        if (routes.size() >= _routeMax) {
+            return;
+        }
+
+        routes.add(defaultRoute(routeId, name));
+        routeTextures.add(-1);
+        saveRoutes();
+    }
+
+    function simpleRouteProp(routeId as Number, key as String, value as Number or Boolean) as Void {
         var routeIndex = getRouteIndexById(routeId);
         if (routeIndex == null) {
             return;
         }
 
-        routes[routeIndex]["colour"] = value;
+        routes[routeIndex][key] = value;
         saveRoutes();
-        recomputeRouteTexture(routeIndex, routeStyle(routeId), routeWidth(routeId), value);
+        recomputeRouteTexture(routeIndex);
+    }
+
+    function setRouteColour(routeId as Number, value as Number) as Void {
+        simpleRouteProp(routeId, "colour", value);
+    }
+
+    function setRouteColour2(routeId as Number, value as Number) as Void {
+        simpleRouteProp(routeId, "colour2", value);
     }
 
     // see oddity with route name and route loading new in context.newRoute
     function setRouteName(routeId as Number, value as String) as Void {
-        ensureRouteId(routeId);
+        setRouteNameNoSideEffect(routeId, value);
+        setValueSideEffect();
+    }
+
+    function setRouteNameNoSideEffect(routeId as Number, value as String) as Void {
         var routeIndex = getRouteIndexById(routeId);
         if (routeIndex == null) {
             return;
         }
 
         routes[routeIndex]["name"] = value;
-        saveRoutes();
+        saveRoutesNoSideEffect();
     }
 
     function setRouteStyle(routeId as Number, value as Number) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["style"] = value;
-        saveRoutes();
-        recomputeRouteTexture(routeIndex, value, routeWidth(routeId), routeColour(routeId));
+        simpleRouteProp(routeId, "style", value);
     }
 
     function setRouteWidth(routeId as Number, value as Number) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["width"] = value;
-        saveRoutes();
-        recomputeRouteTexture(routeIndex, routeStyle(routeId), value, routeColour(routeId));
+        simpleRouteProp(routeId, "width", value);
     }
 
     function setRouteEnabled(routeId as Number, value as Boolean) as Void {
-        ensureRouteId(routeId);
-        var routeIndex = getRouteIndexById(routeId);
-        if (routeIndex == null) {
-            return;
-        }
-
-        routes[routeIndex]["enabled"] = value;
-        saveRoutes();
-        updateViewSettings(); // routes enabled/disabled can effect off track alerts and other view renderring
+        simpleRouteProp(routeId, "enabled", value);
     }
 
     function setRouteReversed(routeId as Number, value as Boolean) as Void {
-        ensureRouteId(routeId);
         var routeIndex = getRouteIndexById(routeId);
         if (routeIndex == null) {
             return;
@@ -794,6 +802,11 @@ class Settings {
     }
 
     function ensureRouteId(routeId as Number) as Void {
+        ensureRouteIdNoSideEffect(routeId);
+        setValueSideEffect();
+    }
+
+    function ensureRouteIdNoSideEffect(routeId as Number) as Void {
         var routeIndex = getRouteIndexById(routeId);
         if (routeIndex != null) {
             return;
@@ -803,17 +816,22 @@ class Settings {
             return;
         }
 
-        routes.add({
-            "routeId" => routeId,
-            "name" => routeName(routeId),
-            "enabled" => true,
-            "colour" => routeColour(routeId),
-            "reversed" => routeReversed(routeId),
-            "style" => routeStyle(routeId),
-            "width" => routeWidth(routeId),
-        });
+        routes.add(defaultRoute(routeId, ""));
         routeTextures.add(-1);
-        saveRoutes();
+        saveRoutesNoSideEffect();
+    }
+
+    function defaultRoute(routeId as Number, name as String) as Dictionary {
+        return {
+            "routeId" => routeId,
+            "name" => name,
+            "enabled" => true,
+            "colour" => defaultRouteColour,
+            "colour2" => DEFAULT_ROUTE_COLOUR_2,
+            "reversed" => false,
+            "style" => DEFAULT_ROUTE_STYLE,
+            "width" => DEFAULT_ROUTE_WIDTH,
+        };
     }
 
     function getRouteIndexById(routeId as Number) as Number? {
@@ -853,6 +871,7 @@ class Settings {
                     "name" => entry["name"] as String,
                     "enabled" => entry["enabled"] as Boolean,
                     "colour" => (entry["colour"] as Number).format("%X"), // this is why we have to copy it :(
+                    "colour2" => (entry["colour2"] as Number).format("%X"), // this is why we have to copy it :(
                     "reversed" => entry["reversed"] as Boolean,
                     "style" => entry["style"] as Number,
                     "width" => entry["width"] as Number,
@@ -881,22 +900,33 @@ class Settings {
         recomputeTrackTexture();
     }
 
-    function recomputeTrackTexture() as Void {
-        trackTexture = getTexture(trackStyle, trackWidth, trackWidth / 2, trackColour);
+    (:settingsView)
+    function setTrackColour2(value as Number) as Void {
+        trackColour2 = value;
+        setValue("trackColour2", trackColour2.format("%X"));
+        recomputeTrackTexture();
     }
 
-    function recomputeRouteTexture(
-        routeIndex as Number,
-        currentStyle as Number,
-        currentWidth as Number,
-        currentColour as Number
-    ) as Void {
+    function recomputeTrackTexture() as Void {
+        trackTexture = getTexture(
+            trackStyle,
+            trackWidth,
+            trackWidth / 2,
+            trackColour,
+            trackColour2
+        );
+    }
+
+    function recomputeRouteTexture(routeIndex as Number) as Void {
         padRouteTextures(routeIndex);
+        var route = routes[routeIndex];
+        var currentWidth = route["width"] as Number;
         routeTextures[routeIndex] = getTexture(
-            currentStyle,
+            route["style"] as Number,
             currentWidth,
             currentWidth / 2,
-            currentColour
+            route["colour"] as Number,
+            route["colour2"] as Number
         );
     }
 
@@ -957,19 +987,9 @@ class Settings {
         setValue("drawLineToClosestPoint", drawLineToClosestPoint);
     }
     (:settingsView,:menu2)
-    function toggleShowPoints() as Void {
-        showPoints = !showPoints;
-        setValue("showPoints", showPoints);
-    }
-    (:settingsView,:menu2)
     function toggleDrawLineToClosestTrack() as Void {
         drawLineToClosestTrack = !drawLineToClosestTrack;
         setValue("drawLineToClosestTrack", drawLineToClosestTrack);
-    }
-    (:settingsView,:menu2)
-    function toggleIncludeDebugPageInOnScreenUi() as Void {
-        includeDebugPageInOnScreenUi = !includeDebugPageInOnScreenUi;
-        setValue("includeDebugPageInOnScreenUi", includeDebugPageInOnScreenUi);
     }
     (:settingsView,:menu2)
     function toggleDrawHitBoxes() as Void {
@@ -1012,18 +1032,36 @@ class Settings {
         setValue("routesEnabled", routesEnabled);
     }
 
+    function getNextMode() as Number {
+        // does not handle dupes, but thats the user error if they do that
+        if (modeDisplayOrder.size() < 1) {
+            // they want to stay locked to the current mode thats picked
+            return mode;
+        }
+
+        var curentModeIndex = modeDisplayOrder.indexOf(mode);
+        if (curentModeIndex == -1 || curentModeIndex == modeDisplayOrder.size() - 1) {
+            // not found, or we need to go back to the star of the array
+            return modeDisplayOrder[0];
+        }
+
+        return modeDisplayOrder[curentModeIndex + 1];
+    }
+
     function nextMode() as Void {
         // logT("mode cycled");
-        // could just add one and check if over MODE_MAX?
-        mode++;
-        if (mode >= MODE_MAX) {
-            mode = MODE_NORMAL;
-        }
+        mode = getNextMode();
 
-        if (mode == MODE_DEBUG && !includeDebugPageInOnScreenUi) {
-            nextMode();
+        // try 5 times to get a good mode, if we can't bail out, better than an infinite while loop
+        // helps if users do something like 1,2,3,40,5,6 it will ship over the bad '40' mode
+        for (var i = 0; i < 5; ++i) {
+            if (mode >= 0 && mode < MODE_MAX) {
+                // not the best validation check, but modes are continuous for now
+                // if we ever have gaps we will need to check for those too
+                break;
+            }
+            mode = getNextMode();
         }
-
         setMode(mode);
     }
 
@@ -1107,19 +1145,33 @@ class Settings {
     //
     // Error: Unhandled Exception
     // Exception: UnexpectedTypeException: Expected Number/Float/Long/Double/Char, given null/Number
-    function parseColour(key as String, defaultValue as Number) as Number {
+    function parseColourTransparency(
+        key as String,
+        defaultValue as Number,
+        allowTransparent as Boolean
+    ) as Number {
         try {
-            return parseColourRaw(key, Application.Properties.getValue(key), defaultValue);
+            return parseColourRaw(
+                key,
+                Application.Properties.getValue(key),
+                defaultValue,
+                allowTransparent
+            );
         } catch (e) {
             logE("Error parsing float: " + key);
         }
         return defaultValue;
     }
 
+    function parseColour(key as String, defaultValue as Number) as Number {
+        return parseColourTransparency(key, defaultValue, false);
+    }
+
     static function parseColourRaw(
         key as String,
         colourString as PropertyValueType,
-        defaultValue as Number
+        defaultValue as Number,
+        allowTransparent as Boolean
     ) as Number {
         try {
             if (colourString == null) {
@@ -1156,7 +1208,7 @@ class Settings {
 
                 // calling tonumber breaks - because its out of range, but we need to set the alpha bits
                 var number = (long & 0xffffffffl).toNumber();
-                if (number == 0xffffffff) {
+                if (number == 0xffffffff && !allowTransparent) {
                     // -1 is transparent and will not render
                     number = 0xfeffffff;
                 }
@@ -1207,6 +1259,84 @@ class Settings {
             return defaultValue;
         } catch (e) {
             logE("Error parsing number: " + key + " " + value);
+        }
+        return defaultValue;
+    }
+
+    static function encodeCSV(value as Array<ReturnType>) as String {
+        var result = "";
+        var size = value.size();
+
+        for (var i = 0; i < size; ++i) {
+            // Convert element to string (works for both Number and String)
+            result += value[i].toString();
+
+            // Add a comma after every element except the last one
+            if (i < size - 1) {
+                result += ",";
+            }
+        }
+
+        return result;
+    }
+
+    typedef ReturnType as Number /* or String*/;
+    function parseCSVString(
+        key as String,
+        defaultValue as Array<ReturnType>,
+        callback as (Method(key as String, value as PropertyValueType) as ReturnType)
+    ) as Array<ReturnType> {
+        try {
+            return parseCSVStringRaw(
+                key,
+                Application.Properties.getValue(key),
+                defaultValue,
+                callback
+            );
+        } catch (e) {
+            logE("Error parsing float: " + key);
+        }
+        return defaultValue;
+    }
+
+    function parseCSVStringRaw(
+        key as String,
+        value as PropertyValueType,
+        defaultValue as Array<ReturnType>,
+        callback as (Method(key as String, value as PropertyValueType) as ReturnType)
+    ) as Array<ReturnType> {
+        try {
+            if (value == null) {
+                return defaultValue;
+            }
+
+            if (value instanceof String) {
+                var string = value;
+                var splitter = ",";
+                var result = [] as Array<ReturnType>;
+                var location = string.find(splitter) as Number?;
+
+                while (location != null) {
+                    result.add(callback.invoke(key, string.substring(0, location) as String));
+
+                    // Truncate the string to look for the next splitter
+                    string =
+                        string.substring(location + splitter.length(), string.length()) as String;
+
+                    location = string.find(splitter);
+                }
+
+                // Add the remaining part of the string if it's not empty
+                if (string.length() > 0) {
+                    result.add(callback.invoke(key, string));
+                }
+
+                return result;
+            }
+
+            return defaultValue;
+        } catch (e) {
+            logE("Error parsing string: " + key + " " + value);
         }
         return defaultValue;
     }
@@ -1380,14 +1510,14 @@ class Settings {
                 for (var j = 0; j < expectedKeys.size(); ++j) {
                     var thisKey = expectedKeys[j];
                     var thisParser = parsers[j];
-                    if (!entry.hasKey(thisKey)) {
-                        return defaultValue;
+                    // back compat, if the keys are missing we need to default them
+                    // old companion app will send route entries without the new keys
+                    var keysValue = null;
+                    if (entry.hasKey(thisKey)) {
+                        keysValue = entry[thisKey];
                     }
 
-                    entryOut[thisKey] = thisParser.invoke(
-                        key + "." + i + "." + thisKey,
-                        entry[thisKey]
-                    );
+                    entryOut[thisKey] = thisParser.invoke(key + "." + i + "." + thisKey, keysValue);
                 }
                 result.add(entryOut);
             }
@@ -1399,70 +1529,20 @@ class Settings {
         return defaultValue;
     }
 
-    function resetDefaults() as Void {
+    (:settingsView)
+    function resetDefaultsFromMenu() as Void {
+        // calling resetDefaults puts teh new values into our current state
+        // we need to load
+        // then we need to load them all back
+        resetDefaultsInStorage();
+        onSettingsChanged(); // reload anything that has changed
+    }
+
+    function resetDefaultsInStorage() as Void {
         logT("Resetting settings to default values");
-        // clear the flag first thing in case of crash we do not want to try clearing over and over
-        setValue("resetDefaults", false);
-
-        // note: this pulls the defaults from whatever we have at the top of the file these may differ from the defaults in properties.xml
+        // resetDefaults flag is cleared by the asDict method
         var defaultSettings = new Settings();
-        turnAlertTimeS = defaultSettings.turnAlertTimeS;
-        minTurnAlertDistanceM = defaultSettings.minTurnAlertDistanceM;
-        maxTrackPoints = defaultSettings.maxTrackPoints;
-        trackStyle = defaultSettings.trackStyle;
-        trackWidth = defaultSettings.trackWidth;
-        showDirectionPointTextUnderIndex = defaultSettings.showDirectionPointTextUnderIndex;
-        centerUserOffsetY = defaultSettings.centerUserOffsetY;
-        mapMoveScreenSize = defaultSettings.mapMoveScreenSize;
-        drawLineToClosestPoint = defaultSettings.drawLineToClosestPoint;
-        showPoints = defaultSettings.showPoints;
-        drawLineToClosestTrack = defaultSettings.drawLineToClosestTrack;
-        includeDebugPageInOnScreenUi = defaultSettings.includeDebugPageInOnScreenUi;
-        drawHitBoxes = defaultSettings.drawHitBoxes;
-        showDirectionPoints = defaultSettings.showDirectionPoints;
-        displayLatLong = defaultSettings.displayLatLong;
-        trackColour = defaultSettings.trackColour;
-        defaultRouteColour = defaultSettings.defaultRouteColour;
-        elevationColour = defaultSettings.elevationColour;
-        userColour = defaultSettings.userColour;
-        metersAroundUser = defaultSettings.metersAroundUser;
-        zoomAtPaceMode = defaultSettings.zoomAtPaceMode;
-        zoomAtPaceSpeedMPS = defaultSettings.zoomAtPaceSpeedMPS;
-        useTrackAsHeadingSpeedMPS = defaultSettings.useTrackAsHeadingSpeedMPS;
-        topDataType = defaultSettings.topDataType;
-        bottomDataType = defaultSettings.bottomDataType;
-        minTrackPointDistanceM = defaultSettings.minTrackPointDistanceM;
-        trackPointReductionMethod = defaultSettings.trackPointReductionMethod;
-        dataFieldTextSize = defaultSettings.dataFieldTextSize;
-        uiMode = defaultSettings.uiMode;
-        elevationMode = defaultSettings.elevationMode;
-        alertType = defaultSettings.alertType;
-        renderMode = defaultSettings.renderMode;
-        fixedLatitude = defaultSettings.fixedLatitude;
-        fixedLongitude = defaultSettings.fixedLongitude;
-        routes = defaultSettings.routes;
-        routesEnabled = defaultSettings.routesEnabled;
-        displayRouteNames = defaultSettings.displayRouteNames;
-        enableOffTrackAlerts = defaultSettings.enableOffTrackAlerts;
-        offTrackWrongDirection = defaultSettings.offTrackWrongDirection;
-        drawCheverons = defaultSettings.drawCheverons;
-        offTrackAlertsDistanceM = defaultSettings.offTrackAlertsDistanceM;
-        offTrackAlertsMaxReportIntervalS = defaultSettings.offTrackAlertsMaxReportIntervalS;
-        offTrackCheckIntervalS = defaultSettings.offTrackCheckIntervalS;
-        _routeMax = defaultSettings.routeMax();
-        normalModeColour = defaultSettings.normalModeColour;
-        uiColour = defaultSettings.uiColour;
-        debugColour = defaultSettings.debugColour;
-
-        // raw write the settings to disk
-        var dict = asDict();
-        saveSettings(dict);
-
-        // purge storage, all routes and caches
-        Application.Storage.clearValues();
-        purgeRoutesFromContext();
-        updateCachedValues();
-        updateViewSettings();
+        saveSettings(defaultSettings.asDict());
     }
 
     function asDict() as Dictionary<String, PropertyValueType> {
@@ -1474,6 +1554,7 @@ class Settings {
             ({
                 "turnAlertTimeS" => turnAlertTimeS,
                 "minTurnAlertDistanceM" => minTurnAlertDistanceM,
+                "modeDisplayOrder" => encodeCSV(modeDisplayOrder),
                 "maxTrackPoints" => maxTrackPoints,
                 "trackStyle" => trackStyle,
                 "trackWidth" => trackWidth,
@@ -1483,13 +1564,12 @@ class Settings {
                 "recalculateIntervalS" => recalculateIntervalS,
                 "mode" => mode,
                 "drawLineToClosestPoint" => drawLineToClosestPoint,
-                "showPoints" => showPoints,
                 "drawLineToClosestTrack" => drawLineToClosestTrack,
-                "includeDebugPageInOnScreenUi" => includeDebugPageInOnScreenUi,
                 "drawHitBoxes" => drawHitBoxes,
                 "showDirectionPoints" => showDirectionPoints,
                 "displayLatLong" => displayLatLong,
                 "trackColour" => trackColour.format("%X"),
+                "trackColour2" => trackColour2.format("%X"),
                 "defaultRouteColour" => defaultRouteColour.format("%X"),
                 "elevationColour" => elevationColour.format("%X"),
                 "userColour" => userColour.format("%X"),
@@ -1554,14 +1634,10 @@ class Settings {
         // assert the map choice when we load the settings, as it may have been changed when the app was not running and onSettingsChanged might not be called
         loadSettings();
         setMinTrackPointDistanceMSideEffect();
+        recomputeTrackTexture();
         for (var i = 0; i < routes.size(); ++i) {
             var routeId = routes[i]["routeId"] as Number;
-            recomputeRouteTexture(
-                i,
-                routeStyle(routeId),
-                routeWidth(routeId),
-                routeColour(routeId)
-            );
+            recomputeRouteTexture(i);
         }
     }
 
@@ -1580,13 +1656,13 @@ class Settings {
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
         mode = parseNumber("mode", mode);
-        drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
-        showPoints = parseBool("showPoints", showPoints);
-        drawLineToClosestTrack = parseBool("drawLineToClosestTrack", drawLineToClosestTrack);
-        includeDebugPageInOnScreenUi = parseBool(
-            "includeDebugPageInOnScreenUi",
-            includeDebugPageInOnScreenUi
+        modeDisplayOrder = parseCSVString(
+            "modeDisplayOrder",
+            modeDisplayOrder,
+            method(:defaultNumberParser)
         );
+        drawLineToClosestPoint = parseBool("drawLineToClosestPoint", drawLineToClosestPoint);
+        drawLineToClosestTrack = parseBool("drawLineToClosestTrack", drawLineToClosestTrack);
         drawHitBoxes = parseBool("drawHitBoxes", drawHitBoxes);
         showDirectionPoints = parseBool("showDirectionPoints", showDirectionPoints);
         displayLatLong = parseBool("displayLatLong", displayLatLong);
@@ -1596,6 +1672,7 @@ class Settings {
         drawCheverons = parseBool("drawCheverons", drawCheverons);
         routesEnabled = parseBool("routesEnabled", routesEnabled);
         trackColour = parseColour("trackColour", trackColour);
+        trackColour2 = parseColourTransparency("trackColour2", trackColour2, true);
         defaultRouteColour = parseColour("defaultRouteColour", defaultRouteColour);
         elevationColour = parseColour("elevationColour", elevationColour);
         userColour = parseColour("userColour", userColour);
@@ -1631,12 +1708,13 @@ class Settings {
         setFixedPositionWithoutUpdate(fixedLatitude, fixedLongitude);
         routes = getArraySchema(
             "routes",
-            ["routeId", "name", "enabled", "colour", "reversed", "style", "width"],
+            ["routeId", "name", "enabled", "colour", "colour2", "reversed", "style", "width"],
             [
                 method(:defaultNumberParser),
                 method(:emptyString),
                 method(:defaultFalse),
                 method(:defaultColourParser),
+                method(:defaultColourParserTransparent),
                 method(:defaultFalse),
                 method(:defaultNumberParser),
                 method(:defaultNumberParser4),
@@ -1659,12 +1737,12 @@ class Settings {
         var haveDoneFirstLoadSetup = Application.Properties.getValue("haveDoneFirstLoadSetup");
         if (haveDoneFirstLoadSetup instanceof Boolean && !haveDoneFirstLoadSetup) {
             setValue("haveDoneFirstLoadSetup", true);
-            resetDefaults(); // pulls from our defaults
+            resetDefaultsInStorage(); // puts the default values into storage
         }
 
         var resetDefaults = Application.Properties.getValue("resetDefaults") as Boolean;
         if (resetDefaults) {
-            resetDefaults();
+            resetDefaultsInStorage(); // puts the default values into storage
             return;
         }
 
@@ -1708,7 +1786,11 @@ class Settings {
     }
 
     function defaultColourParser(key as String, value as PropertyValueType) as Number {
-        return parseColourRaw(key, value, Graphics.COLOR_RED);
+        return parseColourRaw(key, value, Graphics.COLOR_RED, false);
+    }
+
+    function defaultColourParserTransparent(key as String, value as PropertyValueType) as Number {
+        return parseColourRaw(key, value, Graphics.COLOR_TRANSPARENT, true);
     }
 
     function onSettingsChanged() as Void {
@@ -1720,6 +1802,7 @@ class Settings {
         var oldTrackStyle = trackStyle;
         var oldTrackWidth = trackWidth;
         var oldTrackColour = trackColour;
+        var oldTrackColour2 = trackColour2;
         loadSettings();
         // route settins do not work because garmins setting spage cannot edit them
         // when any property is modified, so we have to explain to users not to touch the settings, but we cannot because it looks
@@ -1742,12 +1825,14 @@ class Settings {
                 var currentStyle = currentRouteEntry["style"] as Number;
                 var currentWidth = currentRouteEntry["width"] as Number;
                 var currentColour = currentRouteEntry["colour"] as Number;
+                var currentColour2 = currentRouteEntry["colour2"] as Number;
                 if (
                     oldRouteEntry["style"] != currentStyle ||
                     oldRouteEntry["width"] != currentWidth ||
-                    oldRouteEntry["colour"] != currentColour
+                    oldRouteEntry["colour"] != currentColour ||
+                    oldRouteEntry["colour2"] != currentColour2
                 ) {
-                    recomputeRouteTexture(routeIndex, currentStyle, currentWidth, currentColour);
+                    recomputeRouteTexture(routeIndex);
                 }
 
                 continue;
@@ -1772,7 +1857,8 @@ class Settings {
         if (
             oldTrackStyle != trackStyle ||
             oldTrackWidth != trackWidth ||
-            oldTrackColour != trackColour
+            oldTrackColour != trackColour ||
+            oldTrackColour2 != trackColour2
         ) {
             recomputeTrackTexture();
         }
