@@ -270,53 +270,9 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
         if (Communications has :registerForPhoneAppMessages) {
             logB("registering for phone messages in onTemporalEvent");
             Communications.registerForPhoneAppMessages(method(:onPhoneAppMessage));
-        } else if (Communications has :setMailboxListener) {
-            // note this is from the 4.2.4 sdk samples im not sure if its needed
-            // it still does not seem to work in the sim for the edge_1000 device
-            // approachs62 is a 3.0.0 device and even it has registerForPhoneAppMessages thats meant to be in since api 1.4.0
-            // for some reason the sim edge_1000 2.4 device does not support it
-            logB("setting mailbox listener in onTemporalEvent");
-            Communications.setMailboxListener(method(:onMail));
         }
 
         Background.exit(null);
-    }
-
-    public function onMail(mailIter as MailboxIterator) as Void {
-        logB("Background Service: Received mail.");
-        // note this is from the 4.2.4 sdk samples
-        var mail = mailIter.next();
-
-        var oldData = Background.getBackgroundData();
-        if (!(oldData instanceof Array)) {
-            oldData = [] as Array;
-        }
-
-        while (mail != null) {
-            if (handlePhoneMessage(mail as Array?)) {
-                Communications.emptyMailbox();
-                return;
-            } else {
-                addWithLimit(oldData as Array, mail as Array);
-            }
-
-            // todo limit this while loop to only run for the first mail items
-            // the background process will get killed if we run for too long, so not a huge concern
-            mail = mailIter.next();
-        }
-
-        Communications.emptyMailbox();
-        try {
-            Background.exit(oldData as Application.PropertyValueType);
-        } catch (e instanceof Background.ExitDataSizeLimitException) {
-            if (oldData instanceof Array && oldData.size() > 0) {
-                var lastItem = oldData[oldData.size() - 1];
-                var newData = [lastItem];
-                Background.exit(newData as Application.PropertyValueType); // just exit with the last message
-            } else {
-                Background.exit([]); // clear it out its too big and also has no data in it?
-            }
-        }
     }
 
     private function addWithLimit(oldData as Array, data as Array) as Void {
