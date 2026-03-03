@@ -77,9 +77,9 @@ Configure which screen is displayed for the datafield.
 ![](images/settings/mapmove.png)    
 3 - Debug - A debug screen that may be removed in future releases. Shows the current state of the app.  
 ![](images/settings/debug.png)  
-4 - map move zoom (similar to map move page, but only allows zooming in and out (larger hitbox area)
-5 - map move up/down (similar to map move page, but only allows moving up and down (larger hitbox area)
-6 - map move left/right (similar to map move page, but only allows moving left and right (larger hitbox area)
+4 - Map Move Zoom - Similar to map move page, but only allows zooming in and out (larger hitbox area)  
+5 - Map Move Up/Down - Similar to map move page, but only allows moving up and down (larger hitbox area)  
+6 - Map Move Left/Right - Similar to map move page, but only allows moving left and right (larger hitbox area)  
 
 ### Display Lat/Long
 
