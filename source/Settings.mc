@@ -76,11 +76,13 @@ class Settings {
         updateCachedValues();
     }
 
+    (:settingsView,:menu2)
     function setZoomAtPaceMode(_zoomAtPaceMode as Number) as Void {
         zoomAtPaceMode = _zoomAtPaceMode;
         setValue("b", zoomAtPaceMode);
     }
 
+    (:settingsView,:menu2)
     function setZoomAtPaceSpeedMPS(mps as Float) as Void {
         zoomAtPaceSpeedMPS = mps;
         setValue("e", zoomAtPaceSpeedMPS);
