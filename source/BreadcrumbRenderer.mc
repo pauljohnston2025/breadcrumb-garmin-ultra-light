@@ -22,6 +22,9 @@ class BreadcrumbRenderer {
     var settings as Settings;
     var _cachedValues as CachedValues;
     private var _distanceAccumulator as Float = 0.0f;
+    var _lastGradeAlt as Float = 0.0f;
+    var _lastGradeDist as Float = 0.0f;
+    var _lastGrade as Float = 0.0f;
 
     // units in mm (float/int)
     const SCALE_KEYS as Array<Number> = [
@@ -235,6 +238,131 @@ class BreadcrumbRenderer {
             renderPaceMetric(dc, y, info.averageSpeed);
         } else if (type == DATA_TYPE_CURRENT_PACE) {
             renderPaceMetric(dc, y, info.currentSpeed);
+        } else if (type == DATA_TYPE_WALL_CLOCK) {
+            var clockTime = System.getClockTime();
+            var hour = clockTime.hour;
+            var timeStr = "";
+            if (settings.is24Hour) {
+                // 24-hour format: 0-23
+                timeStr = Lang.format("$1$:$2$", [
+                    hour.format("%02d"),
+                    clockTime.min.format("%02d"),
+                ]);
+            } else {
+                // 12-hour format: 1-12
+                hour = hour % 12;
+                hour = hour == 0 ? 12 : hour; // Convert 0 to 12
+                timeStr = Lang.format("$1$:$2$", [hour, clockTime.min.format("%02d")]);
+            }
+            renderTextMetric(dc, y, timeStr);
+        } else if (type == DATA_TYPE_CURRENT_LAP_TIME) {
+            if (info.elapsedTime != null) {
+                var lapTime = (info.elapsedTime as Number) - _cachedValues._lapStartTime;
+                renderTimeMetric(dc, y, lapTime);
+            } else {
+                renderTimeMetric(dc, y, null);
+            }
+        } else if (type == DATA_TYPE_CURRENT_LAP_PACE) {
+            if (info.elapsedTime != null && info.elapsedDistance != null) {
+                var lapTime = (info.elapsedTime as Number) - _cachedValues._lapStartTime;
+                var lapDist = (info.elapsedDistance as Float) - _cachedValues._lapStartDistance;
+
+                // Avoid division by zero and ensure enough data for a meaningful pace
+                if (lapDist > 1.0f) {
+                    var speedMps = lapDist / (lapTime / 1000.0f);
+                    renderPaceMetric(dc, y, speedMps);
+                } else {
+                    renderPaceMetric(dc, y, null);
+                }
+            } else {
+                renderPaceMetric(dc, y, null);
+            }
+        } else if (type == DATA_TYPE_LAST_LAP_TIME) {
+            // Pass the duration to your existing render function
+            renderTimeMetric(dc, y, _cachedValues._lastLapDuration);
+        } else if (type == DATA_TYPE_LAST_LAP_PACE) {
+            if (_cachedValues._lastLapDistance > 0) {
+                var speedMps =
+                    _cachedValues._lastLapDistance / (_cachedValues._lastLapDuration / 1000.0f);
+                renderPaceMetric(dc, y, speedMps);
+            } else {
+                renderPaceMetric(dc, y, null);
+            }
+        } else if (type == DATA_TYPE_GRADE) {
+            if (info.altitude != null && info.elapsedDistance != null) {
+                var currentAlt = info.altitude as Float;
+                var currentDist = info.elapsedDistance as Float;
+
+                // Only update the calculation if we have traveled 10 meters
+                // since the last calculation to smooth out noise
+                if (currentDist - _lastGradeDist > 10.0f) {
+                    var deltaAlt = currentAlt - _lastGradeAlt;
+                    var deltaDist = currentDist - _lastGradeDist;
+
+                    // Calculate grade as (rise / run) * 100
+                    _lastGrade = (deltaAlt / deltaDist) * 100.0f;
+
+                    // Update the markers for the next calculation
+                    _lastGradeAlt = currentAlt;
+                    _lastGradeDist = currentDist;
+                }
+
+                renderTextMetric(dc, y, _lastGrade.format("%.1f") + "%");
+            } else {
+                renderTextMetric(dc, y, "---");
+            }
+        } else if (type == DATA_TYPE_HEADING) {
+            var degrees = Math.toDegrees(_cachedValues.rotationRad as Float);
+            if (degrees < 0) {
+                degrees += 360;
+            }
+
+            var directions = [
+                "N",
+                "NNE",
+                "NE",
+                "ENE",
+                "E",
+                "ESE",
+                "SE",
+                "SSE",
+                "S",
+                "SSW",
+                "SW",
+                "WSW",
+                "W",
+                "WNW",
+                "NW",
+                "NNW",
+            ];
+
+            // We add 0.5 to handle the rounding offset for "North" correctly
+            var index = (degrees / 22.5 + 0.5).toNumber() % 16;
+            var cardinal = directions[index];
+
+            renderTextMetric(dc, y, degrees.format("%d") + "° | " + cardinal);
+        } else if (type == DATA_TYPE_GPS_ACCURACY) {
+            var accuracy = info.currentLocationAccuracy;
+            var label = "No GPS";
+            if (accuracy == Position.QUALITY_LAST_KNOWN) {
+                label = "Last Known";
+            } else if (accuracy == Position.QUALITY_POOR) {
+                label = "Poor";
+            } else if (accuracy == Position.QUALITY_USABLE) {
+                label = "Usable";
+            } else if (accuracy == Position.QUALITY_GOOD) {
+                label = "Good";
+            }
+            renderTextMetric(dc, y, label);
+        } else if (type == DATA_TYPE_CURRENT_LAP_DISTANCE) {
+            if (info.elapsedDistance != null) {
+                var lapDist = (info.elapsedDistance as Float) - _cachedValues._lapStartDistance;
+                renderDistanceMetric(dc, y, lapDist);
+            } else {
+                renderDistanceMetric(dc, y, null);
+            }
+         } else {
+            renderTextMetric(dc, y, "INVALID");
         }
     }
 
@@ -290,7 +418,7 @@ class BreadcrumbRenderer {
         var speedConverted = speedMps;
         var suffix = "k/h";
 
-        if (settings.distanceImperialUnits) {
+        if (settings.paceImperialUnits) {
             speedConverted = speedMps * 2.23694f;
             suffix = "m/h";
         } else {
@@ -310,7 +438,7 @@ class BreadcrumbRenderer {
         var secondsPerUnit;
         var suffix = "/km";
 
-        if (settings.distanceImperialUnits) {
+        if (settings.paceImperialUnits) {
             secondsPerUnit = 1609.34f / speedMps;
             suffix = "/mi";
         } else {
@@ -1951,8 +2079,8 @@ class BreadcrumbRenderer {
         return _clearRouteProgress != 0 && current != 3;
     }
 
-    function returnToUser() as Void {
-        _cachedValues.returnToUser();
+    function returnToUser() as Boolean {
+        return _cachedValues.returnToUser();
     }
 
     // todo move most of these into a ui class

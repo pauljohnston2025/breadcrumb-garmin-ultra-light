@@ -267,6 +267,14 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         _breadcrumbContext.track.onStartResume();
     }
 
+    function onTimerStop() as Void {
+        _breadcrumbContext.track.onTimerStop();
+    }
+
+    function onTimerLap() as Void {
+        _cachedValues.onTimerLap();
+    }
+
     function compute(info as Activity.Info) as Void {
         try {
             actualCompute(info);
@@ -624,7 +632,14 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 routeWidth
             );
             if (settings.drawCheverons) {
-                renderer.renderTrackCheverons(dc, route, routeColour, routeStyle, routeTexture, routeWidth);
+                renderer.renderTrackCheverons(
+                    dc,
+                    route,
+                    routeColour,
+                    routeStyle,
+                    routeTexture,
+                    routeWidth
+                );
             }
             if (settings.showDirectionPoints || settings.showDirectionPointTextUnderIndex > 0) {
                 renderer.renderTrackDirectionPoints(dc, route, Graphics.COLOR_PURPLE);
@@ -670,7 +685,14 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 routeWidth
             );
             if (settings.drawCheverons) {
-                renderer.renderTrackCheveronsUnrotated(dc, route, routeColour, routeStyle, routeTexture, routeWidth);
+                renderer.renderTrackCheveronsUnrotated(
+                    dc,
+                    route,
+                    routeColour,
+                    routeStyle,
+                    routeTexture,
+                    routeWidth
+                );
             }
             if (settings.showDirectionPoints || settings.showDirectionPointTextUnderIndex > 0) {
                 renderer.renderTrackDirectionPointsUnrotated(dc, route, Graphics.COLOR_PURPLE);
@@ -798,6 +820,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             Graphics.TEXT_JUSTIFY_CENTER
         );
         y += spacing;
+
         var distToLastStr = "NA";
         var lastPoint = _breadcrumbContext.track.lastPoint();
         var pointWeLeftTrack = offTrackInfo.pointWeLeftTrack;

@@ -35,28 +35,32 @@ enum /*TrackPointReductionMethod*/ {
 }
 
 enum /*DataType*/ {
-    DATA_TYPE_NONE,
-    DATA_TYPE_SCALE,
-    DATA_TYPE_ALTITUDE,
-    DATA_TYPE_AVERAGE_HEART_RATE,
-    DATA_TYPE_AVERAGE_SPEED,
-    DATA_TYPE_CURRENT_HEART_RATE,
-    DATA_TYPE_CURRENT_SPEED,
-    DATA_TYPE_ELAPSED_DISTANCE,
-    DATA_TYPE_ELAPSED_TIME,
-    DATA_TYPE_TOTAL_ASCENT,
-    DATA_TYPE_TOTAL_DESCENT,
-    DATA_TYPE_AVERAGE_PACE,
-    DATA_TYPE_CURRENT_PACE,
+    DATA_TYPE_NONE = 0,
+    DATA_TYPE_SCALE = 1,
+    DATA_TYPE_ALTITUDE = 2,
+    DATA_TYPE_AVERAGE_HEART_RATE = 3,
+    DATA_TYPE_AVERAGE_SPEED = 4,
+    DATA_TYPE_CURRENT_HEART_RATE = 5,
+    DATA_TYPE_CURRENT_SPEED = 6,
+    DATA_TYPE_ELAPSED_DISTANCE = 7,
+    DATA_TYPE_ELAPSED_TIME = 8,
+    DATA_TYPE_TOTAL_ASCENT = 9,
+    DATA_TYPE_TOTAL_DESCENT = 10,
+    DATA_TYPE_AVERAGE_PACE = 11,
+    DATA_TYPE_CURRENT_PACE = 12,
+    DATA_TYPE_WALL_CLOCK = 13,
+    DATA_TYPE_CURRENT_LAP_TIME = 14,
+    DATA_TYPE_CURRENT_LAP_PACE = 15,
+    DATA_TYPE_LAST_LAP_TIME = 16,
+    DATA_TYPE_LAST_LAP_PACE = 17,
+    DATA_TYPE_GRADE = 18,
+    DATA_TYPE_HEADING = 19,
+    DATA_TYPE_GPS_ACCURACY = 20,
+    DATA_TYPE_CURRENT_LAP_DISTANCE = 21,
 
     // other metrics that might be good
     // most of these are inbuilt garmin ones (so could easily be added to a second data screen)
     // Ill add them if users ask, but currently only have requests for pace https://github.com/pauljohnston2025/breadcrumb-garmin/issues/8
-    // anything to do with laps I will need to store timestamps when onTimerLap() is called, and probably store all the activity info? or maybe just store distance/and timestamp?
-    // time of day - wall clock
-    // last lap time
-    // current lap time
-
     DATA_TYPE_MAX,
 }
 
@@ -259,6 +263,9 @@ class Settings {
         System.getDeviceSettings().distanceUnits == System.UNIT_STATUTE;
     var elevationImperialUnits as Boolean =
         System.getDeviceSettings().elevationUnits == System.UNIT_STATUTE;
+    var paceImperialUnits as Boolean =
+        System.getDeviceSettings().paceUnits == System.UNIT_STATUTE;
+    var is24Hour as Boolean = System.getDeviceSettings().is24Hour as Boolean;
     var trackTexture as Graphics.BitmapTexture or Number = -1; // -1 is to say use colour instead
     var routeTextures as Array<Graphics.BitmapTexture or Number> = []; // -1 is to say use colour instead
 
@@ -384,11 +391,13 @@ class Settings {
         updateRouteSettings();
     }
 
+    (:settingsView,:menu2)
     function setZoomAtPaceMode(_zoomAtPaceMode as Number) as Void {
         zoomAtPaceMode = _zoomAtPaceMode;
         setValue("zoomAtPaceMode", zoomAtPaceMode);
     }
 
+    (:settingsView,:menu2)
     function setZoomAtPaceSpeedMPS(mps as Float) as Void {
         zoomAtPaceSpeedMPS = mps;
         setValue("zoomAtPaceSpeedMPS", zoomAtPaceSpeedMPS);
@@ -528,7 +537,97 @@ class Settings {
         setValue("showDirectionPointTextUnderIndex", showDirectionPointTextUnderIndex);
     }
 
+<<<<<<< HEAD
     (:settingsView,:menu2)
+=======
+    (:settingsView)
+    function setErrorTileTTLS(value as Number) as Void {
+        errorTileTTLS = value;
+        setValue("errorTileTTLS", errorTileTTLS);
+        tileServerPropChanged();
+    }
+
+    (:settingsView)
+    function setFullTileSize(value as Number) as Void {
+        setFullTileSizeWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setFullTileSizeWithoutSideEffect(value as Number) as Void {
+        fullTileSize = value;
+        Application.Properties.setValue("fullTileSize", fullTileSize);
+        tileServerPropChanged();
+    }
+
+    (:settingsView)
+    function setScaledTileSize(value as Number) as Void {
+        setScaledTileSizeWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setScaledTileSizeWithoutSideEffect(value as Number) as Void {
+        scaledTileSize = value;
+        if (useDrawBitmap) {
+            scaledTileSize = fullTileSize;
+        }
+        Application.Properties.setValue("scaledTileSize", scaledTileSize);
+        if (tileUrl.find(COMPANION_APP_TILE_URL_MATCH) == null) {
+            setTileSizeWithoutSideEffect(scaledTileSize);
+        }
+        tileServerPropChanged();
+    }
+
+    (:settingsView)
+    function setPackingFormat(value as Number) as Void {
+        setPackingFormatWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setPackingFormatWithoutSideEffect(value as Number) as Void {
+        packingFormat = value;
+        Application.Properties.setValue("packingFormat", packingFormat);
+        tileServerPropChanged();
+    }
+
+    (:settingsView)
+    function setUseDrawBitmap(value as Boolean) as Void {
+        setUseDrawBitmapWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setUseDrawBitmapWithoutSideEffect(value as Boolean) as Void {
+        useDrawBitmap = value;
+        Application.Properties.setValue("useDrawBitmap", useDrawBitmap);
+        if (useDrawBitmap) {
+            setScaledTileSizeWithoutSideEffect(fullTileSize);
+        }
+        tileServerPropChanged();
+    }
+
+    (:settingsView)
+    function setTileLayerMax(value as Number) as Void {
+        setTileLayerMaxWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setTileLayerMaxWithoutSideEffect(value as Number) as Void {
+        tileLayerMax = value;
+        Application.Properties.setValue("tileLayerMax", tileLayerMax);
+    }
+
+    (:settingsView)
+    function setTileLayerMin(value as Number) as Void {
+        setTileLayerMinWithoutSideEffect(value);
+        setValueSideEffect();
+    }
+    function setTileLayerMinWithoutSideEffect(value as Number) as Void {
+        tileLayerMin = value;
+        Application.Properties.setValue("tileLayerMin", tileLayerMin);
+    }
+
+    (:settingsView)
+    function setDisableMapsFailureCount(value as Number) as Void {
+        disableMapsFailureCount = value;
+        setValue("disableMapsFailureCount", disableMapsFailureCount);
+    }
+
+    (:settingsView)
+>>>>>>> old-repo/master
     function setOffTrackAlertsDistanceM(value as Number) as Void {
         offTrackAlertsDistanceM = value;
         setValue("offTrackAlertsDistanceM", offTrackAlertsDistanceM);
@@ -602,7 +701,54 @@ class Settings {
         setValue("recalculateIntervalS", recalculateIntervalS);
     }
 
+<<<<<<< HEAD
     (:settingsView,:menu2)
+=======
+    function setMapEnabled(_mapEnabled as Boolean) as Void {
+        setMapEnabledRaw(_mapEnabled);
+        setValue("mapEnabled", mapEnabled);
+    }
+
+    function setMapEnabledRaw(_mapEnabled as Boolean) as Void {
+        mapEnabled = _mapEnabled;
+        mapEnabledChanged();
+    }
+
+    function mapEnabledChanged() as Void {
+        if (!mapEnabled) {
+            getApp()._breadcrumbContext.tileCache.clearValuesWithoutStorage(); // do not remove our cached tiles, we might just be temporarily disabling maps
+            clearPendingWebRequests();
+            clearTileCacheStats();
+            clearWebStats();
+            return;
+        }
+
+        // prompts user to open the app
+        if (tileUrl.find(COMPANION_APP_TILE_URL_MATCH) != null && !storageMapTilesOnly) {
+            // we could also send a toast, but the transmit allows us to open the app easier on the phone
+            // even though the phone side is a bit of a hack (ConnectIQMessageReceiver cannot parse the data), it's still better than having to manualy open the app.
+            transmit([PROTOCOL_SEND_OPEN_APP], {}, getApp()._commStatus);
+        }
+    }
+
+    (:settingsView)
+    function setCacheTilesInStorage(value as Boolean) as Void {
+        cacheTilesInStorage = value;
+        setValue("cacheTilesInStorage", cacheTilesInStorage);
+
+        if (!cacheTilesInStorage) {
+            tileServerPropChanged();
+        }
+    }
+
+    (:settingsView)
+    function setStorageMapTilesOnly(value as Boolean) as Void {
+        storageMapTilesOnly = value;
+        setValue("storageMapTilesOnly", storageMapTilesOnly);
+    }
+
+    (:settingsView)
+>>>>>>> old-repo/master
     function setDrawLineToClosestPoint(value as Boolean) as Void {
         drawLineToClosestPoint = value;
         setValue("drawLineToClosestPoint", drawLineToClosestPoint);
@@ -1636,7 +1782,6 @@ class Settings {
         setMinTrackPointDistanceMSideEffect();
         recomputeTrackTexture();
         for (var i = 0; i < routes.size(); ++i) {
-            var routeId = routes[i]["routeId"] as Number;
             recomputeRouteTexture(i);
         }
     }
@@ -1651,6 +1796,52 @@ class Settings {
             "showDirectionPointTextUnderIndex",
             showDirectionPointTextUnderIndex
         );
+<<<<<<< HEAD
+=======
+        errorTileTTLS = parseNumber("errorTileTTLS", errorTileTTLS);
+        fullTileSize = parseNumber("fullTileSize", fullTileSize);
+        useDrawBitmap = parseBool("useDrawBitmap", useDrawBitmap);
+        packingFormat = parseNumber("packingFormat", packingFormat);
+        scaledTileSize = parseNumber("scaledTileSize", scaledTileSize);
+        if (useDrawBitmap) {
+            scaledTileSize = fullTileSize;
+        }
+        tileUrl = parseString("tileUrl", tileUrl);
+        tileSize = parseNumber("tileSize", tileSize);
+        if (tileUrl.find(COMPANION_APP_TILE_URL_MATCH) == null) {
+            tileSize = scaledTileSize;
+        }
+        tileLayerMax = parseNumber("tileLayerMax", tileLayerMax);
+        tileLayerMin = parseNumber("tileLayerMin", tileLayerMin);
+        // logT("tileSize: " + tileSize);
+        if (tileSize < 2) {
+            tileSize = 2;
+        } else if (tileSize > 256) {
+            tileSize = 256;
+        }
+        if (fullTileSize < 2) {
+            fullTileSize = 2;
+        } else if (fullTileSize > 256) {
+            fullTileSize = 256;
+        }
+        if (scaledTileSize < 2) {
+            scaledTileSize = 2;
+        } else if (scaledTileSize > 256) {
+            scaledTileSize = 256;
+        }
+
+        tileCacheSize = parseNumber("tileCacheSize", tileCacheSize);
+        storageTileCacheSize = parseNumber("storageTileCacheSize", storageTileCacheSize);
+        storageTileCachePageCount = parseNumber(
+            "storageTileCachePageCount",
+            storageTileCachePageCount
+        );
+        storageSeedBoundingBox = parseBool("storageSeedBoundingBox", storageSeedBoundingBox);
+        storageSeedRouteDistanceM = parseFloat(
+            "storageSeedRouteDistanceM",
+            storageSeedRouteDistanceM
+        );
+>>>>>>> old-repo/master
         centerUserOffsetY = parseFloat("centerUserOffsetY", centerUserOffsetY);
         mapMoveScreenSize = parseFloat("mapMoveScreenSize", mapMoveScreenSize);
         recalculateIntervalS = parseNumber("recalculateIntervalS", recalculateIntervalS);

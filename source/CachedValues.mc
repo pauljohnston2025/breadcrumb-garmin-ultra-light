@@ -56,6 +56,21 @@ class CachedValues {
     var rotateAroundScreenYOffsetFactoredIn as Float = physicalScreenHeight / 2f;
     var rotateAroundMinScreenDim as Float = -1f;
 
+    var _lapStartTime as Number = 0;
+    var _lapStartDistance as Float = 0f;
+    var _lastLapDuration as Number = 0;
+    var _lastLapDistance as Float = 0f;
+
+    function onTimerLap() as Void {
+        var info = Activity.getActivityInfo();
+        if (info != null && info.elapsedTime != null && info.elapsedDistance != null) {
+            _lastLapDuration = (info.elapsedTime as Number) - _lapStartTime;
+            _lastLapDistance = (info.elapsedDistance as Float) - _lapStartDistance;
+            _lapStartTime = info.elapsedTime as Number;
+            _lapStartDistance = info.elapsedDistance as Float;
+        }
+    }
+
     function initialize(settings as Settings) {
         self._settings = settings;
         // initialised in constructor so they can be inlined
@@ -645,10 +660,15 @@ class CachedValues {
         return new RectangularPoint(0f, 0f, 0f); // highly unlikely code path
     }
 
-    function returnToUser() as Void {
+    function returnToUser() as Boolean {
+        if (fixedPosition == null && scale == null) {
+            return false; // nothing to do
+        }
+        
         // set fixed position recalculates all on us
         _settings.setFixedPosition(null, null);
         setScale(null);
+        return true;
     }
 
     function setScale(_scale as Float?) as Void {
