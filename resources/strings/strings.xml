@@ -15,6 +15,9 @@
     <string id="zoomAtPaceSpeedMPSPrompt">1.0</string>
     <string id="centerUserOffsetYTitle">Center User Offset Y (ratio)</string>
     <string id="recalculateIntervalSTitle">Compute Interval (s)</string>
+    <string id="renderModeTitle">Render Mode</string>
+    <string id="renderModeUnbufferedRotating">Unbuffered Rotations - low memory</string>
+    <string id="renderModeNoBufferedNoRotating">No Buffer No Rotations - low memory</string>
 
 
     <string id="displayLatLongTitle">Display Lat/Long</string>

@@ -17,4 +17,6 @@
 	<property id="n" type="boolean">false</property>
 	<property id="o" type="boolean">false</property>
 
+	<property id="r" type="number">1</property>
+
 </properties>

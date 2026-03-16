@@ -24,6 +24,8 @@ class CachedValues {
     // updated whenever we get new activity data with a new heading
     var rotateCos as Float = Math.cos(0f).toFloat() as Float;
     var rotateSin as Float = Math.sin(0f).toFloat() as Float;
+    var rotateCosUser as Float = Math.cos(0f).toFloat() as Float;
+    var rotateSinUser as Float = Math.sin(0f).toFloat() as Float;
     private var _lastStableHeading as Float = 0.0f;
     var currentSpeed as Float = -1f;
     var currentlyZoomingAroundUser as Boolean = false;
@@ -225,6 +227,13 @@ class CachedValues {
         if (currentHeading != null) {
             rotateCos = Math.cos(currentHeading).toFloat();
             rotateSin = Math.sin(currentHeading).toFloat();
+            rotateCosUser = rotateCos;
+            rotateSinUser = rotateSin;
+            if (_settings.renderMode == RENDER_MODE_UNBUFFERED_NO_ROTATION)
+            {
+                rotateCos = Math.cos(0).toFloat();
+                rotateSin = Math.sin(0).toFloat();
+            }
         }
 
         // we are either in 2 cases

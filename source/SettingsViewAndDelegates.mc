@@ -74,7 +74,7 @@ function safeSetToggle(menu as WatchUi.Menu2, id as Object, value as Boolean) as
 (:settingsView,:menu2)
 class SettingsMain extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({ :title => Rez.Strings.AppName});
+        Menu2.initialize({ :title => Rez.Strings.AppName });
         addItem(
             new WatchUi.MenuItem(Rez.Strings.generalSettingsTitle, null, :settingsMainGeneral, {})
         );
@@ -154,6 +154,18 @@ class SettingsZoomAtPace extends WatchUi.Menu2 {
 }
 
 (:settingsView,:menu2)
+function getRenderModeString(mode as Number) as ResourceId or String {
+    switch (mode) {
+        case RENDER_MODE_UNBUFFERED_ROTATING:
+            return Rez.Strings.renderModeUnbufferedRotating;
+        case RENDER_MODE_UNBUFFERED_NO_ROTATION:
+            return Rez.Strings.renderModeNoBufferedNoRotating;
+        default:
+            return "";
+    }
+}
+
+(:settingsView,:menu2)
 class SettingsGeneral extends WatchUi.Menu2 {
     function initialize() {
         Menu2.initialize({ :title => Rez.Strings.generalSettingsTitle });
@@ -164,6 +176,9 @@ class SettingsGeneral extends WatchUi.Menu2 {
                 :settingsGeneralRecalculateIntervalS,
                 {}
             )
+        );
+        addItem(
+            new WatchUi.MenuItem(Rez.Strings.renderModeTitle, null, :settingsGeneralRenderMode, {})
         );
         addItem(
             new WatchUi.MenuItem(
@@ -198,6 +213,7 @@ class SettingsGeneral extends WatchUi.Menu2 {
             settings.recalculateIntervalS.toString()
         );
 
+        safeSetSubLabel(me, :settingsGeneralRenderMode, getRenderModeString(settings.renderMode));
         safeSetSubLabel(
             me,
             :settingsGeneralCenterUserOffsetY,
@@ -397,6 +413,10 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
         me.view = view;
     }
 
+    public function getRenderModeStringL(value as Number) as ResourceId or String {
+        return getRenderModeString(value);
+    }
+
     public function onSelect(item as WatchUi.MenuItem) as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
@@ -413,6 +433,17 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
                     settings.recalculateIntervalS,
                     view
                 )
+            );
+        } else if (itemId == :settingsGeneralRenderMode) {
+            WatchUi.pushView(
+                new EnumMenu(
+                    Rez.Strings.renderModeTitle,
+                    method(:getRenderModeStringL),
+                    settings.renderMode,
+                    RENDER_MODE_MAX
+                ),
+                new $.EnumDelegate(settings.method(:setRenderMode), view),
+                WatchUi.SLIDE_IMMEDIATE
             );
         } else if (itemId == :settingsGeneralCenterUserOffsetY) {
             startPicker(

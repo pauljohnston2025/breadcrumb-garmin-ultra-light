@@ -184,13 +184,17 @@ class BreadcrumbRenderer {
         var userPosUnrotatedX = usersLastLocation.x - centerPosition.x;
         var userPosUnrotatedY = usersLastLocation.y - centerPosition.y;
 
-        var userPosRotatedX =
-            rotateAroundScreenXOffsetFactoredIn +
-            rotateCos * userPosUnrotatedX -
-            rotateSin * userPosUnrotatedY;
-        var userPosRotatedY =
-            rotateAroundScreenYOffsetFactoredIn -
-            (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
+        var userPosRotatedX = rotateAroundScreenXOffsetFactoredIn + userPosUnrotatedX;
+        var userPosRotatedY = rotateAroundScreenYOffsetFactoredIn - userPosUnrotatedY;
+        if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
+            userPosRotatedX =
+                rotateAroundScreenXOffsetFactoredIn +
+                rotateCos * userPosUnrotatedX -
+                rotateSin * userPosUnrotatedY;
+            userPosRotatedY =
+                rotateAroundScreenYOffsetFactoredIn -
+                (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
+        }
 
         var triangleSizeY = 16;
         var triangleSizeX = 10;
@@ -202,6 +206,48 @@ class BreadcrumbRenderer {
 
         var triangleRightX = triangleTopX + triangleSizeX;
         var triangleRightY = triangleLeftY;
+
+        var triangleCenterX = userPosRotatedX;
+        var triangleCenterY = userPosRotatedY;
+
+        if (settings.renderMode != RENDER_MODE_UNBUFFERED_ROTATING) {
+            var rotateCosUser = _cachedValues.rotateCosUser; // local lookup faster
+            var rotateSinUser = _cachedValues.rotateSinUser; // local lookup faster
+            // todo: load user arrow from bitmap and draw rotated instead
+            // we normally rotate the track, but we now need to rotate the user
+            var triangleTopXRot =
+                triangleCenterX +
+                rotateCosUser * (triangleTopX - triangleCenterX) -
+                rotateSinUser * (triangleTopY - triangleCenterY);
+            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
+            triangleTopY =
+                triangleCenterY +
+                (rotateSinUser * (triangleTopX - triangleCenterX) +
+                    rotateCosUser * (triangleTopY - triangleCenterY));
+            triangleTopX = triangleTopXRot;
+
+            var triangleLeftXRot =
+                triangleCenterX +
+                rotateCosUser * (triangleLeftX - triangleCenterX) -
+                rotateSinUser * (triangleLeftY - triangleCenterY);
+            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
+            triangleLeftY =
+                triangleCenterY +
+                (rotateSinUser * (triangleLeftX - triangleCenterX) +
+                    rotateCosUser * (triangleLeftY - triangleCenterY));
+            triangleLeftX = triangleLeftXRot;
+
+            var triangleRightXRot =
+                triangleCenterX +
+                rotateCosUser * (triangleRightX - triangleCenterX) -
+                rotateSinUser * (triangleRightY - triangleCenterY);
+            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
+            triangleRightY =
+                triangleCenterY +
+                (rotateSinUser * (triangleRightX - triangleCenterX) +
+                    rotateCosUser * (triangleRightY - triangleCenterY));
+            triangleRightX = triangleRightXRot;
+        }
 
         dc.setColor(USER_AND_SCALE_COLOUR, Graphics.COLOR_BLACK);
         dc.fillPolygon([

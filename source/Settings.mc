@@ -16,6 +16,14 @@ enum /*ZoomMode*/ {
     ZOOM_AT_PACE_MODE_MAX,
 }
 
+enum /*RenderMode*/ {
+    /*RENDER_MODE_BUFFERED_ROTATING = 0,*/
+    RENDER_MODE_UNBUFFERED_ROTATING = 1,
+    /* RENDER_MODE_BUFFERED_NO_ROTATION = 2,*/
+    RENDER_MODE_UNBUFFERED_NO_ROTATION = 3,
+    RENDER_MODE_MAX,
+}
+
 (:background)
 function settingsAsDict() as Dictionary<String, PropertyValueType> {
     return (
@@ -30,6 +38,7 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
             "n" => Application.Properties.getValue("n"),
             "p" => Application.Properties.getValue("p"),
             "q" => Application.Properties.getValue("q"),
+            "r" => Application.Properties.getValue("r"),
         }) as Dictionary<String, PropertyValueType>
     );
 }
@@ -56,6 +65,7 @@ class Settings {
     var routesEnabled as Boolean = true;
 
     var displayLatLong as Boolean = true;
+    var renderMode as Number = RENDER_MODE_UNBUFFERED_ROTATING;
 
     // how many seconds should we wait before even considering the next point
     // changes in speed/angle/zoom are not effected by this number. Though maybe they should be?
@@ -163,6 +173,13 @@ class Settings {
     function setRoutesEnabled(_routesEnabled as Boolean) as Void {
         routesEnabled = _routesEnabled;
         setValue("n", routesEnabled);
+    }
+
+    (:settingsView,:menu2)
+    function setRenderMode(_renderMode as Number) as Void {
+        renderMode = _renderMode;
+        setValue("r", renderMode);
+        updateCachedValues();
     }
 
     (:settingsView,:menu2)
@@ -329,6 +346,7 @@ class Settings {
         zoomAtPaceSpeedMPS = parseFloat("e", zoomAtPaceSpeedMPS);
         useTrackAsHeadingSpeedMPS = parseFloat("p", useTrackAsHeadingSpeedMPS);
         minTrackPointDistanceM = parseNumber("q", minTrackPointDistanceM);
+        renderMode = parseNumber("r", renderMode);
     }
 
     function onSettingsChanged() as Void {
