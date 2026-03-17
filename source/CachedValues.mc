@@ -48,6 +48,7 @@ class CachedValues {
         recalculateAll();
     }
 
+    (:inline)
     function calcOuterBoundingBoxFromTrackAndRoute(
         route as BreadcrumbTrack?,
         trackBoundingBox as [Float, Float, Float, Float]?
@@ -158,6 +159,7 @@ class CachedValues {
             : _breadcrumbContextLocal.track.boundingBox;
     }
 
+    (:inline)
     function calculateHeading(p1 as RectangularPoint, p2 as RectangularPoint) as Float {
         // atan2(dx, dy) for North-up orientation
         return Math.atan2(p2.x - p1.x, p2.y - p1.y).toFloat();
@@ -268,6 +270,7 @@ class CachedValues {
         updateScaleCenter();
     }
 
+    (:inline)
     function updateVirtualScreenSize() as Void {
         rotateAroundScreenXOffsetFactoredIn = xHalfPhysical;
         if (currentlyZoomingAroundUser) {
@@ -277,6 +280,7 @@ class CachedValues {
         }
     }
 
+    (:inline)
     function calcScaleForScreenMeters(maxDistanceM as Float) as Float {
         // we want the whole map to be show on the screen, we have 360 pixels on the
         // venu 2s
@@ -286,6 +290,7 @@ class CachedValues {
     }
 
     /** returns the new scale */
+    (:inline)
     function getNewScaleFromBoundingBox(outerBoundingBox as [Float, Float, Float, Float]) as Float {
         var xDistanceM = outerBoundingBox[2] - outerBoundingBox[0];
         var yDistanceM = outerBoundingBox[3] - outerBoundingBox[1];
@@ -341,6 +346,7 @@ class CachedValues {
         updateScaleCenter();
     }
 
+    (:inline)
     function calcCenterPointForBoundingBox(boundingBox as [Float, Float, Float, Float]) as Void {
         centerPosition = new RectangularPoint(
             boundingBox[0] + (boundingBox[2] - boundingBox[0]) / 2.0,

@@ -23,14 +23,14 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
     const TRACK_COLOUR = Graphics.COLOR_GREEN;
     (:reducedColors)
     const TRACK_COLOUR = Graphics.COLOR_GREEN;
-    
+
     (:blackAndWhite)
     const ROUTE_COLOUR = Graphics.COLOR_WHITE;
     (:fullColours)
     const ROUTE_COLOUR = Graphics.COLOR_BLUE;
     (:reducedColors)
     const ROUTE_COLOUR = Graphics.COLOR_BLUE;
-    
+
     (:blackAndWhite)
     const ROUTE_WIDTH = 2; // needs to be thinner so we can tell the difference between track and route (the track will hopefully go right on top of the route and fill it in more)
     (:fullColours)
@@ -97,63 +97,58 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
 
     function compute(info as Activity.Info) as Void {
         try {
-            actualCompute(info);
+            _computeCounter++;
+
+            // logD("compute");
+            // temp hack for debugging in simulator (since it seems altitude does not work when playing activity data from gpx file)
+            // var route = _breadcrumbContext.routes[0];
+            // var nextPoint = route.coordinates.getPoint(_breadcrumbContext.track.coordinates.pointSize());
+            // if (nextPoint != null)
+            // {
+            //     info.altitude = nextPoint.altitude;
+            // }
+
+            // make sure tile seed or anything else does not stop our computes completely
+            // block any tasks until we return from setting view (settings view adds more memory, so we ned to do the least memeory intensive tasks)
+            var weReallyNeedACompute = _computeCounter > 3 * settings.recalculateIntervalS;
+            if (!weReallyNeedACompute) {
+                // store rotations and speed every time
+                var rescaleOccurred = _cachedValues.onActivityInfo(info);
+                if (rescaleOccurred) {
+                    // rescaling is an expensive operation, if we have multiple large routes rescale and then try and recalculate off track alerts (or anything else expensive)
+                    // we could hit watchdog errors. Best to not attempt anything else.
+                    logD("rescale occurred");
+                    return;
+                }
+            }
+
+            // slow down the calls to onActivityInfo as its a heavy operation checking
+            // the distance we don't really need data much faster than this anyway
+            var newPoint = BreadcrumbTrack.pointFromActivityInfo(info);
+            if (newPoint == null) {
+                return;
+            }
+
+            _cachedValues.handleHeadingPoint(newPoint.clone()); // prevent scale in place from below
+
+            if (_computeCounter < settings.recalculateIntervalS) {
+                return;
+            }
+
+            _computeCounter = 0;
+
+            if (_cachedValues.currentScale != 0f) {
+                newPoint.rescaleInPlace(_cachedValues.currentScale);
+            }
+            var trackAddRes = _breadcrumbContext.track.onActivityInfo(newPoint);
+            var pointAdded = trackAddRes[0];
+            var complexOperationHappened = trackAddRes[1];
+            if (pointAdded && !complexOperationHappened) {
+                _cachedValues.updateScaleCenter();
+            }
         } catch (e) {
             logE("failed compute: " + e.getErrorMessage());
             ++$.globalExceptionCounter;
-        }
-    }
-
-    // see onUpdate explanation for when each is called
-    function actualCompute(info as Activity.Info) as Void {
-        _computeCounter++;
-
-        // logD("compute");
-        // temp hack for debugging in simulator (since it seems altitude does not work when playing activity data from gpx file)
-        // var route = _breadcrumbContext.routes[0];
-        // var nextPoint = route.coordinates.getPoint(_breadcrumbContext.track.coordinates.pointSize());
-        // if (nextPoint != null)
-        // {
-        //     info.altitude = nextPoint.altitude;
-        // }
-
-        // make sure tile seed or anything else does not stop our computes completely
-        // block any tasks until we return from setting view (settings view adds more memory, so we ned to do the least memeory intensive tasks)
-        var weReallyNeedACompute = _computeCounter > 3 * settings.recalculateIntervalS;
-        if (!weReallyNeedACompute) {
-            // store rotations and speed every time
-            var rescaleOccurred = _cachedValues.onActivityInfo(info);
-            if (rescaleOccurred) {
-                // rescaling is an expensive operation, if we have multiple large routes rescale and then try and recalculate off track alerts (or anything else expensive)
-                // we could hit watchdog errors. Best to not attempt anything else.
-                logD("rescale occurred");
-                return;
-            }
-        }
-
-        // slow down the calls to onActivityInfo as its a heavy operation checking
-        // the distance we don't really need data much faster than this anyway
-        var newPoint = BreadcrumbTrack.pointFromActivityInfo(info);
-        if (newPoint == null) {
-            return;
-        }
-
-        _cachedValues.handleHeadingPoint(newPoint.clone()); // prevent scale in place from below
-
-        if (_computeCounter < settings.recalculateIntervalS) {
-            return;
-        }
-
-        _computeCounter = 0;
-
-        if (_cachedValues.currentScale != 0f) {
-            newPoint.rescaleInPlace(_cachedValues.currentScale);
-        }
-        var trackAddRes = _breadcrumbContext.track.onActivityInfo(newPoint);
-        var pointAdded = trackAddRes[0];
-        var complexOperationHappened = trackAddRes[1];
-        if (pointAdded && !complexOperationHappened) {
-            _cachedValues.updateScaleCenter();
         }
     }
 
@@ -167,7 +162,27 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // dc.clear();
 
         try {
-            actualOnUpdate(dc);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
+
+            // logD("onUpdate");
+            var renderer = _breadcrumbContext.breadcrumbRenderer;
+
+            var route = _breadcrumbContext.route;
+            var track = _breadcrumbContext.track;
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
+            if (route != null && settings.routesEnabled) {
+                renderer.renderTrack(dc, route, ROUTE_COLOUR, true, ROUTE_WIDTH);
+            }
+            renderer.renderTrack(dc, track, TRACK_COLOUR, false, TRACK_WIDTH);
+
+            renderer.renderCurrentScale(dc);
+
+            var lastPoint = _breadcrumbContext.track.lastPoint();
+            if (lastPoint != null) {
+                renderer.renderUser(dc, lastPoint);
+            }
         } catch (e) {
             logE("failed onUpdate: " + e.getErrorMessage());
             ++$.globalExceptionCounter;
@@ -176,35 +191,5 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         // template code for 'complex datafield' has this, but I just get a black screen if I do it (think it's only for when using layouts, but im directly drawing to dc)
         // Call parent's onUpdate(dc) to redraw the layout
         // View.onUpdate(dc);
-    }
-
-    function actualOnUpdate(dc as Dc) as Void {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        // logD("onUpdate");
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-
-        renderUnbufferedRotating(dc);
-
-        renderer.renderCurrentScale(dc);
-
-        var lastPoint = _breadcrumbContext.track.lastPoint();
-        if (lastPoint != null) {
-            renderer.renderUser(dc, lastPoint);
-        }
-    }
-
-    function renderUnbufferedRotating(dc as Dc) as Void {
-        var route = _breadcrumbContext.route;
-        var track = _breadcrumbContext.track;
-
-        var renderer = _breadcrumbContext.breadcrumbRenderer;
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-        if (route != null && settings.routesEnabled) {
-            renderer.renderTrack(dc, route, ROUTE_COLOUR, true, ROUTE_WIDTH);
-        }
-        renderer.renderTrack(dc, track, TRACK_COLOUR, false, TRACK_WIDTH);
     }
 }

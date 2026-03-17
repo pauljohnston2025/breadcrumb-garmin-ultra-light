@@ -123,6 +123,7 @@ class BreadcrumbRenderer {
         }
     }
 
+    (:inline)
     function getScaleSize() as [Float, String] {
         var scaleKeys = settings.distanceImperialUnits ? SCALE_KEYS_IMPERIAL : SCALE_KEYS;
         var scaleValues = settings.distanceImperialUnits ? SCALE_VALUES_IMPERIAL : SCALE_VALUES;
@@ -175,85 +176,63 @@ class BreadcrumbRenderer {
 
     // last location should already be scaled
     function renderUser(dc as Dc, usersLastLocation as RectangularPoint) as Void {
-        var centerPosition = _cachedValues.centerPosition; // local lookup faster
-        var rotateCos = _cachedValues.rotateCos; // local lookup faster
-        var rotateSin = _cachedValues.rotateSin; // local lookup faster
-        var rotateAroundScreenXOffsetFactoredIn = _cachedValues.rotateAroundScreenXOffsetFactoredIn; // local lookup faster
-        var rotateAroundScreenYOffsetFactoredIn = _cachedValues.rotateAroundScreenYOffsetFactoredIn; // local lookup faster
+        var cached = _cachedValues; // Single object lookup
+        var centerPos = cached.centerPosition;
 
-        var userPosUnrotatedX = usersLastLocation.x - centerPosition.x;
-        var userPosUnrotatedY = usersLastLocation.y - centerPosition.y;
+        // 1. Calculate the user's base position on screen
+        var unRotX = usersLastLocation.x - centerPos.x;
+        var unRotY = usersLastLocation.y - centerPos.y;
 
-        var userPosRotatedX = rotateAroundScreenXOffsetFactoredIn + userPosUnrotatedX;
-        var userPosRotatedY = rotateAroundScreenYOffsetFactoredIn - userPosUnrotatedY;
+        var userX, userY;
+
         if (settings.renderMode == RENDER_MODE_UNBUFFERED_ROTATING) {
-            userPosRotatedX =
-                rotateAroundScreenXOffsetFactoredIn +
-                rotateCos * userPosUnrotatedX -
-                rotateSin * userPosUnrotatedY;
-            userPosRotatedY =
-                rotateAroundScreenYOffsetFactoredIn -
-                (rotateSin * userPosUnrotatedX + rotateCos * userPosUnrotatedY);
+            var cos = cached.rotateCos;
+            var sin = cached.rotateSin;
+            userX = cached.rotateAroundScreenXOffsetFactoredIn + cos * unRotX - sin * unRotY;
+            userY = cached.rotateAroundScreenYOffsetFactoredIn - (sin * unRotX + cos * unRotY);
+        } else {
+            userX = cached.rotateAroundScreenXOffsetFactoredIn + unRotX;
+            userY = cached.rotateAroundScreenYOffsetFactoredIn - unRotY;
         }
 
-        var triangleSizeY = 16;
-        var triangleSizeX = 10;
-        var triangleTopX = userPosRotatedX;
-        var triangleTopY = userPosRotatedY - triangleSizeY;
+        // 2. Define the Triangle (relative to userX, userY)
+        // Constants for the shape
+        var sX = 10; // triangleSizeX
+        var sY = 16; // triangleSizeY
 
-        var triangleLeftX = triangleTopX - triangleSizeX;
-        var triangleLeftY = userPosRotatedY + triangleSizeY;
-
-        var triangleRightX = triangleTopX + triangleSizeX;
-        var triangleRightY = triangleLeftY;
-
-        var triangleCenterX = userPosRotatedX;
-        var triangleCenterY = userPosRotatedY;
+        var pTopX, pTopY, pLeftX, pLeftY, pRightX, pRightY;
 
         if (settings.renderMode != RENDER_MODE_UNBUFFERED_ROTATING) {
-            var rotateCosUser = _cachedValues.rotateCosUser; // local lookup faster
-            var rotateSinUser = _cachedValues.rotateSinUser; // local lookup faster
-            // todo: load user arrow from bitmap and draw rotated instead
-            // we normally rotate the track, but we now need to rotate the user
-            var triangleTopXRot =
-                triangleCenterX +
-                rotateCosUser * (triangleTopX - triangleCenterX) -
-                rotateSinUser * (triangleTopY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleTopY =
-                triangleCenterY +
-                (rotateSinUser * (triangleTopX - triangleCenterX) +
-                    rotateCosUser * (triangleTopY - triangleCenterY));
-            triangleTopX = triangleTopXRot;
+            var uCos = cached.rotateCosUser;
+            var uSin = cached.rotateSinUser;
 
-            var triangleLeftXRot =
-                triangleCenterX +
-                rotateCosUser * (triangleLeftX - triangleCenterX) -
-                rotateSinUser * (triangleLeftY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleLeftY =
-                triangleCenterY +
-                (rotateSinUser * (triangleLeftX - triangleCenterX) +
-                    rotateCosUser * (triangleLeftY - triangleCenterY));
-            triangleLeftX = triangleLeftXRot;
+            // Simplified Rotation:
+            // Top point is (0, -sY). Rotated: x = -sin*(-sY), y = cos*(-sY)
+            pTopX = userX + uSin * sY;
+            pTopY = userY - uCos * sY;
 
-            var triangleRightXRot =
-                triangleCenterX +
-                rotateCosUser * (triangleRightX - triangleCenterX) -
-                rotateSinUser * (triangleRightY - triangleCenterY);
-            // yes + and not -, we are in pixel coordinates, the rest are in latitude which is negative at the bottom of the page
-            triangleRightY =
-                triangleCenterY +
-                (rotateSinUser * (triangleRightX - triangleCenterX) +
-                    rotateCosUser * (triangleRightY - triangleCenterY));
-            triangleRightX = triangleRightXRot;
+            // Left point is (-sX, sY). Rotated: x = cos*(-sX) - sin*(sY), y = sin*(-sX) + cos*(sY)
+            pLeftX = userX - uCos * sX - uSin * sY;
+            pLeftY = userY - uSin * sX + uCos * sY;
+
+            // Right point is (sX, sY). Rotated: x = cos*(sX) - sin*(sY), y = sin*(sX) + cos*(sY)
+            pRightX = userX + uCos * sX - uSin * sY;
+            pRightY = userY + uSin * sX + uCos * sY;
+        } else {
+            // No user-rotation needed (likely because the whole screen is rotating)
+            pTopX = userX;
+            pTopY = userY - sY;
+            pLeftX = userX - sX;
+            pLeftY = userY + sY;
+            pRightX = userX + sX;
+            pRightY = userY + sY;
         }
 
         dc.setColor(USER_AND_SCALE_COLOUR, Graphics.COLOR_BLACK);
         dc.fillPolygon([
-            [triangleTopX, triangleTopY],
-            [triangleRightX, triangleRightY],
-            [triangleLeftX, triangleLeftY],
+            [pTopX, pTopY],
+            [pRightX, pRightY],
+            [pLeftX, pLeftY],
         ]);
     }
 
@@ -306,77 +285,11 @@ class BreadcrumbRenderer {
                     rotateAroundScreenYOffsetFactoredIn -
                     (rotateSin * nextXScaledAtCenter + rotateCos * nextYScaledAtCenter);
 
-                renderLineChecked(
-                    dc,
-                    lastXRotated,
-                    lastYRotated,
-                    nextXRotated,
-                    nextYRotated
-                );
+                dc.drawLine(lastXRotated, lastYRotated, nextXRotated, nextYRotated);
 
                 lastXRotated = nextXRotated;
                 lastYRotated = nextYRotated;
             }
-
-            renderStartAndEnd(
-                dc,
-                firstXRotated,
-                firstYRotated,
-                lastXRotated,
-                lastYRotated,
-                drawEndMarker
-            );
-        }
-    }
-
-    function renderLineChecked(
-        dc as Dc,
-        xStart as Float,
-        yStart as Float,
-        xEnd as Float,
-        yEnd as Float
-    ) as Void {
-        // I assumed garmin checked the limits of the line before trying to render it, but textured line renders take a long time at high zoom levels.
-        // I assume garmin expect all calls to dc.draw to be on the screen, and so they try and grab the colour for each pixel from the texture before rendering it to their buffer.
-        // This proves to be extremely slow, since at high zoom levels the pixel dimensions are really large, and most will be off screen.
-        // Also my renderInterpolatedLineStyle algorithm takes longer and longer, as the length of the line segments becomes larger as we zoom in further. This leads to watchdog crashes, so I've got to handle it anyway for that.
-
-        // how expensive are these function calls?
-        // and all these checks?
-        var screenWidth = dc.getWidth();
-        var screenHeight = dc.getHeight();
-        // note: this check is not perfect, as the line has width, but its normally on the order of <10 pixels, which means only 5 pixels form the corners 'might' be touching the edge of the screen.
-        // Its a round screen most of the time anyway, so it would only be clipping the very edge of frame, so we will just skip it for now, so we do not have to do more math and more computations here.
-        // We could pass in screenWidth and screenHeight that is already offset
-        if (
-            (xStart < 0 && xEnd < 0) ||
-            (yStart < 0 && yEnd < 0) ||
-            (xStart > screenWidth && xEnd > screenWidth) ||
-            (yStart > screenHeight && yEnd > screenHeight)
-        ) {
-            return;
-        }
-
-        dc.drawLine(xStart, yStart, xEnd, yEnd);
-    }
-
-    function renderStartAndEnd(
-        dc as Dc,
-        firstX as Float,
-        firstY as Float,
-        lastX as Float,
-        lastY as Float,
-        drawEndMarker as Boolean
-    ) as Void {
-        // todo let user configure these, or render icons instead
-        // could add a start play button and a finnish flag (not Finland's flag, the checkered kind)
-        var squareSize = 10;
-        var squareHalf = squareSize / 2;
-        dc.setColor(START_COLOUR, Graphics.COLOR_BLACK);
-        dc.fillRectangle(firstX - squareHalf, firstY - squareHalf, squareSize, squareSize);
-        if (drawEndMarker) {
-            dc.setColor(END_COLOUR, Graphics.COLOR_BLACK);
-            dc.fillRectangle(lastX - squareHalf, lastY - squareHalf, squareSize, squareSize);
         }
     }
 }

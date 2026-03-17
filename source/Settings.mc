@@ -194,17 +194,6 @@ class Settings {
         setValue("n", routesEnabled);
     }
 
-    function nextZoomAtPaceMode() as Void {
-        // could also do this? not sure what better for perf (probably the modulo 1 less instruction), below is more readable
-        // zoomAtPaceMode = (zoomAtPaceMode + 1) % ZOOM_AT_PACE_MODE_MAX;
-        zoomAtPaceMode++;
-        if (zoomAtPaceMode >= ZOOM_AT_PACE_MODE_MAX) {
-            zoomAtPaceMode = ZOOM_AT_PACE_MODE_PACE;
-        }
-
-        setZoomAtPaceMode(zoomAtPaceMode);
-    }
-
     function updateCachedValues() as Void {
         var _breadcrumbContextLocal = $._breadcrumbContext;
         if (_breadcrumbContextLocal == null) {
