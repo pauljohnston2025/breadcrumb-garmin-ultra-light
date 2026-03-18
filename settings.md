@@ -53,6 +53,11 @@ Determines if the current latitude and longitude are displayed on the watch scre
 
 The number of seconds that need to elapse before we try and add or next track point. Higher values should result in better battery performance (less calculations), but will also mean you need to wait longer for the map and track to update. This setting is also used to control how often to refresh the buffer if using a buffered render mode. A lower number should be used for high speed activities such as cycling.
 
+### Render Mode
+
+Unbuffered Rotations - Renders the breadcrumb trail by rotating the map in the users direction of travel.  
+No Buffer No Rotations - The breadcrumb trail is always north facing, and will not rotate when the user turns.
+
 ### Center User Offset Y
 
 Offsets the users vertical position by a fraction of the screen size. Larger values will move the position further down the screen. eg. 0.5 - user in the middle, 0.75 user 3/4 of the way down the screen (near the bottom), 0.25 user near the top of the screen. Larger values are generally preferred, as it allow you to see more of the route in front of the users position. The users offset only applies when 'zooming' around the user, see [Zoom At Pace Mode](#zoom-at-pace-mode). Note: The offset can also be applied if you have manually zoomed into the map and have overridden the Zoom At Pace Mode.  
