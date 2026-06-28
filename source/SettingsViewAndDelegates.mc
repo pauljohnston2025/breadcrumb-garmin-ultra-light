@@ -188,15 +188,6 @@ class SettingsGeneral extends WatchUi.Menu2 {
                 {}
             )
         );
-        addItem(
-            new WatchUi.ToggleMenuItem(
-                Rez.Strings.displayLatLongTitle,
-                null,
-                :settingsGeneralDisplayLatLong,
-                false,
-                {}
-            )
-        );
         rerender();
     }
 
@@ -219,7 +210,6 @@ class SettingsGeneral extends WatchUi.Menu2 {
             :settingsGeneralCenterUserOffsetY,
             settings.centerUserOffsetY.format("%.2f")
         );
-        safeSetToggle(me, :settingsGeneralDisplayLatLong, settings.displayLatLong);
     }
 }
 
@@ -453,9 +443,6 @@ class SettingsGeneralDelegate extends WatchUi.Menu2InputDelegate {
                     view
                 )
             );
-        } else if (itemId == :settingsGeneralDisplayLatLong) {
-            settings.toggleDisplayLatLong();
-            view.rerender();
         }
     }
 }

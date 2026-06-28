@@ -20,8 +20,6 @@
     <string id="renderModeNoBufferedNoRotating">No Buffer No Rotations - low memory</string>
 
 
-    <string id="displayLatLongTitle">Display Lat/Long</string>
-
     <string id="routesTitle">Routes</string>
     <string id="routesEnabled">Enable Routes</string>
     <string id="clearRoutes">Clear All Routes</string>

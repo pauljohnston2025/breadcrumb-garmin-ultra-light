@@ -17,10 +17,6 @@
         <settingConfig type="numeric" min="0" max="1"/>
     </setting>
 
-    <setting propertyKey="@Properties.o" title="@Strings.displayLatLongTitle">
-        <settingConfig type="boolean"/>
-    </setting>
-
     <setting propertyKey="@Properties.k" title="@Strings.maxTrackPointsTitle">
         <settingConfig type="numeric" min="1"/>
     </setting>

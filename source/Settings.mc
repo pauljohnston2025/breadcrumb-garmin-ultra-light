@@ -29,9 +29,8 @@ function settingsAsDict() as Dictionary<String, PropertyValueType> {
     return (
         ({
             "k" => Application.Properties.getValue("k"),
-            "k" => Application.Properties.getValue("k"),
+            "j" => Application.Properties.getValue("j"),
             "c" => Application.Properties.getValue("c"),
-            "o" => Application.Properties.getValue("o"),
             "d" => Application.Properties.getValue("d"),
             "b" => Application.Properties.getValue("b"),
             "e" => Application.Properties.getValue("e"),
@@ -64,7 +63,6 @@ class Settings {
 
     var routesEnabled as Boolean = true;
 
-    var displayLatLong as Boolean = true;
     var renderMode as Number = RENDER_MODE_UNBUFFERED_ROTATING;
 
     // how many seconds should we wait before even considering the next point
@@ -164,12 +162,6 @@ class Settings {
         setValue("c", recalculateIntervalS);
     }
 
-    (:settingsView,:menu2)
-    function setDisplayLatLong(value as Boolean) as Void {
-        displayLatLong = value;
-        setValue("o", displayLatLong);
-    }
-
     function setRoutesEnabled(_routesEnabled as Boolean) as Void {
         routesEnabled = _routesEnabled;
         setValue("n", routesEnabled);
@@ -180,12 +172,6 @@ class Settings {
         renderMode = _renderMode;
         setValue("r", renderMode);
         updateCachedValues();
-    }
-
-    (:settingsView,:menu2)
-    function toggleDisplayLatLong() as Void {
-        displayLatLong = !displayLatLong;
-        setValue("o", displayLatLong);
     }
 
     (:settingsView,:menu2)
@@ -328,7 +314,6 @@ class Settings {
         centerUserOffsetY = parseFloat("j", centerUserOffsetY);
         recalculateIntervalS = parseNumber("c", recalculateIntervalS);
         recalculateIntervalS = recalculateIntervalS <= 0 ? 1 : recalculateIntervalS;
-        displayLatLong = parseBool("o", displayLatLong);
         routesEnabled = parseBool("n", routesEnabled);
         metersAroundUser = parseNumber("d", metersAroundUser);
         zoomAtPaceMode = parseNumber("b", zoomAtPaceMode);

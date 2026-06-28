@@ -15,7 +15,6 @@
     <!-- https://forums.garmin.com/developer/connect-iq/i/bug-reports/bug-boolean-properties-with-default-value-true-can-t-be-changed-in-simulator -->
 	<!-- any setting that defaults to true seems to be stuck that way, so defaulting these all to false -->
 	<property id="n" type="boolean">false</property>
-	<property id="o" type="boolean">false</property>
 
 	<property id="r" type="number">1</property>
 

@@ -172,32 +172,6 @@ class BreadcrumbRenderer {
             foundName,
             Graphics.TEXT_JUSTIFY_CENTER
         );
-
-        // make this a const
-        var scaleFromEdge = 75; // guestimate
-
-        var currentScale = _cachedValues.currentScale;
-        var centerPosition = _cachedValues.centerPosition;
-
-        if (settings.displayLatLong) {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            if (currentScale != 0f) {
-                var latLong = RectangularPoint.xyToLatLon(
-                    centerPosition.x / currentScale,
-                    centerPosition.y / currentScale
-                );
-                if (latLong != null) {
-                    var txt = latLong[0].format("%.3f") + ", " + latLong[1].format("%.3f");
-                    dc.drawText(
-                        _cachedValues.xHalfPhysical,
-                        dc.getHeight() - scaleFromEdge,
-                        Graphics.FONT_XTINY,
-                        txt,
-                        Graphics.TEXT_JUSTIFY_CENTER
-                    );
-                }
-            }
-        }
     }
 
     // last location should already be scaled
