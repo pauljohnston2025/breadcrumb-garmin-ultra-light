@@ -71,7 +71,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
                 _breadcrumbContextLocal.settings.onSettingsChanged();
             }
         } catch (e) {
-            logE("failed onSettingsChange: " + e.getErrorMessage());
+            logE("failed onSettingsChange: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -107,7 +107,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
 
         // the initial view is called again when the settings close (sometimes)
         // we also catch this in the 'onUpdate' function in the main view
-        $._view.allowTaskComputes = true;
+        ($._view as BreadcrumbDataFieldView).allowTaskComputes = true;
 
         if (Background has :registerForPhoneAppMessageEvent) {
             Background.registerForPhoneAppMessageEvent();
@@ -141,7 +141,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
     (:settingsView,:menu2,:typecheck(disableBackgroundCheck))
     function getSettingsView() as [Views] or [Views, InputDelegates] or Null {
         setupGlobals();
-        $._view.allowTaskComputes = false;
+        ($._view as BreadcrumbDataFieldView).allowTaskComputes = false;
         var settings = new $.SettingsMain();
         return [settings, new $.SettingsMainDelegate(settings)];
     }
@@ -198,6 +198,7 @@ function onPhone(data as Application.PersistableType) as Void {
                 if (!routeWrote) {
                     _breadcrumbContextLocal.clearRoute(route.storageIndex);
                 }
+
                 return;
             }
 
@@ -240,7 +241,7 @@ function onPhone(data as Application.PersistableType) as Void {
                 return;
             }
             _breadcrumbContextLocal.settings.saveSettings(
-                rawData[0] as Dictionary<String, PropertyValueType>
+                rawData[0] as Dictionary<String, Application.Properties.ValueType>
             );
             _breadcrumbContextLocal.settings.onSettingsChanged(); // reload anything that has changed
             return;
@@ -249,7 +250,7 @@ function onPhone(data as Application.PersistableType) as Void {
         logE("Unknown message type: " + type);
         mustUpdate();
     } catch (e) {
-        logE("failed onPhone: " + e.getErrorMessage());
+        logE("failed onPhone: " + (e as Exception).getErrorMessage());
         mustUpdate();
         ++$.globalExceptionCounter;
     }
@@ -298,14 +299,14 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
             if (type == PROTOCOL_REQUEST_SETTINGS) {
                 logB("got send settings req: ");
                 Communications.transmit(
-                    [PROTOCOL_SEND_SETTINGS, settingsAsDict()],
+                    [PROTOCOL_SEND_SETTINGS, settingsAsDict()] as Array<Communications.TransmitType>,
                     {},
                     new SettingsSent()
                 );
                 return true;
             }
         } catch (e) {
-            logB("Error background: " + e.getErrorMessage());
+            logB("Error background: " + (e as Exception).getErrorMessage());
             return false;
         }
         return false;

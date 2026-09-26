@@ -247,7 +247,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             View.onLayout(dc);
             actualOnLayout(dc);
         } catch (e) {
-            logE("failed onLayout: " + e.getErrorMessage());
+            logE("failed onLayout: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -279,7 +279,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         try {
             actualCompute(info);
         } catch (e) {
-            logE("failed compute: " + e.getErrorMessage());
+            logE("failed compute: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -297,7 +297,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     Attention.backlight(true);
                 }
             } catch (e) {
-                logE("failed to turn on backlight: " + e.getErrorMessage());
+                logE("failed to turn on backlight: " + (e as Exception).getErrorMessage());
             }
             try {
                 if (Attention has :vibrate) {
@@ -312,7 +312,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                     Attention.vibrate(vibeData);
                 }
             } catch (e) {
-                logE("failed to vibrate: " + e.getErrorMessage());
+                logE("failed to vibrate: " + (e as Exception).getErrorMessage());
             }
 
             // alert comes after we start the vibrate in case it throws
@@ -329,7 +329,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 WatchUi.showToast(alert.text(), {});
             }
         } catch (e) {
-            logE("failed to show alert: " + e.getErrorMessage());
+            logE("failed to show alert: " + (e as Exception).getErrorMessage());
         }
     }
 
@@ -518,7 +518,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         try {
             actualOnUpdate(dc);
         } catch (e) {
-            logE("failed onUpdate: " + e.getErrorMessage());
+            logE("failed onUpdate: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
 
@@ -900,7 +900,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
         y += spacing;
         var currentSpeedMPS = 0f;
         var info = Activity.getActivityInfo();
-        if (info != null && info.currentSpeed != null) {
+        if (info.currentSpeed != null) {
             currentSpeedMPS = info.currentSpeed as Float;
         }
         var cacheHits = "speed: " + currentSpeedMPS.format("%.1f") + "m/s";

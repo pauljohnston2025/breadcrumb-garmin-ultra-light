@@ -190,13 +190,13 @@ function turnAlertDistancePx(
 }
 
 function safeSetStorage(
-    key as Application.PropertyKeyType,
-    value as Application.PropertyValueType
+    key as Application.Storage.KeyType,
+    value as Application.Storage.ValueType
 ) as Void {
     try {
         Application.Storage.setValue(key, value);
     } catch (e) {
-        logE("failed to set storage key: " + key + " " + e.getErrorMessage());
+        logE("failed to set storage key: " + key + " " + (e as Exception).getErrorMessage());
     }
 }
 
