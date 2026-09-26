@@ -72,7 +72,7 @@ class BreadcrumbDataFieldApp extends Application.AppBase {
                 _breadcrumbContextLocal.settings.onSettingsChanged();
             }
         } catch (e) {
-            logE("failed onSettingsChange: " + e.getErrorMessage());
+            logE("failed onSettingsChange: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -178,6 +178,7 @@ function onPhone(data as Application.PersistableType) as Void {
                 if (!routeWrote) {
                     _breadcrumbContextLocal.clearRoute();
                 }
+
                 return;
             }
 
@@ -196,7 +197,7 @@ function onPhone(data as Application.PersistableType) as Void {
                 return;
             }
             _breadcrumbContextLocal.settings.saveSettings(
-                rawData[0] as Dictionary<String, PropertyValueType>
+                rawData[0] as Dictionary<String, Application.Properties.ValueType>
             );
             _breadcrumbContextLocal.settings.onSettingsChanged(); // reload anything that has changed
             return;
@@ -205,7 +206,7 @@ function onPhone(data as Application.PersistableType) as Void {
         logE("Unknown message type: " + type);
         mustUpdate();
     } catch (e) {
-        logE("failed onPhone: " + e.getErrorMessage());
+        logE("failed onPhone: " + (e as Exception).getErrorMessage());
         mustUpdate();
         ++$.globalExceptionCounter;
     }
@@ -254,14 +255,14 @@ class BreadcrumbServiceDelegate extends System.ServiceDelegate {
             if (type == PROTOCOL_REQUEST_SETTINGS) {
                 logB("got send settings req: ");
                 Communications.transmit(
-                    [PROTOCOL_SEND_SETTINGS, settingsAsDict()],
+                    [PROTOCOL_SEND_SETTINGS, settingsAsDict()] as Array<Communications.TransmitType>,
                     {},
                     new SettingsSent()
                 );
                 return true;
             }
         } catch (e) {
-            logB("Error background: " + e.getErrorMessage());
+            logB("Error background: " + (e as Exception).getErrorMessage());
             return false;
         }
         return false;

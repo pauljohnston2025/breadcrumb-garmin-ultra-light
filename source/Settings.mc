@@ -75,7 +75,7 @@ class Settings {
     var distanceImperialUnits as Boolean =
         System.getDeviceSettings().distanceUnits == System.UNIT_STATUTE;
 
-    function setValue(key as String, value as PropertyValueType) as Void {
+    function setValue(key as String, value as Application.Properties.ValueType) as Void {
         Application.Properties.setValue(key, value);
         setValueSideEffect();
     }
@@ -84,7 +84,6 @@ class Settings {
         updateCachedValues();
     }
 
-    (:settingsView,:menu2)
     function setZoomAtPaceMode(_zoomAtPaceMode as Number) as Void {
         zoomAtPaceMode = _zoomAtPaceMode;
         setValue("b", zoomAtPaceMode);
@@ -214,7 +213,7 @@ class Settings {
 
     function parseBoolRaw(
         key as String,
-        value as PropertyValueType,
+        value as Application.Properties.ValueType?,
         defaultValue as Boolean
     ) as Boolean {
         try {
@@ -254,7 +253,7 @@ class Settings {
 
     static function parseFloatRaw(
         key as String,
-        value as PropertyValueType,
+        value as Application.Properties.ValueType?,
         defaultValue as Float
     ) as Float {
         try {
@@ -284,7 +283,7 @@ class Settings {
         return defaultValue;
     }
 
-    function saveSettings(settings as Dictionary<String, PropertyValueType>) as Void {
+    function saveSettings(settings as Dictionary<String, Application.Properties.ValueType>) as Void {
         // should we sanitize this as its untrusted? makes it significantly more annoying to do
         var keys = settings.keys();
         for (var i = 0; i < keys.size(); ++i) {
@@ -293,9 +292,9 @@ class Settings {
             // for now just blindly trust the users
             // we do reload which sanitizes, but they could break garmins settings page with unexpected types
             try {
-                Application.Properties.setValue(key, value as PropertyValueType);
+                Application.Properties.setValue(key, value as Application.Properties.ValueType);
             } catch (e) {
-                logE("failed property save: " + e.getErrorMessage() + " " + key + ":" + value);
+                logE("failed property save: " + (e as Exception).getErrorMessage() + " " + key + ":" + value);
                 ++$.globalExceptionCounter;
             }
         }

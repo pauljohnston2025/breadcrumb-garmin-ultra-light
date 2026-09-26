@@ -110,7 +110,7 @@ class BreadcrumbTrack {
             Storage.setValue(key + "distanceTotal", distanceTotal);
         } catch (e) {
             // it will still be in memory, just not persisted, this is bad as the user will think it worked, so return false to indicate error
-            logE("failed route save: " + e.getErrorMessage());
+            logE("failed route save: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
             return false;
         }

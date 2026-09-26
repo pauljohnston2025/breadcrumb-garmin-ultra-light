@@ -73,7 +73,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
             View.onLayout(dc);
             actualOnLayout(dc);
         } catch (e) {
-            logE("failed onLayout: " + e.getErrorMessage());
+            logE("failed onLayout: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -147,7 +147,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 _cachedValues.updateScaleCenter();
             }
         } catch (e) {
-            logE("failed compute: " + e.getErrorMessage());
+            logE("failed compute: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
     }
@@ -184,7 +184,7 @@ class BreadcrumbDataFieldView extends WatchUi.DataField {
                 renderer.renderUser(dc, lastPoint);
             }
         } catch (e) {
-            logE("failed onUpdate: " + e.getErrorMessage());
+            logE("failed onUpdate: " + (e as Exception).getErrorMessage());
             ++$.globalExceptionCounter;
         }
 

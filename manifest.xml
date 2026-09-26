@@ -28,6 +28,7 @@
             <iq:product id="d2mach1"/>
             <iq:product id="descentg1"/>
             <iq:product id="d2mach2"/>
+            <iq:product id="d2mach2pro"/>
             <iq:product id="descentg2"/>
             <iq:product id="descentmk1"/>
             <iq:product id="descentmk2"/>
@@ -86,11 +87,20 @@
             <iq:product id="fenix8solar47mm"/>
             <iq:product id="fenix8solar51mm"/>
             <iq:product id="fenixchronos"/>
+            <iq:product id="fenix943mm"/>
+            <iq:product id="fenix947mm"/>
+            <iq:product id="fenix9pro43mm"/>
+            <iq:product id="fenix9pro47mm"/>
+            <iq:product id="fenix9pro51mm"/>
+            <iq:product id="fenix9prosolar47mm"/>
+            <iq:product id="fenix9prosolar51mm"/>
             <iq:product id="fenixe"/>
             <iq:product id="fr165"/>
             <iq:product id="fr165m"/>
             <iq:product id="fr245"/>
             <iq:product id="fr245m"/>
+            <iq:product id="fr170"/>
+            <iq:product id="fr170m"/>
             <iq:product id="fr255"/>
             <iq:product id="fr255m"/>
             <iq:product id="fr255s"/>
@@ -107,6 +117,7 @@
             <iq:product id="fr935"/>
             <iq:product id="fr945"/>
             <iq:product id="fr945lte"/>
+            <iq:product id="fr70"/>
             <iq:product id="fr955"/>
             <iq:product id="fr965"/>
             <iq:product id="fr970"/>
